@@ -1,0 +1,24 @@
+extends layout
+
+block content
+  .container.mt-5
+    .row.justify-content-center
+      .col-md-10
+        h1.text-center.mb-4.text-primary-emphasis Your Messages
+
+        if messages.length > 0
+          each message, index in messages
+            .card.mb-3.shadow.mx-auto(style="max-width: 600px")
+              .card-header.bg-success.text-white.text-center
+                span Message #{index + 1}
+              .card-body
+                h5.card-title.text-muted.text-center Info: #{message.question}
+                p.card-text.text-dark.text-center Details: #{message.answer}
+                p.text-end
+                  small.text-muted Received: #{new Date(message.createdAt).toLocaleString()}
+        else
+          .alert.alert-info.text-center
+            p No messages yet.
+
+      .col-md-12.text-center.mt-4
+        a.btn.btn-outline-primary.mt-2(href="/") Return to Homepage

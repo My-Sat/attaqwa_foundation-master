@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  h1= title
+  if success.length > 0
+    .alert.alert-success.text-center
+      | #{success}
+  if error.length > 0
+    .alert.alert-danger.text-center
+      | #{error}
+  table.table
+    thead
+      tr
+        th Title
+        th Actions
+    tbody
+      each session in classSessions
+        tr
+          td= session.title
+          td
+            a.btn.btn-primary(href=session.url) View

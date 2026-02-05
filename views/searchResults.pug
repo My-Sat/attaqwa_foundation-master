@@ -1,0 +1,38 @@
+extends layout
+
+block content
+  h3.text-center Search Results for "#{query}"
+
+  if questions.length > 0
+    h4.text-primary Questions
+    ul.list-group
+      each question in questions
+        li.list-group-item
+          strong Question: 
+          | #{question.question}
+          br
+          if question.answer
+            strong Answer: 
+            | #{question.answer}
+  else
+    p.text-muted No questions matched your search.
+
+  if videos.length > 0
+    h4.text-primary Videos
+    .row
+      each video in videos
+        .col-md-4.mb-3
+          .card
+            .card-body
+              h5.card-title= video.title
+              iframe(
+                width="100%"
+                height="200"
+                src=video.youtubeUrl
+                title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              )
+  else
+    p.text-muted No videos matched your search.

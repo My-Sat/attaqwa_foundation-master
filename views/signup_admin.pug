@@ -1,0 +1,23 @@
+extends layout
+
+block content
+  h1.text-center Admin Sign Up
+
+  .container.mt-4
+    .row
+      .col-md-6.offset-md-3
+        form(method="POST" action="/signup/admin")
+          // Check if errors array has any content
+          if errors.length
+            each error in errors
+              .alert.alert-danger= error.msg
+          .mb-3
+            label(for="username") Username
+            input.form-control(type="text" name="username" value=(oldInput.username || ''))
+          .mb-3
+            label(for="password") Password
+            input.form-control(type="password" name="password")
+          .mb-3
+            label(for="confirmPassword") Confirm Password
+            input.form-control(type="password" name="confirmPassword")
+          button.btn.btn-primary(type="submit") Sign Up

@@ -1,0 +1,25 @@
+extends layout
+
+block content
+  h1 Update Registration Fee
+
+  if success && success.length > 0
+    .alert.alert-success
+      each msg in success
+        p= msg
+
+  if error && error.length > 0
+    .alert.alert-danger
+      each msg in error
+        p= msg
+
+  if fee
+    p Current registration fee: GHC #{fee.amount}
+  else
+    p No registration fee set currently.
+
+  form(action='/registration_fee' method='POST')
+    .form-group
+      label(for='amount') Enter New Registration Fee (GHC):
+      input.form-control(type='number' name='amount' step='0.01' required)
+    button.btn.btn-primary(type='submit') Update Fee

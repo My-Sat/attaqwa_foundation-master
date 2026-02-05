@@ -1,0 +1,138 @@
+/* Navbar Logo */
+.navbar-logo {
+  max-height: 70px;
+  width: auto;
+}
+
+.foundation {
+  background-color: darkseagreen;
+}
+
+ul li a {
+  text-decoration: none;
+  color: #3498db;
+}
+
+/* Sheesu Image */
+.sheesu {
+  max-height: 100px;
+  width: 150px;
+}
+
+.videos {
+  background-color: #eaeded;
+}
+
+/* Titles */
+.title {
+  color: whitesmoke;
+}
+
+/* Sections Styling */
+.knowledge, .ask-sheesu, .live-video {
+  border: 1px solid #b03a2e;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+}
+
+.list li {
+  margin-bottom: 8px;
+}
+
+/* Footer Styling */
+footer {
+  background-color: #343a40;
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+footer a {
+  color: #ffc107;
+  text-decoration: none;
+  margin: 0 10px;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+.social-media-icons a {
+  color: #fff;
+  font-size: 20px;
+  margin: 0 10px;
+  text-decoration: none;
+}
+
+.social-media-icons a:hover {
+  color: #ffc107;
+}
+
+.iframe-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* Aspect ratio 16:9 */
+  height: 0;
+  overflow: hidden;
+}
+
+.iframe-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.ask-link {
+  text-decoration: none;
+}
+
+.nav-link i.fa-user-circle {
+  margin-right: 5px;
+  font-size: 1.2em;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+}
+
+/* Base style: No scroll functionality on smaller screens */
+.question-list, .video-list, .article-list {
+  max-height: none;
+  overflow: visible;
+  word-wrap: break-word; /* Ensures long words break onto the next line */
+  word-break: break-word; /* Adds fallback for very long strings */
+  white-space: normal; /* Prevents horizontal scrolling by wrapping text */
+}
+
+/* Apply scroll only for larger screens (768px and above) */
+@media (min-width: 768px) {
+  .question-list {
+    max-height: 40vh;  /* Limit height to 40% of the viewport */
+    overflow-y: auto;  /* Enable vertical scrolling when content overflows */
+    white-space: normal; /* Prevents horizontal scrolling by wrapping text */
+  }
+
+  .video-list {
+    max-height: 70vh;  /* Limit height to 70% of the viewport */
+    overflow-y: auto;  /* Enable vertical scrolling when content overflows */
+    white-space: normal; /* Prevents horizontal scrolling by wrapping text */
+  }
+
+  .article-list {
+    max-height: 70vh;  /* Limit height to 70% of the viewport */
+    overflow-y: auto;  /* Enable vertical scrolling when content overflows */
+    white-space: normal; /* Prevents horizontal scrolling by wrapping text */
+  }
+}
+

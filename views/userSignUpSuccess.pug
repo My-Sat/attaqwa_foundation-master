@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  .container.mt-5
+    .row
+      .col-md-6.offset-md-3
+        .text-center
+          h2(style="color: green;")
+            i(class="fa fa-check-circle" aria-hidden="true") Success! User Registered
+          p Your account has been successfully created.
+          a.btn.btn-success(href="/signin") Sign in Now

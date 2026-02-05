@@ -1,0 +1,76 @@
+extends layout
+
+block content
+  h1.text-center.mt-4 Admin Dashboard
+
+  .container
+    .row
+      // Manage Admin Section
+      .col-md-4
+        .card.mb-4.shadow-sm.border.border-primary
+          .card-header.text-center.bg-primary.text-white
+            h5 Manage Admin
+          .card-body
+            ul.list-group.list-group-flush
+              li.list-group-item
+                a(href="/signup/admin", class='nav-link') Admin Sign Up
+              li.list-group-item
+                a(href='/delete_admin', class='nav-link') Delete Admin
+
+      // Manage Videos Section
+      .col-md-4
+        .card.mb-4.shadow-sm.border.border-success
+          .card-header.text-center.bg-success.text-white
+            h5 Manage Videos
+          .card-body
+            ul.list-group.list-group-flush
+              li.list-group-item
+                a(href='/add_video', class='nav-link') Add Video
+              li.list-group-item
+                a(href='/delete_video_list', class='nav-link') Delete Video
+              li.list-group-item
+                a(href='/add_category', class='nav-link') Add Video Category
+              li.list-group-item
+                a(href='/delete_category', class='nav-link') Delete Video Category
+
+      // Manage Questions Section
+      .col-md-4
+        .card.mb-4.shadow-sm.border.border-warning
+          .card-header.text-center.bg-warning.text-dark
+            h5 Manage Questions
+          .card-body
+            ul.list-group.list-group-flush
+              li.list-group-item
+                a(href='/manage_questions', class='nav-link') Answer Questions
+              li.list-group-item 
+                a(href='/delete_question', class='nav-link') Delete Question
+
+      // Manage Articles Section
+      .col-md-4
+        .card.mb-4.shadow-sm.border.border-warning
+          .card-header.text-center.bg-warning.text-dark
+            h5 Manage Articles
+          .card-body
+            ul.list-group.list-group-flush
+              li.list-group-item
+                a(href='/create_article', class='nav-link') Create Article
+              li.list-group-item 
+                a(href='/delete_article', class='nav-link') Delete article
+              li.list-group-item 
+                a(href='/edit_article', class='nav-link') Edit article
+      // Manage Class
+      .col-md-4
+        .card.mb-4.shadow-sm.border.border-warning
+          .card-header.text-center.bg-warning.text-dark
+            h5 Manage Class
+          .card-body
+            ul.list-group.list-group-flush
+              li.list-group-item
+                a(href='/add_session', class='nav-link') Add Class Session
+              li.list-group-item 
+                a(href='/all_class_sessions', class='nav-link') View class sessions
+              li.list-group-item 
+                a(href='/registrations/pending', class='nav-link') Approve Registrations
+              li.list-group-item 
+                a(href='/registration_fee', class='nav-link') State/update access code fee
+

@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  h1= title
+  if success && success.length > 0
+    p.alert.alert-success= success
+  if error && error.length > 0
+    p.alert.alert-danger= error
+  form(action='/live_class_auth' method='POST')
+    .form-group
+      label(for='code') Enter Access Code:
+      input.form-control(type='text' name='code' required)
+    button.btn.btn-primary(type='submit') Join Live Class
+  p
+  p
+    a(href='/register' style='text-decoration: none;') Don't have an access code? Acquire an access code

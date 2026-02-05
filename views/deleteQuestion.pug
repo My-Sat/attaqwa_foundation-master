@@ -1,0 +1,34 @@
+extends layout
+
+block content
+  .container.mt-5
+    h1.text-primary.text-center Manage Questions
+
+    // Display success message
+    if success.length > 0
+      .alert.alert-success.text-center #{success}
+
+    // Display error message
+    if error.length > 0
+      .alert.alert-danger.text-center #{error}
+
+    if questions.length > 0
+      table.table.table-bordered.mt-4
+        thead
+          tr
+            th User
+            th Question
+            th Answered
+            th Action
+        tbody
+          each question in questions
+            tr
+              td #{question.userId ? question.userId.username : 'Unknown'}
+              td #{question.question}
+              td #{question.isAnswered ? 'Yes' : 'No'}
+              td
+                form(method="POST", action="/delete_question", onsubmit="return confirm('Are you sure you want to delete this question?');")
+                  input(type="hidden", name="questionId", value=question._id)
+                  button.btn.btn-danger(type="submit") Delete
+    else
+      .alert.alert-info.text-center No questions found.

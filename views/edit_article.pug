@@ -1,0 +1,23 @@
+extends layout
+
+block content
+  .container.mt-5
+    h1.text-center Edit Article
+
+    form(action="/update_article" method="POST")
+      input(type="hidden" name="articleId" value=article._id)
+
+      .form-group
+        label(for="title") Article Title
+        input.form-control(type="text" name="title" value=article.title required)
+
+      .form-group
+        label(for="content") Article Content
+        textarea.form-control(name="content" id="content" rows="10" required)= article.content
+
+      button.btn.btn-success.mt-3(type="submit") Save Changes
+
+  //- Include CKEditor
+  script(src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js")
+  script.
+    CKEDITOR.replace('content');

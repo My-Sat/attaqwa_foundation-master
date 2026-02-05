@@ -1,0 +1,26 @@
+extends layout
+
+block content
+  h1.text-center.mt-4 Delete Admin
+
+  .container.mt-4
+    if success.length > 0
+      .alert.alert-success(role="alert")
+        each message in success
+          p= message
+
+    if error.length > 0
+      .alert.alert-danger(role="alert")
+        each message in error
+          p= message
+
+    if admins.length > 0
+      ul.list-group
+        each admin in admins
+          li.list-group-item.d-flex.justify-content-between.align-items-center
+            span #{admin.username}
+            form(action="/delete_admin" method="POST" onsubmit="return confirm('Are you sure you want to delete this admin? This action cannot be undone.');")
+              input(type="hidden" name="adminId" value=admin._id)
+              button.btn.btn-danger.btn-sm(type="submit") Delete
+    else
+      p.text-center No admins available to delete.

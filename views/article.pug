@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  .container.mt-5
+    // Ensures the title is centered and styled
+    h1.text-center(style="font-size: 2.0rem; font-weight: bold; color: #2c3e50; margin-bottom: 1.5rem;") #{article.title}
+
+    hr(style="border: 2px solid #2c3e50; width: 50%; margin: 0 auto; margin-bottom: 2rem;")
+
+    div.mt-4.px-3.py-4(style="font-size: 1.2rem; line-height: 1.8; color: #34495e; background: #f8f9fa; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);")
+      != article.content

@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  .container.mt-5
+    h1.text-center Edit Article
+
+    form(action="/edit_article" method="POST")
+      .form-group
+        label(for="articleId") Select an Article to Edit
+        select.form-control(name="articleId" required)
+          option(value="" disabled selected) -- Select Article --
+          each article in articles
+            option(value=article._id)= article.title
+
+      button.btn.btn-primary.mt-3(type="submit") Edit Article

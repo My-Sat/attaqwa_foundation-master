@@ -1,0 +1,116 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title= title || 'Home Page'
+
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css")
+    link(rel="stylesheet", href="/stylesheets/layout.css")
+    link(
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    )
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
+    link(rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png")
+    link(rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png")
+    link(rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png")
+    link(rel="manifest" href="/site.webmanifest")
+
+
+
+  body
+    .container-fluid
+      // Navbar Section
+      nav.navbar.navbar-expand-lg.bg-body-tertiary
+        .container-fluid
+          // Logo
+          a.navbar-brand(href="/")
+            img.navbar-logo(src="/images/attaqwa.jpg")
+
+          // Username and Messages Section
+          .d-flex.align-items-center
+            if isLoggedIn && admin
+              // Admin Username
+              h5.text-primary.me-3= admin.username ? admin.username[0].toUpperCase() + admin.username.slice(1).toLowerCase() : ''
+              // Admin Dropdown Menu
+              .dropdown.me-3
+                a.nav-link.dropdown-toggle(href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false")
+                  i(class="fas fa-user-circle text-primary") 
+                ul.dropdown-menu
+                  li
+                    a.dropdown-item(href="/dashboard") Dashboard
+                  li
+                    a.dropdown-item(href="/signout") Sign Out
+
+            else if isLoggedIn && user
+              // User Messages Link
+              a.nav-link.text-secondary.me-3(href="/user_messages")
+                i(class="fas fa-envelope")
+                if unreadMessages > 0
+                  span.badge.bg-danger= unreadMessages
+              // User Username
+              h5.text-primary.me-3= user.username ? user.username[0].toUpperCase() + user.username.slice(1).toLowerCase() : ''
+              .dropdown.me-3
+                a.nav-link.dropdown-toggle(href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false")
+                  i(class="fas fa-user-circle text-primary") 
+                ul.dropdown-menu
+                  li
+                    a.dropdown-item(href="/signout") Sign Out
+            else
+              // Sign In and Sign Up Links
+              a.nav-link.h5.text-secondary.me-3(href="/signin") Sign In
+              a.nav-link.h5.text-secondary(href="/signup") Sign Up
+
+          // Navbar Toggle for Small Screens
+          button.navbar-toggler(
+            type="button" 
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          )
+            span.navbar-toggler-icon
+
+          // Navbar Links
+          .collapse.navbar-collapse#navbarSupportedContent
+            ul.navbar-nav.me-auto.mb-2.mb-lg-0
+              li.nav-item
+                a.nav-link.active(aria-current="page" href="/") Home
+              li.nav-item
+                a.nav-link(href="/donate") Donate
+              li.nav-item 
+                a.nav-link(href="mailto:attaqwafoundationhum@gmail.com") Contact Us  
+
+            form.d-flex(method="get" action="/search")
+              input.form-control.me-2(name="q" type="search" placeholder="search word here" aria-label="Search" required)
+              button.btn.btn-outline-success(type="submit") Search
+
+
+      // Body Section
+      block content
+      block scripts
+
+    // Footer Section
+    footer
+      p &copy; 2024 At-Taqwa Foundation. All Rights Reserved.
+      .social-media-icons
+        a(href="https://www.facebook.com/TaqwaAnd?mibextid=ZbWKwL" target="_blank") Facebook |
+        a(href="https://x.com/TaqwaAnd?s=09" target="_blank") Twitter |
+        a(href="https://www.instagram.com" target="_blank") Instagram |
+        a(href="https://www.youtube.com/@at-taqwafoundationandhuman2761" target="_blank") YouTube
+      p
+        a(href="#") Privacy Policy | 
+        a(href="#") Terms of Service
+      p Support us: 
+        a(href="/donate") Donate to At-Taqwa Foundation
+
+    script(src="/javascripts/userSignUp.js")
+    script(
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    )

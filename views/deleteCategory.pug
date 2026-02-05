@@ -1,0 +1,24 @@
+extends layout
+
+block content
+  .container.mt-5
+    h1.text-primary.text-center Delete Video Category
+
+    // Check if there's a success flash message
+    if success.length > 0
+      .alert.alert-success.text-center #{success}
+
+    // Check if there's an error flash message
+    if error.length > 0
+      .alert.alert-danger.text-center #{error}
+
+    form(method="POST", action="/delete_category" onsubmit="return confirm('Are you sure you want to delete this category? This action cannot be undone.');")
+      .form-group
+        label(for="category") Select a Category:
+        select#category.form-control(name="category", required=true)
+          option(value="" disabled selected) Choose a category
+          each cat in categories
+            option(value=cat._id) #{cat.title}
+
+      .form-group.mt-3
+        button.btn.btn-danger.btn-block(type="submit") Delete Category

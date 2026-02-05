@@ -1,0 +1,47 @@
+extends layout
+
+block content
+  h1.text-center= title
+
+  .container.mt-4
+    .row
+      .col-md-6.offset-md-3
+        h3.text-center Sign In as a User
+
+        if userError
+          .alert.alert-danger
+            i.fa.fa-exclamation-circle(aria-hidden="true")
+            | #{userError}
+
+        form(method="POST" action="/signin/user")
+          .mb-3
+            label(for="username") Username
+            input.form-control(type="text" name="username" required)
+          .mb-3
+            label(for="password") Password
+            input.form-control(type="password" name="password" required)
+          button.btn.btn-primary(type="submit") Sign In 
+
+    .text-center.mt-4 
+      p Don't have an account? 
+        a(href="/signup") Sign up    
+
+    hr.mt-5
+
+    .row
+      .col-md-6.offset-md-3
+        h3.text-center Sign In as an Admin
+
+        if adminError
+          .alert.alert-danger
+            i.fa.fa-exclamation-circle(aria-hidden="true")
+            | #{adminError}
+
+        form(method="POST" action="/signin/admin")
+          .mb-3
+            label(for="username") Username
+            input.form-control(type="text" name="username" required)
+          .mb-3
+            label(for="password") Password
+            input.form-control(type="password" name="password" required)
+          button.btn.btn-danger(type="submit") Sign In

@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  .container.mt-4
+    h2.text-center Question Details
+    .row
+      .col-md-8.offset-md-2
+        h4 Question: #{question.question}
+        p Answer: #{question.answer || "This question has not been answered yet."}

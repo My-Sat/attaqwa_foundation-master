@@ -1,0 +1,34 @@
+extends layout
+
+block content
+  h1= title
+  if success && success.length > 0
+    p.alert.alert-success= success
+  if error && error.length > 0
+    p.alert.alert-danger= error    
+  table.table
+    thead
+      tr
+        th User
+        th Session
+        th MoMo Reference
+        th Assign Access Code
+    tbody
+      each registration in registrations
+        tr
+          td= registration.userId.username
+          td= registration.classSessionId.title
+          td= registration.momoReferenceName
+          td
+            form(action='/registrations/pending' method='POST')
+              input(type='hidden' name='registrationId' value=registration._id)
+              input.form-control(
+                type='text',
+                name='code',
+                required,
+                disabled=registration.accessCodeAssigned
+              )
+              button.btn.btn-primary(
+                type='submit',
+                disabled=registration.accessCodeAssigned
+              ) Assign Code

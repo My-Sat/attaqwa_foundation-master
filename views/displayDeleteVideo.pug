@@ -1,0 +1,23 @@
+extends layout
+
+block content
+  .container.mt-5
+    h1.text-primary.text-center Delete Video
+
+    // Display error message if present
+    if error.length > 0
+      .alert.alert-danger.text-center #{error}
+
+    // Display success message if present
+    if success.length > 0
+      .alert.alert-success.text-center #{success}
+
+    form(method="POST", action="/delete_video")
+      .form-group
+        label(for="category") Select Video Category:
+        select#category.form-control(name="category", required)
+          option(value="") -- Select a Category --
+          each cat in categories
+            option(value=cat._id)= cat.title
+
+      button.btn.btn-danger.mt-3(type="submit") View Videos

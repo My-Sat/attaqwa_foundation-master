@@ -1,0 +1,41 @@
+extends layout
+
+block content
+  h1.text-center= title
+
+  .container.mt-5
+    .row
+      .col-md-6.offset-md-3
+        h3.text-center User Sign Up
+        form(method="POST" action="/signup")
+          // Display error messages if any
+          if errors && errors.length
+            each error in errors
+              .alert.alert-danger= error.msg
+          .mb-3
+            label(for="username") Username
+            input.form-control(
+              type="text" 
+              name="username" 
+              value=(oldInput && oldInput.username ? oldInput.username : '') 
+              required
+            )
+          .mb-3
+            label(for="phoneNumber") Phone Number
+            input.form-control#phoneNumber(
+              type="text" 
+              name="phoneNumber" 
+              value=(oldInput && oldInput.phoneNumber ? oldInput.phoneNumber : '') 
+              required
+            )
+          .mb-3
+            label(for="password") Password
+            input.form-control(type="password" name="password" required)
+          .mb-3
+            label(for="confirmPassword") Confirm Password
+            input.form-control(type="password" name="confirmPassword" required)
+          button.btn.btn-primary(type="submit") Sign Up
+
+    .text-center.mt-4 
+      P Already have an account? 
+        a(href="/signin/user") Sign in

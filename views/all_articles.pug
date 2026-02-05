@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  .container.mt-5
+    h2 All Articles
+    hr
+    ul.list-group
+      each article in articles
+        li.list-group-item
+          a(href=`/article/${article._id}`) #{article.title}

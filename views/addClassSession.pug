@@ -1,0 +1,22 @@
+extends layout
+
+block content
+  .row.justify-content-center
+    .col-md-6
+      h2.text-center.mt-3 Add Class session
+      hr
+
+      // Check if there's a success flash message
+      if success.length > 0
+        .alert.alert-success.text-center #{success}
+
+      // Check if there's an error flash message
+      if error.length > 0
+        .alert.alert-danger.text-center #{error}
+
+      form(method="POST" action="/add_session")
+        .form-group
+          label(for="title") Session Title
+          input#title.form-control(type="text" name="title" required placeholder="Enter session title")
+        
+        button.btn.btn-primary.mt-3(type="submit") Add Session

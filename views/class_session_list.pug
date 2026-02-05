@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  if success.length > 0
+    .alert.alert-success.text-center
+      | #{success}
+  if error.length > 0
+    .alert.alert-danger.text-center
+      | #{error}
+  .class-session-details
+    p
+      strong Class Session: 
+      | #{classSession.title}
+    p
+      strong Students under this session:
+    ul
+      each registration in classSession.users
+        li= registration.userId.username
