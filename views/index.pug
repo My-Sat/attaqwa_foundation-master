@@ -1,56 +1,75 @@
 extends layout
 
 block content
-  .row
-    .col.text-center.foundation
-      h2.title AT-TAQWA FOUNDATION
-      h5.title The Gateway to Taqwa
-      a.mt-2.mb-2(href="/donate" style="font-weight: bold; color: white; font-size: 1.2rem; text-decoration: none;") Donate here !!!
+  section.home-hero
+    .hero-content
+      h1.hero-title At-Taqwa Foundation
+      p.hero-subtitle The gateway to taqwa through live teaching, practical resources, and trusted answers.
+      .hero-actions
+        a.btn.btn-donate(href="/donate") Donate Now
 
-  .row.justify-content-center.videos
-    .col-12.col-md-6.live-video.text-center
-      h4.mt-3 Live Stream Starts at 6:30 pm Local time
-      p#countdown(style="font-size: 1.5rem; color: red;")
-      .iframe-container
-        iframe(
-          src=liveVideoUrl
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen
-        )
+  section.home-grid
+    .row.g-4
+      .col-12.col-lg-8
+        .panel.live-panel
+          .panel-header
+            h2 Live Stream
+            p Live stream starts at 6:30 PM local time.
+          p#countdown.countdown-text
+          .iframe-container
+            iframe(
+              src=liveVideoUrl
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              title="Live stream player"
+            )
 
-    .col-12.col-md-3.ask-sheesu.text-center
-      // Live Class Link (Placed above "Ask Sheesu")
-      h5.mt-2
-        a.live-class-link.btn.btn-primary(href="/live_class_auth" style="font-size: 1.0rem;") 🔴 Join Live Class
+      .col-12.col-lg-4
+        .panel.ask-panel
+          a.btn.btn-live-class(href="/live_class_auth")
+            i.fas.fa-broadcast-tower.me-2
+            | Join Live Class
+          .ask-brand
+            img.sheesu(src="/images/sheesu.jpg" alt="Sheesu")
+            a.btn.btn-ask(href="/ask_sheesu") Ask Shiisu
+          h3.panel-section-title Recent Questions and Answers
+          ul.question-list.list
+            if questions.length
+              each question, idx in questions
+                li
+                  a(href=`/question/${question._id}`) #{question.question}
+                if idx !== questions.length - 1
+                  hr
+            else
+              li.text-muted No answered questions yet.
+          a.btn.btn-view-more(href="/all_questions") View More Questions
 
-      // Ask Sheesu Section
-      img.sheesu(src="images/sheesu.jpg")
-      h5.mt-2
-        a.ask-link.btn.btn-secondary(href="/ask_sheesu" style="font-size: 1.2rem;") Ask Shiisu
-      br
-      div
-        h5 Recent Questions and Answers
-        ul.question-list.list(style="font-size: 1.2rem;")
-          each question in questions
-            li: a(href=`/question/${question._id}`) #{question.question}
-            if index !== questions.length - 1
-              hr
-        a.btn.btn-secondary.mt-2(href="/all_questions" style="font-size: 1.2rem;") View More Questions
-    
-    .col-12.col-md-3.knowledge.text-center 
-      h5 VIDEOS 
-      hr
-      ul.video-list.list(style="font-size: 1.2rem;") 
-        each category in videoCategories
-          li: a(href=category.url) #{category.title}
-      h5 Articles/Curricular
-      hr
-      ul.article-list.list(style="font-size: 1.2rem;") 
-        each article in articles
-          li: a(href=`/article/${article._id}`) #{article.title}
+    .row.g-4.mt-1
+      .col-12.col-lg-6
+        .panel.resources-panel
+          h3.panel-section-title Videos
+          ul.video-list.list
+            if videoCategories.length
+              each category in videoCategories
+                li
+                  a(href=category.url) #{category.title}
+            else
+              li.text-muted No video categories available.
 
-  .row.text-center
-  .d-flex.justify-content-center.align-items-center
-    h5.mr-3(style="font-size: 1.5rem; color: #7f8c8d;") Visitors:
-    h5(style="font-size: 1.5rem; color: #641e16;") #{visitorCount}
+      .col-12.col-lg-6
+        .panel.resources-panel
+          h3.panel-section-title Articles and Curricular
+          ul.article-list.list
+            if articles.length
+              each article in articles
+                li
+                  a(href=`/article/${article._id}`) #{article.title}
+            else
+              li.text-muted No articles available.
+
+    .row.mt-4
+      .col-12
+        .visitors-bottom
+          span Visitors
+          strong= visitorCount

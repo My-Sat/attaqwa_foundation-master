@@ -21,92 +21,95 @@ html(lang="en")
 
 
 
-  body
-    .container-fluid
-      // Navbar Section
-      nav.navbar.navbar-expand-lg.bg-body-tertiary
-        .container-fluid
-          // Logo
-          a.navbar-brand(href="/")
-            img.navbar-logo(src="/images/attaqwa.jpg")
+  body.site-body
+    // Navbar Section
+    nav.navbar.navbar-expand-lg.site-navbar
+      .container
+        // Logo
+        a.navbar-brand.site-brand(href="/")
+          img.navbar-logo(src="/images/attaqwa.jpg" alt="At-Taqwa Foundation logo")
+          span.brand-title At-Taqwa Foundation
+
+        // Navbar Toggle for Small Screens
+        button.navbar-toggler.site-toggler(
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        )
+          span.navbar-toggler-icon
+
+        // Navbar Links
+        .collapse.navbar-collapse#navbarSupportedContent
+          ul.navbar-nav.me-auto.mb-2.mb-lg-0
+            li.nav-item
+              a.nav-link.active(aria-current="page" href="/") Home
+            li.nav-item
+              a.nav-link(href="/donate") Donate
+            li.nav-item
+              a.nav-link(href="mailto:attaqwafoundationhum@gmail.com") Contact Us
+
+          form.d-flex.site-search(method="get" action="/search")
+            input.form-control(name="q" type="search" placeholder="Search topics" aria-label="Search" required)
+            button.btn.btn-search(type="submit") Search
 
           // Username and Messages Section
-          .d-flex.align-items-center
+          .d-flex.align-items-center.site-user-actions
             if isLoggedIn && admin
               // Admin Username
-              h5.text-primary.me-3= admin.username ? admin.username[0].toUpperCase() + admin.username.slice(1).toLowerCase() : ''
+              span.site-user-name= admin.username ? admin.username[0].toUpperCase() + admin.username.slice(1).toLowerCase() : ''
               // Admin Dropdown Menu
-              .dropdown.me-3
-                a.nav-link.dropdown-toggle(href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false")
-                  i(class="fas fa-user-circle text-primary") 
-                ul.dropdown-menu
+              .dropdown
+                a.nav-link.dropdown-toggle.user-menu-toggle(href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false")
+                  i(class="fas fa-user-circle")
+                ul.dropdown-menu.dropdown-menu-end
                   li
                     a.dropdown-item(href="/dashboard") Dashboard
                   li
                     a.dropdown-item(href="/signout") Sign Out
-
             else if isLoggedIn && user
               // User Messages Link
-              a.nav-link.text-secondary.me-3(href="/user_messages")
+              a.nav-link.messages-link(href="/user_messages" aria-label="Messages")
                 i(class="fas fa-envelope")
                 if unreadMessages > 0
                   span.badge.bg-danger= unreadMessages
               // User Username
-              h5.text-primary.me-3= user.username ? user.username[0].toUpperCase() + user.username.slice(1).toLowerCase() : ''
-              .dropdown.me-3
-                a.nav-link.dropdown-toggle(href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false")
-                  i(class="fas fa-user-circle text-primary") 
-                ul.dropdown-menu
+              span.site-user-name= user.username ? user.username[0].toUpperCase() + user.username.slice(1).toLowerCase() : ''
+              .dropdown
+                a.nav-link.dropdown-toggle.user-menu-toggle(href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false")
+                  i(class="fas fa-user-circle")
+                ul.dropdown-menu.dropdown-menu-end
                   li
                     a.dropdown-item(href="/signout") Sign Out
             else
               // Sign In and Sign Up Links
-              a.nav-link.h5.text-secondary.me-3(href="/signin") Sign In
-              a.nav-link.h5.text-secondary(href="/signup") Sign Up
+              a.nav-link.auth-link(href="/signin") Sign In
+              a.nav-link.auth-link(href="/signup") Sign Up
 
-          // Navbar Toggle for Small Screens
-          button.navbar-toggler(
-            type="button" 
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          )
-            span.navbar-toggler-icon
-
-          // Navbar Links
-          .collapse.navbar-collapse#navbarSupportedContent
-            ul.navbar-nav.me-auto.mb-2.mb-lg-0
-              li.nav-item
-                a.nav-link.active(aria-current="page" href="/") Home
-              li.nav-item
-                a.nav-link(href="/donate") Donate
-              li.nav-item 
-                a.nav-link(href="mailto:attaqwafoundationhum@gmail.com") Contact Us  
-
-            form.d-flex(method="get" action="/search")
-              input.form-control.me-2(name="q" type="search" placeholder="search word here" aria-label="Search" required)
-              button.btn.btn-outline-success(type="submit") Search
-
-
-      // Body Section
-      block content
-      block scripts
+    // Body Section
+    main.site-main
+      .container
+        block content
+        block scripts
 
     // Footer Section
-    footer
-      p &copy; 2024 At-Taqwa Foundation. All Rights Reserved.
-      .social-media-icons
-        a(href="https://www.facebook.com/TaqwaAnd?mibextid=ZbWKwL" target="_blank") Facebook |
-        a(href="https://x.com/TaqwaAnd?s=09" target="_blank") Twitter |
-        a(href="https://www.instagram.com" target="_blank") Instagram |
-        a(href="https://www.youtube.com/@at-taqwafoundationandhuman2761" target="_blank") YouTube
-      p
-        a(href="#") Privacy Policy | 
-        a(href="#") Terms of Service
-      p Support us: 
-        a(href="/donate") Donate to At-Taqwa Foundation
+    footer.site-footer
+      .container
+        p.mb-2 &copy; 2024 At-Taqwa Foundation. All Rights Reserved.
+        .social-media-icons
+          a(href="https://www.facebook.com/TaqwaAnd?mibextid=ZbWKwL" target="_blank") Facebook
+          a(href="https://x.com/TaqwaAnd?s=09" target="_blank") Twitter
+          a(href="https://www.instagram.com" target="_blank") Instagram
+          a(href="https://www.youtube.com/@at-taqwafoundationandhuman2761" target="_blank") YouTube
+        p.mt-2.mb-2
+          a(href="#") Privacy Policy
+          span.mx-2 |
+          a(href="#") Terms of Service
+        p.mb-0
+          | Support us:
+          a.ms-2(href="/donate") Donate to At-Taqwa Foundation
 
     script(src="/javascripts/userSignUp.js")
     script(
