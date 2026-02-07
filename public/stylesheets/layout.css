@@ -228,6 +228,77 @@ a:active {
   margin-top: 1.2rem;
 }
 
+.auth-shell {
+  display: flex;
+  justify-content: center;
+  padding: 1.2rem 0 0.5rem;
+}
+
+.auth-card {
+  width: min(100%, 500px);
+  border: 1px solid var(--border-0);
+  border-radius: 1rem;
+  background: linear-gradient(165deg, #ffffff 0%, #f4faf8 55%, #eef6f4 100%);
+  box-shadow: var(--shadow-soft);
+  padding: 1.35rem 1.2rem 1.1rem;
+}
+
+.auth-header {
+  margin-bottom: 0.75rem;
+}
+
+.auth-title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-0);
+}
+
+.auth-subtitle {
+  margin: 0.45rem 0 0;
+  color: var(--text-1);
+  font-size: 0.95rem;
+}
+
+.auth-alert {
+  border-radius: 0.7rem;
+}
+
+.auth-input {
+  border: 1px solid var(--border-0);
+  padding: 0.62rem 0.72rem;
+  border-radius: 0.7rem;
+}
+
+.auth-input:focus {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 0.2rem rgba(15, 107, 102, 0.14);
+}
+
+.auth-submit {
+  width: 100%;
+  border: 1px solid var(--brand-500);
+  border-radius: 0.7rem;
+  color: #ffffff;
+  font-weight: 700;
+  background: linear-gradient(120deg, var(--brand-500), #13817a);
+  padding: 0.62rem 0.8rem;
+}
+
+.auth-submit:hover,
+.auth-submit:focus,
+.auth-submit:active {
+  color: #ffffff;
+  background: linear-gradient(120deg, var(--brand-600), #0d6d67);
+  border-color: var(--brand-600);
+}
+
+.auth-footer {
+  margin-top: 0.95rem;
+  text-align: center;
+  color: var(--text-1);
+}
+
 .panel {
   height: 100%;
   border: 1px solid var(--border-0);

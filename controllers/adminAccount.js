@@ -3,12 +3,6 @@ const { validationResult } = require('express-validator'); // Import express-val
 const asyncHandler = require('express-async-handler');
 const Admin = require('../models/admin');
 const RegistrationFee = require('../models/registrationFee');
-const bcrypt = require('bcryptjs');
-
-// GET: Render Sign In Page
-exports.getSignInPage = asyncHandler(async (req, res) => {
-  res.render('signin', { title: 'Sign In' });
-});
 
 // GET:  Admin Sign-Up Page
 exports.getAdminSignUp = (req, res) => {
@@ -53,59 +47,6 @@ exports.getAdminSignUpSuccess = (req, res) => {
     title: 'Signup Successful'
   });
 };
-
-
-// POST: Handle Admin Sign-In
-exports.postAdminSignIn = asyncHandler(async (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(401).render('signin', {
-      title: 'Sign In',
-      adminError: 'Username and password are required.',
-      oldInput: { username },
-    });
-  }
-
-  // Convert username to lowercase before querying
-  const formattedUsername = username.trim().toLowerCase();
-
-  const admin = await Admin.findOne({ username: formattedUsername });
-  if (!admin) {
-    return res.status(401).render('signin', {
-      title: 'Sign In',
-      adminError: 'Invalid username or password.',
-      oldInput: { username },
-    });
-  }
-
-  const isMatch = await bcrypt.compare(password, admin.password);
-  if (!isMatch) {
-    return res.status(401).render('signin', {
-      title: 'Sign In',
-      adminError: 'Invalid username or password.',
-      oldInput: { username },
-    });
-  }
-
-  req.session.isLoggedIn = true;
-  req.session.admin = {
-    username: admin.username,
-  };
-
-  req.session.save((err) => {
-    if (err) {
-      console.error('Session save error:', err);
-      return res.status(500).send('An error occurred. Please try again.');
-    }
-    res.redirect('/dashboard');
-  });
-});
-
-// GET: Render Sign In Page
-exports.getSignInPage = asyncHandler(async (req, res) => {
-  res.render('signin', { title: 'Sign In' });
-});
 
 
 //GET: Admin Dashs Board

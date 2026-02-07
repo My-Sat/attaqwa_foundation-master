@@ -5,6 +5,7 @@ const deleteCategoryController = require('../controllers/deleteCategory');
 const deleteVideoController = require('../controllers/deleteVideo');
 const userAccount = require("../controllers/userAccount");
 const adminAccount = require('../controllers/adminAccount');
+const authController = require('../controllers/auth');
 const questionController = require("../controllers/question");
 const sessionSignOut = require("../controllers/signOut");
 const { validateUserSignUp } = require("../middleware/userValidation");
@@ -98,13 +99,16 @@ router.post("/delete_video/:id", isAdmin, deleteVideoController.postDeleteVideo)
 
 
 // GET: Display the sign-in page
-router.get('/signin', adminAccount.getSignInPage);
+router.get('/signin', authController.getSignInPage);
 
-// POST: Handle user sign-in
-router.post('/signin/user', userAccount.postUserSignIn);
+// POST: Handle sign-in for all roles
+router.post('/signin', authController.postSignIn);
 
-// POST: Handle admin sign-in
-router.post('/signin/admin', adminAccount.postAdminSignIn);
+// Backward compatibility for legacy sign-in routes
+router.get('/signin/user', (req, res) => res.redirect('/signin'));
+router.get('/signin/admin', (req, res) => res.redirect('/signin'));
+router.post('/signin/user', authController.postSignIn);
+router.post('/signin/admin', authController.postSignIn);
 
 // User Sign-Up Routes
 router.get('/signup', userAccount.getUserSignUp);

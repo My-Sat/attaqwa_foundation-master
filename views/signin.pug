@@ -1,47 +1,37 @@
 extends layout
 
 block content
-  h1.text-center= title
+  section.auth-shell
+    .auth-card
+      .auth-header
+        h1.auth-title= title
+        p.auth-subtitle Use one account sign-in. You will be redirected based on your role.
 
-  .container.mt-4
-    .row
-      .col-md-6.offset-md-3
-        h3.text-center Sign In as a User
+      if signInError
+        .alert.alert-danger.auth-alert(role="alert")
+          i.fas.fa-exclamation-circle.me-2(aria-hidden="true")
+          | #{signInError}
 
-        if userError
-          .alert.alert-danger
-            i.fa.fa-exclamation-circle(aria-hidden="true")
-            | #{userError}
+      form.auth-form(method="POST" action="/signin")
+        .mb-3
+          label.form-label(for="username") Username
+          input#username.form-control.auth-input(
+            type="text"
+            name="username"
+            value=(oldInput && oldInput.username ? oldInput.username : '')
+            autocomplete="username"
+            required
+          )
+        .mb-3
+          label.form-label(for="password") Password
+          input#password.form-control.auth-input(
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            required
+          )
+        button.btn.auth-submit(type="submit") Sign In
 
-        form(method="POST" action="/signin/user")
-          .mb-3
-            label(for="username") Username
-            input.form-control(type="text" name="username" required)
-          .mb-3
-            label(for="password") Password
-            input.form-control(type="password" name="password" required)
-          button.btn.btn-primary(type="submit") Sign In 
-
-    .text-center.mt-4 
-      p Don't have an account? 
-        a(href="/signup") Sign up    
-
-    hr.mt-5
-
-    .row
-      .col-md-6.offset-md-3
-        h3.text-center Sign In as an Admin
-
-        if adminError
-          .alert.alert-danger
-            i.fa.fa-exclamation-circle(aria-hidden="true")
-            | #{adminError}
-
-        form(method="POST" action="/signin/admin")
-          .mb-3
-            label(for="username") Username
-            input.form-control(type="text" name="username" required)
-          .mb-3
-            label(for="password") Password
-            input.form-control(type="password" name="password" required)
-          button.btn.btn-danger(type="submit") Sign In
+      p.auth-footer.mb-0
+        | Don't have an account?
+        a.ms-2(href="/signup") Sign up
