@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
   --bg-0: #f3f8f7;
@@ -19,9 +19,17 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: 'Manrope', sans-serif;
+}
+
 body.site-body {
   margin: 0;
-  font-family: 'Manrope', sans-serif;
   color: var(--text-0);
   background:
     radial-gradient(circle at 5% 5%, rgba(15, 107, 102, 0.12), transparent 35%),
@@ -31,11 +39,14 @@ body.site-body {
 
 a {
   color: var(--brand-600);
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
-a:hover {
+a:hover,
+a:focus,
+a:active {
   color: var(--brand-500);
+  text-decoration: none !important;
 }
 
 .site-main {
@@ -69,7 +80,6 @@ a:hover {
 }
 
 .brand-title {
-  font-family: 'Source Serif 4', serif;
   font-weight: 700;
   font-size: 1.2rem;
   color: var(--text-0);
@@ -161,9 +171,9 @@ a:hover {
 
 .hero-title {
   margin: 0;
-  font-family: 'Source Serif 4', serif;
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1.1;
+  font-weight: 800;
 }
 
 .hero-subtitle {
@@ -255,16 +265,18 @@ a:hover {
   gap: 0.8rem;
 }
 
-.btn-live-class {
+.home-grid .btn.btn-live-class {
   border: 1px solid #ffb6b6;
-  color: #2a0b0b;
+  color: #3b0c0c !important;
   font-weight: 700;
-  background: linear-gradient(120deg, #ff8f8f, #ff6b6b);
+  background: linear-gradient(120deg, #ff8f8f, #ff6b6b) !important;
 }
 
-.btn-live-class:hover {
-  color: #1f0707;
-  background: linear-gradient(120deg, #ff9f9f, #ff7a7a);
+.home-grid .btn.btn-live-class:hover,
+.home-grid .btn.btn-live-class:focus,
+.home-grid .btn.btn-live-class:active {
+  color: #2a0909 !important;
+  background: linear-gradient(120deg, #ff9f9f, #ff7a7a) !important;
   border-color: #ffc4c4;
   filter: none;
 }
