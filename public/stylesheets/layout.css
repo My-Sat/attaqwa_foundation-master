@@ -296,19 +296,6 @@ a:active {
   border: 1px solid var(--border-0);
 }
 
-.btn-view-more {
-  border: 1px solid var(--brand-500);
-  color: #ffffff;
-  background: var(--brand-500);
-  font-weight: 700;
-}
-
-.btn-view-more:hover {
-  color: #ffffff;
-  background: var(--brand-600);
-  border-color: var(--brand-600);
-}
-
 .home-grid .btn.btn-ask {
   border: 1px solid var(--brand-500) !important;
   color: #ffffff !important;
@@ -343,10 +330,30 @@ a:active {
   color: var(--brand-500);
 }
 
-.question-list hr {
-  margin: 0.5rem 0 0.65rem;
-  border-top: 1px solid var(--border-0);
-  opacity: 1;
+.home-lazy-list li {
+  padding-bottom: 0.55rem;
+  margin-bottom: 0.55rem;
+  border-bottom: 1px solid var(--border-0);
+}
+
+.home-lazy-list li:last-child {
+  margin-bottom: 0;
+}
+
+.home-lazy-list .home-empty-state,
+.home-lazy-list .home-list-loader,
+.home-lazy-list .home-list-sentinel {
+  border-bottom: 0;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.home-list-loader {
+  font-size: 0.92rem;
+}
+
+.home-list-sentinel {
+  min-height: 1px;
 }
 
 /* Footer */

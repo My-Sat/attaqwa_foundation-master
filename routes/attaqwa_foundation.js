@@ -157,6 +157,7 @@ router.post('/delete_question', isAdmin, questionController.postDeleteQuestion);
 
 //Donate Page
 router.get('/donate', donateController.getDonatePage);
+router.get('/api/home-feed/:type', index_controller.getHomeFeed);
 
 router.get('/live_class_auth', isAuthenticated, sessionController.getLiveClassAuth);
 

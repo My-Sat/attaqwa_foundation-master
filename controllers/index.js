@@ -8,6 +8,7 @@ const asyncHandler = require('express-async-handler');
 // YouTube API Credentials
 const YOUTUBE_API_KEY = 'AIzaSyCZV3KPk9vQK3Rrkwz4alWgslhHmoVSf14'; // Replace with your API Key
 const CHANNEL_ID = 'UCuc74pUfHQ0w4wLxe9yeIRg'; // Replace with your channel ID
+const HOME_PAGE_SIZE = 5;
 
 exports.index = asyncHandler(async (req, res) => {
   let liveVideoUrl = "https://www.youtube.com/embed/xjxOWSmSjnU"; // Fallback video
@@ -38,9 +39,14 @@ exports.index = asyncHandler(async (req, res) => {
   }
 
   // Fetch video categories and answered questions from the database
-  const videoCategories = await VideoCategory.find();
-  const questions = await Question.find({ isAnswered: true }).sort({ createdAt: -1 }).limit(3);
-  const articles = await Article.find().sort({ createdAt: -1 }).limit(5); // Fetch latest 5 articles
+  const [videoCategories, questions, articles, totalQuestions, totalVideoCategories, totalArticles] = await Promise.all([
+    VideoCategory.find().sort({ _id: 1 }).limit(HOME_PAGE_SIZE),
+    Question.find({ isAnswered: true }).sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE),
+    Article.find().sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE),
+    Question.countDocuments({ isAnswered: true }),
+    VideoCategory.countDocuments(),
+    Article.countDocuments(),
+  ]);
   
   // Update visitor count
   let visitor = await Visitor.findOne();
@@ -58,5 +64,68 @@ exports.index = asyncHandler(async (req, res) => {
     questions, 
     visitorCount: visitor.count,
     articles, // Pass articles to view
+    homePageSize: HOME_PAGE_SIZE,
+    hasMoreQuestions: totalQuestions > questions.length,
+    hasMoreVideos: totalVideoCategories > videoCategories.length,
+    hasMoreArticles: totalArticles > articles.length,
   });
+});
+
+exports.getHomeFeed = asyncHandler(async (req, res) => {
+  const feedType = req.params.type;
+  const skip = Math.max(0, parseInt(req.query.skip, 10) || 0);
+  const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || HOME_PAGE_SIZE));
+
+  let items = [];
+  let total = 0;
+
+  if (feedType === 'questions') {
+    [items, total] = await Promise.all([
+      Question.find({ isAnswered: true }).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Question.countDocuments({ isAnswered: true }),
+    ]);
+
+    return res.json({
+      items: items.map((question) => ({
+        id: question._id,
+        title: question.question,
+        url: `/question/${question._id}`,
+      })),
+      hasMore: skip + items.length < total,
+    });
+  }
+
+  if (feedType === 'videos') {
+    [items, total] = await Promise.all([
+      VideoCategory.find().sort({ _id: 1 }).skip(skip).limit(limit),
+      VideoCategory.countDocuments(),
+    ]);
+
+    return res.json({
+      items: items.map((category) => ({
+        id: category._id,
+        title: category.title,
+        url: `/video_categories/${category._id}`,
+      })),
+      hasMore: skip + items.length < total,
+    });
+  }
+
+  if (feedType === 'articles') {
+    [items, total] = await Promise.all([
+      Article.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Article.countDocuments(),
+    ]);
+
+    return res.json({
+      items: items.map((article) => ({
+        id: article._id,
+        title: article.title,
+        url: `/article/${article._id}`,
+      })),
+      hasMore: skip + items.length < total,
+    });
+  }
+
+  res.status(400).json({ error: 'Invalid feed type.' });
 });
