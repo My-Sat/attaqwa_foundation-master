@@ -180,19 +180,20 @@ a:hover {
   gap: 0.7rem;
 }
 
-.btn-donate {
-  border: 1px solid #fff4c8;
-  color: #1a1a1a;
+.home-hero .btn.btn-donate {
+  border: 1px solid #ffffff;
+  color: #0c3f3c;
   font-weight: 700;
-  background: #ffd166;
+  background: #ffffff;
   padding: 0.6rem 1rem;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
 }
 
-.btn-donate:hover {
-  color: #111;
-  background: #ffe39a;
-  border-color: #ffeab9;
+.home-hero .btn.btn-donate:hover,
+.home-hero .btn.btn-donate:focus {
+  color: #0a3432;
+  background: #eaf7f5;
+  border-color: #d4efeb;
 }
 
 .visitors-bottom {
