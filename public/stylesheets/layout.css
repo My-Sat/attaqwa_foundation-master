@@ -256,15 +256,17 @@ a:hover {
 }
 
 .btn-live-class {
-  border: 0;
-  color: #fff;
+  border: 1px solid #ffb6b6;
+  color: #2a0b0b;
   font-weight: 700;
-  background: linear-gradient(120deg, #dc3f3f, #b22525);
+  background: linear-gradient(120deg, #ff8f8f, #ff6b6b);
 }
 
 .btn-live-class:hover {
-  color: #fff;
-  filter: brightness(0.95);
+  color: #1f0707;
+  background: linear-gradient(120deg, #ff9f9f, #ff7a7a);
+  border-color: #ffc4c4;
+  filter: none;
 }
 
 .ask-brand {
