@@ -251,7 +251,7 @@ a:active {
   margin: 0;
   font-size: 1.6rem;
   font-weight: 800;
-  color: var(--text-0);
+  color: var(--brand-500);
 }
 
 .auth-subtitle {
@@ -279,7 +279,7 @@ a:active {
   width: 100%;
   border: 1px solid var(--brand-500);
   border-radius: 0.7rem;
-  color: #ffffff;
+  color: #ffffff !important;
   font-weight: 700;
   background: linear-gradient(120deg, var(--brand-500), #13817a);
   padding: 0.62rem 0.8rem;
@@ -288,7 +288,7 @@ a:active {
 .auth-submit:hover,
 .auth-submit:focus,
 .auth-submit:active {
-  color: #ffffff;
+  color: #ffffff !important;
   background: linear-gradient(120deg, var(--brand-600), #0d6d67);
   border-color: var(--brand-600);
 }
