@@ -296,19 +296,32 @@ a:active {
   border: 1px solid var(--border-0);
 }
 
-.btn-ask,
 .btn-view-more {
   border: 1px solid var(--brand-500);
-  color: var(--brand-600);
-  background: #fff;
+  color: #ffffff;
+  background: var(--brand-500);
   font-weight: 700;
 }
 
-.btn-ask:hover,
 .btn-view-more:hover {
-  color: #fff;
-  background: var(--brand-500);
-  border-color: var(--brand-500);
+  color: #ffffff;
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+}
+
+.home-grid .btn.btn-ask {
+  border: 1px solid var(--brand-500) !important;
+  color: #ffffff !important;
+  background: var(--brand-500) !important;
+  font-weight: 700;
+}
+
+.home-grid .btn.btn-ask:hover,
+.home-grid .btn.btn-ask:focus,
+.home-grid .btn.btn-ask:active {
+  border-color: var(--brand-600) !important;
+  color: #ffffff !important;
+  background: var(--brand-600) !important;
 }
 
 .list {
