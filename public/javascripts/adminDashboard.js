@@ -4,6 +4,7 @@
     const videoList = document.getElementById('videoList');
     const adminList = document.getElementById('adminList');
     const questionList = document.getElementById('questionList');
+    const answerQuestionsBtn = document.getElementById('answerQuestionsBtn');
     const articleList = document.getElementById('articleList');
     const classList = document.getElementById('classList');
 
@@ -33,6 +34,8 @@
     const articleEditContent = document.getElementById('articleEditContent');
     const questionAnswerForm = document.getElementById('questionAnswerForm');
     const questionAnswerId = document.getElementById('questionAnswerId');
+    const questionAnswerSelect = document.getElementById('questionAnswerSelect');
+    const questionAnswerSelectHint = document.getElementById('questionAnswerSelectHint');
     const questionAnswerText = document.getElementById('questionAnswerText');
     const questionAnswerInput = document.getElementById('questionAnswerInput');
 
@@ -425,6 +428,78 @@
       renderQuestions();
     }
 
+    function getQuestionById(id) {
+      return state.questions.find((item) => String(item._id) === String(id));
+    }
+
+    function syncQuestionAnswerFormById(id) {
+      const question = getQuestionById(id);
+      if (!question || !questionAnswerId || !questionAnswerText || !questionAnswerInput) {
+        return false;
+      }
+
+      questionAnswerId.value = question._id;
+      questionAnswerText.value = question.question || '';
+      questionAnswerInput.value = question.answer || '';
+      return true;
+    }
+
+    function populateQuestionSelector(options) {
+      const includeOnlyUnanswered = Boolean(options && options.includeOnlyUnanswered);
+      const selectedId = options && options.selectedId ? options.selectedId : '';
+      const sourceList = includeOnlyUnanswered
+        ? state.questions.filter((item) => !item.isAnswered)
+        : state.questions.slice();
+
+      if (!questionAnswerSelect || !sourceList.length) {
+        return null;
+      }
+
+      questionAnswerSelect.innerHTML = sourceList
+        .map((question) => {
+          const shortQuestion = (question.question || '').trim();
+          const label = shortQuestion.length > 85 ? `${shortQuestion.slice(0, 82)}...` : shortQuestion;
+          return `<option value="${question._id}">${escapeHtml(label)}</option>`;
+        })
+        .join('');
+
+      if (selectedId && sourceList.some((item) => String(item._id) === String(selectedId))) {
+        questionAnswerSelect.value = selectedId;
+      }
+
+      const resolvedId = questionAnswerSelect.value || sourceList[0]._id;
+      questionAnswerSelect.value = resolvedId;
+
+      if (questionAnswerSelectHint) {
+        questionAnswerSelectHint.textContent = includeOnlyUnanswered
+          ? `${sourceList.length} unanswered question(s) pending.`
+          : `${sourceList.length} question(s) available.`;
+      }
+
+      return resolvedId;
+    }
+
+    function openQuestionAnswerEditor(options) {
+      if (!questionAnswerForm || !questionAnswerId || !questionAnswerText || !questionAnswerInput) {
+        showFeedback(questionFeedback, 'Unable to load question answer editor.', 'error');
+        return;
+      }
+
+      const resolvedId = populateQuestionSelector(options);
+      if (!resolvedId) {
+        showFeedback(questionFeedback, 'No questions available to answer.', 'error');
+        return;
+      }
+
+      if (!syncQuestionAnswerFormById(resolvedId)) {
+        showFeedback(questionFeedback, 'Unable to load selected question.', 'error');
+        return;
+      }
+
+      clearFeedback(questionAnswerModalFeedback);
+      showModal(questionAnswerModal, questionAnswerModalElement);
+    }
+
     async function loadArticles() {
       const payload = await request('/api/admin/articles');
       state.articles = payload.articles || [];
@@ -662,6 +737,28 @@
       });
     }
 
+    if (questionAnswerSelect) {
+      questionAnswerSelect.addEventListener('change', (event) => {
+        const selectedId = event.target.value;
+        syncQuestionAnswerFormById(selectedId);
+      });
+    }
+
+    if (answerQuestionsBtn) {
+      answerQuestionsBtn.addEventListener('click', () => {
+        const unansweredQuestions = state.questions.filter((item) => !item.isAnswered);
+        if (!unansweredQuestions.length) {
+          showFeedback(questionFeedback, 'No questions available to answer.', 'error');
+          return;
+        }
+
+        openQuestionAnswerEditor({
+          includeOnlyUnanswered: true,
+          selectedId: unansweredQuestions[0]._id,
+        });
+      });
+    }
+
     categoryFilter.addEventListener('change', async (event) => {
       state.activeCategory = event.target.value;
       clearFeedback(videoFeedback);
@@ -692,18 +789,10 @@
       const editButton = event.target.closest('[data-action="edit-answer"]');
       if (editButton) {
         const { id } = editButton.dataset;
-        const question = state.questions.find((item) => String(item._id) === String(id));
-
-        if (!question || !questionAnswerForm || !questionAnswerId || !questionAnswerText || !questionAnswerInput) {
-          showFeedback(questionFeedback, 'Unable to load question answer editor.', 'error');
-          return;
-        }
-
-        clearFeedback(questionAnswerModalFeedback);
-        questionAnswerId.value = question._id;
-        questionAnswerText.value = question.question || '';
-        questionAnswerInput.value = question.answer || '';
-        showModal(questionAnswerModal, questionAnswerModalElement);
+        openQuestionAnswerEditor({
+          includeOnlyUnanswered: false,
+          selectedId: id,
+        });
         return;
       }
 

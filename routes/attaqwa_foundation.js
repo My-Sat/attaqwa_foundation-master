@@ -151,8 +151,8 @@ router.get("/ask_sheesu",isAuthenticated, questionController.getAskQuestion);
 router.post("/ask_sheesu",isAuthenticated, questionController.postAskQuestion);
 
 // Admin routes
-router.get("/manage_questions",isAdmin, questionController.getQuestions);
-router.post("/answer_question",isAdmin, questionController.postAnswerQuestion);
+router.get("/manage_questions",isAdmin, redirectDeprecatedToDashboard);
+router.post("/answer_question",isAdmin, redirectDeprecatedToDashboard);
 
 // Route to get question details by ID
 router.get('/all_questions', questionController.getAllQuestions);

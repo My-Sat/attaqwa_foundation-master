@@ -1,6 +1,9 @@
 // script.js (Place this code inside a script tag in your Pug file or external JS file)
 document.addEventListener('DOMContentLoaded', function () {
     const phoneInput = document.getElementById('phoneNumber');
+    if (!phoneInput) {
+      return;
+    }
   
     // Listen for input changes
     phoneInput.addEventListener('blur', function () {

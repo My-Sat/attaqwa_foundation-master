@@ -1,4 +1,6 @@
 (function () {
+  const LOADING_SELECTOR = '.is-loading[data-loading-original-content]';
+
   function isHTMLElement(node) {
     return node && node.nodeType === 1;
   }
@@ -44,12 +46,11 @@
 
     const loadingText = element.getAttribute('data-loading-text') || 'Loading...';
 
-    if (!element.dataset.loadingOriginalHtml) {
-      element.dataset.loadingOriginalHtml = element.innerHTML;
-    }
+    const isInputSubmit = element.matches('input[type="submit"]');
+    const originalContent = isInputSubmit ? element.value : element.innerHTML;
 
-    if (!element.dataset.loadingOriginalAriaBusy) {
-      element.dataset.loadingOriginalAriaBusy = element.getAttribute('aria-busy') || '';
+    if (!element.dataset.loadingOriginalContent) {
+      element.dataset.loadingOriginalContent = originalContent || '';
     }
 
     element.classList.add('is-loading');
@@ -61,7 +62,43 @@
       element.disabled = true;
     }
 
-    element.innerHTML = `<span class="btn-loading-content"><span class="btn-loading-spinner" aria-hidden="true"></span><span>${loadingText}</span></span>`;
+    if (isInputSubmit) {
+      element.value = loadingText;
+    } else {
+      element.innerHTML = `<span class="btn-loading-content"><span class="btn-loading-spinner" aria-hidden="true"></span><span>${loadingText}</span></span>`;
+    }
+  }
+
+  function resetLoadingState(element) {
+    if (!isButtonLike(element) || !element.classList.contains('is-loading')) {
+      return;
+    }
+
+    const isInputSubmit = element.matches('input[type="submit"]');
+    const originalContent = element.dataset.loadingOriginalContent || '';
+
+    element.classList.remove('is-loading');
+    element.removeAttribute('aria-busy');
+
+    if (element.matches('a.btn')) {
+      element.style.pointerEvents = '';
+    } else {
+      element.disabled = false;
+    }
+
+    if (isInputSubmit) {
+      element.value = originalContent;
+    } else {
+      element.innerHTML = originalContent;
+    }
+
+    delete element.dataset.loadingOriginalContent;
+  }
+
+  function resetAllLoadingStates() {
+    document.querySelectorAll(LOADING_SELECTOR).forEach((node) => {
+      resetLoadingState(node);
+    });
   }
 
   document.addEventListener('submit', (event) => {
@@ -72,15 +109,22 @@
 
     const submitter = event.submitter;
 
-    if (isButtonLike(submitter) && !hasOptOut(submitter)) {
-      setLoadingState(submitter);
-      return;
-    }
+    // Delay until other handlers run so AJAX forms with preventDefault don't get stuck in loading state.
+    setTimeout(() => {
+      if (event.defaultPrevented) {
+        return;
+      }
 
-    const fallbackButton = form.querySelector('button[type="submit"], input[type="submit"]');
-    if (fallbackButton) {
-      setLoadingState(fallbackButton);
-    }
+      if (isButtonLike(submitter) && !hasOptOut(submitter)) {
+        setLoadingState(submitter);
+        return;
+      }
+
+      const fallbackButton = form.querySelector('button[type="submit"], input[type="submit"]');
+      if (fallbackButton) {
+        setLoadingState(fallbackButton);
+      }
+    }, 0);
   }, true);
 
   document.addEventListener('click', (event) => {
@@ -91,4 +135,9 @@
 
     setLoadingState(anchor);
   }, true);
+
+  // Restore stale loading UI when browser restores page from bfcache or history state.
+  window.addEventListener('pageshow', () => {
+    resetAllLoadingStates();
+  });
 })();

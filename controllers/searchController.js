@@ -4,7 +4,7 @@ const asyncHandler = require('express-async-handler');
 
 // GET: Handle search requests
 exports.search = asyncHandler(async (req, res) => {
-  const query = req.query.q; // Search query from the request
+  const query = (req.query.q || '').trim();
   const success = req.flash('success');
   const error = req.flash('error');
 
@@ -16,15 +16,19 @@ exports.search = asyncHandler(async (req, res) => {
   try {
     // Search questions: Both `question` and `answer` fields
     const questions = await Question.find(
-      { $text: { $search: query } }, // Search condition
-      { score: { $meta: 'textScore' } } // Include relevance score
-    ).sort({ score: { $meta: 'textScore' } });
+      { $text: { $search: query } },
+      { score: { $meta: 'textScore' } }
+    )
+      .sort({ score: { $meta: 'textScore' } })
+      .limit(20);
 
     // Search videos: `title` field
     const videos = await Video.find(
       { $text: { $search: query } },
       { score: { $meta: 'textScore' } }
-    ).sort({ score: { $meta: 'textScore' } });
+    )
+      .sort({ score: { $meta: 'textScore' } })
+      .limit(20);
 
     res.render('searchResults', {
       title: 'Search Results',

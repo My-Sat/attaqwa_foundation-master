@@ -1,8 +1,16 @@
 extends layout
 
 block content
-  h1 All Questions
-  ul
-    each question in questions
-      li
-        a(href=`/question/${question._id}`)= question.question
+  section.question-shell
+    .question-card
+      .question-head
+        h1.question-title All Questions
+        p.question-subtitle Browse answered questions and open any item for full details.
+
+      if questions && questions.length
+        ul.question-feed
+          each question in questions
+            li.question-feed-item
+              a.question-feed-link(href=`/question/${question._id}`)= question.question
+      else
+        p.text-muted.mb-0 No answered questions available.

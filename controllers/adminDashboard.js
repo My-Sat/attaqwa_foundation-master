@@ -6,6 +6,7 @@ const Question = require('../models/question');
 const Article = require('../models/article');
 const ClassSession = require('../models/class_session');
 const Registration = require('../models/class_registration');
+const Message = require('../models/messages');
 const sanitizeHtml = require('sanitize-html');
 
 function getEmbedUrl(youtubeUrl) {
@@ -260,9 +261,18 @@ exports.updateQuestionAnswer = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Question not found.' });
   }
 
+  const previousAnswer = question.answer || '';
   question.answer = answer;
   question.isAnswered = true;
   await question.save();
+
+  if (question.userId && previousAnswer !== answer) {
+    await Message.create({
+      userId: question.userId,
+      question: question.question,
+      answer,
+    });
+  }
 
   return res.json({
     question: {

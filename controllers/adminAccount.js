@@ -6,7 +6,17 @@ const RegistrationFee = require('../models/registrationFee');
 
 // GET:  Admin Sign-Up Page
 exports.getAdminSignUp = (req, res) => {
-  res.render('signup_admin', { errors: [], oldInput: {} }); // Ensure `errors` and `oldInput` are passed
+  res.render('signup_admin', {
+    title: 'Admin Sign Up',
+    errors: [],
+    oldInput: {
+      firstName: '',
+      surname: '',
+      otherNames: '',
+      phoneNumber: '',
+      username: '',
+    },
+  });
 };
 
 //POST: Admin sign up
@@ -20,21 +30,44 @@ exports.postAdminSignUp = [
       });
     }
 
-    const { username, password } = req.body;
+    const { firstName, surname, otherNames, phoneNumber, username, password } = req.body;
 
     // Convert username to lowercase
     const formattedUsername = username.trim().toLowerCase();
+    const formattedPhoneNumber = phoneNumber.trim();
 
     // Check if username is already taken
-    const existingAdmin = await Admin.findOne({ username: formattedUsername });
-    if (existingAdmin) {
+    const [existingAdminByUsername, existingAdminByPhone] = await Promise.all([
+      Admin.findOne({ username: formattedUsername }),
+      Admin.findOne({ phoneNumber: formattedPhoneNumber }),
+    ]);
+
+    if (existingAdminByUsername || existingAdminByPhone) {
       return res.status(400).render('signup_admin', {
-        errors: [{ msg: 'Username is already taken' }],
-        oldInput: req.body,
+        title: 'Admin Sign Up',
+        errors: [
+          existingAdminByUsername
+            ? { msg: 'Username is already taken' }
+            : { msg: 'Phone number is already registered' },
+        ],
+        oldInput: {
+          firstName,
+          surname,
+          otherNames,
+          phoneNumber: formattedPhoneNumber,
+          username,
+        },
       });
     }
 
-    const admin = new Admin({ username: formattedUsername, password });
+    const admin = new Admin({
+      firstName,
+      surname,
+      otherNames: otherNames || '',
+      phoneNumber: formattedPhoneNumber,
+      username: formattedUsername,
+      password,
+    });
     await admin.save();
 
     res.redirect('/admin_signup_success');

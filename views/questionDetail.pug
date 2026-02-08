@@ -1,9 +1,14 @@
 extends layout
 
 block content
-  .container.mt-4
-    h2.text-center Question Details
-    .row
-      .col-md-8.offset-md-2
-        h4 Question: #{question.question}
-        p Answer: #{question.answer || "This question has not been answered yet."}
+  section.question-shell
+    .question-card
+      .question-head
+        h1.question-title Question Detail
+      .question-detail-block
+        h2.question-detail-label Question
+        p.question-detail-text= question.question
+      .question-detail-block
+        h2.question-detail-label Answer
+        p.question-detail-text= question.answer || "This question has not been answered yet."
+      a.btn.btn-outline-secondary.mt-2(href="/all_questions") Back to All Questions

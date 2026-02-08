@@ -18,7 +18,7 @@ block content
       .admin-card
         .admin-card-head
           h3.admin-card-title Questions
-          a.btn.admin-btn(href="/manage_questions") Answer Questions
+          button#answerQuestionsBtn.btn.admin-btn(type="button" data-no-loading) Answer Questions
         p#questionFeedback.admin-feedback.d-none
         ul#questionList.admin-item-list
           li.text-muted Loading questions...
@@ -177,6 +177,10 @@ block content
         form#questionAnswerForm
           input#questionAnswerId(type="hidden" name="questionId")
           .modal-body
+            .mb-3
+              label.form-label(for="questionAnswerSelect") Pending Questions
+              select#questionAnswerSelect.form-select
+              small#questionAnswerSelectHint.text-muted
             .mb-3
               label.form-label(for="questionAnswerText") Question
               textarea#questionAnswerText.form-control(rows="3" readonly)
