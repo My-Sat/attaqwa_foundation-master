@@ -46,6 +46,16 @@ block content
                 a.dropdown-item(href="/registrations/pending") Approve Registrations
               li
                 a.dropdown-item(href="/registration_fee") Update Access Fee
+        .admin-card-head.mb-2
+          p#liveStreamScheduleStatus.admin-card-note.mb-0 No incoming live video for the moment.
+          .dropdown
+            button.btn.btn-outline-secondary.btn-sm(type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Countdown actions")
+              i.bi.bi-three-dots-vertical
+            ul.dropdown-menu.dropdown-menu-end
+              li
+                button.dropdown-item(type="button" data-bs-toggle="modal" data-bs-target="#liveStreamScheduleModal") Set Countdown
+              li
+                button#clearLiveStreamScheduleBtn.dropdown-item(type="button" data-no-loading) Clear
         p#liveClassStatus.admin-card-note Live class is currently not active.
         .d-flex.gap-2.mb-2
           button#endLiveClassBtn.btn.btn-outline-danger(type="button" data-no-loading) End Live Class
@@ -179,6 +189,26 @@ block content
           .modal-footer
             button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
             button.btn.admin-btn(type="submit") Save Changes
+
+  .modal.fade#liveStreamScheduleModal(tabindex="-1" aria-labelledby="liveStreamScheduleModalLabel" aria-hidden="true")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5#liveStreamScheduleModalLabel.modal-title Set Live Stream Countdown
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        form#liveStreamScheduleForm
+          .modal-body
+            .mb-3
+              label.form-label(for="liveStreamStartsAt") Start Date & Time
+              input#liveStreamStartsAt.form-control(type="datetime-local" name="startsAt" required)
+            .mb-3
+              label.form-label(for="liveStreamNote") Short Description
+              input#liveStreamNote.form-control(type="text" name="note" maxlength="220" placeholder="e.g. Tafsir session on Surah Al-Mulk")
+              .form-text Displayed on home page along with countdown.
+            p#liveStreamScheduleModalFeedback.admin-feedback.d-none
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button.btn.admin-btn(type="submit") Save Countdown
 
   .modal.fade#questionAnswerModal(tabindex="-1" aria-labelledby="questionAnswerModalLabel" aria-hidden="true")
     .modal-dialog.modal-lg

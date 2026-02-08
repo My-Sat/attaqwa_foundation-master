@@ -2,6 +2,7 @@ const Question = require('../models/question');
 const VideoCategory = require('../models/videoCategory');
 const Visitor = require('../models/visitor');
 const Article = require('../models/article');
+const LiveStreamSchedule = require('../models/live_stream_schedule');
 const axios = require('axios');
 const asyncHandler = require('express-async-handler');
 
@@ -53,10 +54,11 @@ exports.index = asyncHandler(async (req, res) => {
   }
 
   // Fetch video categories and answered questions from the database
-  const [totalQuestions, totalVideoCategories, totalArticles] = await Promise.all([
+  const [totalQuestions, totalVideoCategories, totalArticles, liveStreamSchedule] = await Promise.all([
     Question.countDocuments({ isAnswered: true }),
     VideoCategory.countDocuments(),
     Article.countDocuments(getPublicArticleFilter()),
+    LiveStreamSchedule.findOne({}),
   ]);
 
   const shouldLazyLoadVideos = totalVideoCategories > HOME_EAGER_LOAD_THRESHOLD;
@@ -93,6 +95,10 @@ exports.index = asyncHandler(async (req, res) => {
     hasMoreVideos: totalVideoCategories > videoCategories.length,
     hasMoreArticles: totalArticles > articles.length,
     liveClassNotice,
+    liveStreamSchedule: {
+      startsAt: liveStreamSchedule && liveStreamSchedule.startsAt ? liveStreamSchedule.startsAt : null,
+      note: liveStreamSchedule && liveStreamSchedule.note ? liveStreamSchedule.note : '',
+    },
   });
 });
 

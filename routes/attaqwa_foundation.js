@@ -142,6 +142,9 @@ router.delete('/api/admin/class-sessions/:id', isAdmin, adminDashboardController
 router.get('/api/admin/live-class/status', isAdmin, adminDashboardController.getLiveClassStatus);
 router.post('/api/admin/live-class/start', isAdmin, adminDashboardController.startLiveClass);
 router.post('/api/admin/live-class/end', isAdmin, adminDashboardController.endLiveClass);
+router.get('/api/admin/live-stream-schedule', isAdmin, adminDashboardController.getLiveStreamSchedule);
+router.put('/api/admin/live-stream-schedule', isAdmin, adminDashboardController.upsertLiveStreamSchedule);
+router.delete('/api/admin/live-stream-schedule', isAdmin, adminDashboardController.clearLiveStreamSchedule);
 
 // Deprecated standalone page: delete admin
 router.get('/delete_admin', isAdmin, redirectDeprecatedToDashboard);

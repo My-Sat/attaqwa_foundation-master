@@ -14,8 +14,12 @@ block content
         .panel.live-panel
           .panel-header
             h2 Live Stream
-            p Live stream starts at 6:30 PM local time.
-          p#countdown.countdown-text
+            p#liveStreamNote.live-stream-note(
+              data-note=(liveStreamSchedule && liveStreamSchedule.note ? liveStreamSchedule.note : '')
+            )
+          p#liveStreamCountdown.countdown-text(
+            data-start-at=(liveStreamSchedule && liveStreamSchedule.startsAt ? liveStreamSchedule.startsAt.toISOString() : '')
+          ) No incoming live video for the moment
           .iframe-container
             iframe(
               src=liveVideoUrl
@@ -106,6 +110,7 @@ block content
 
 block scripts
   script(src="/javascripts/homeLazyLists.js")
+  script(src="/javascripts/homeCountdown.js")
   if liveClassNotice
     script.
       (function () {

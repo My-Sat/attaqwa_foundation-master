@@ -10,6 +10,8 @@
     const liveClassStatusElement = document.getElementById('liveClassStatus');
     const endLiveClassBtn = document.getElementById('endLiveClassBtn');
     const joinLiveClassBtn = document.getElementById('joinLiveClassBtn');
+    const liveStreamScheduleStatusElement = document.getElementById('liveStreamScheduleStatus');
+    const clearLiveStreamScheduleBtn = document.getElementById('clearLiveStreamScheduleBtn');
 
     if (!categoryList || !videoList || !adminList || !questionList || !articleList || !classList) {
       return;
@@ -27,6 +29,9 @@
     const classSessionEditForm = document.getElementById('classSessionEditForm');
     const classSessionEditId = document.getElementById('classSessionEditId');
     const classSessionEditTitle = document.getElementById('classSessionEditTitle');
+    const liveStreamScheduleForm = document.getElementById('liveStreamScheduleForm');
+    const liveStreamStartsAt = document.getElementById('liveStreamStartsAt');
+    const liveStreamNote = document.getElementById('liveStreamNote');
     const classSessionUsersTitle = document.getElementById('classSessionUsersTitle');
     const classSessionUsersList = document.getElementById('classSessionUsersList');
     const videoPreviewFrame = document.getElementById('videoPreviewFrame');
@@ -50,6 +55,7 @@
     const videoModalFeedback = document.getElementById('videoModalFeedback');
     const classSessionModalFeedback = document.getElementById('classSessionModalFeedback');
     const classSessionEditModalFeedback = document.getElementById('classSessionEditModalFeedback');
+    const liveStreamScheduleModalFeedback = document.getElementById('liveStreamScheduleModalFeedback');
     const questionAnswerModalFeedback = document.getElementById('questionAnswerModalFeedback');
     const deleteConfirmModalLabel = document.getElementById('deleteConfirmModalLabel');
     const deleteConfirmMessage = document.getElementById('deleteConfirmMessage');
@@ -59,6 +65,7 @@
     const videoModalElement = document.getElementById('videoModal');
     const classSessionModalElement = document.getElementById('classSessionModal');
     const classSessionEditModalElement = document.getElementById('classSessionEditModal');
+    const liveStreamScheduleModalElement = document.getElementById('liveStreamScheduleModal');
     const classSessionUsersModalElement = document.getElementById('classSessionUsersModal');
     const videoPreviewModalElement = document.getElementById('videoPreviewModal');
     const questionAnswerModalElement = document.getElementById('questionAnswerModal');
@@ -79,6 +86,9 @@
       : null;
     const classSessionEditModal = hasBootstrapModal && classSessionEditModalElement
       ? window.bootstrap.Modal.getOrCreateInstance(classSessionEditModalElement)
+      : null;
+    const liveStreamScheduleModal = hasBootstrapModal && liveStreamScheduleModalElement
+      ? window.bootstrap.Modal.getOrCreateInstance(liveStreamScheduleModalElement)
       : null;
     const classSessionUsersModal = hasBootstrapModal && classSessionUsersModalElement
       ? window.bootstrap.Modal.getOrCreateInstance(classSessionUsersModalElement)
@@ -104,6 +114,11 @@
         isLive: false,
         activeSession: null,
         startedAt: null,
+      },
+      liveStreamSchedule: {
+        startsAt: null,
+        note: '',
+        updatedAt: null,
       },
       activeCategory: '',
     };
@@ -225,7 +240,7 @@
           deleteConfirmModalLabel.textContent = confirmTitle;
         }
         deleteConfirmButton.textContent = confirmText;
-        deleteConfirmButton.classList.remove('btn-danger', 'btn-primary', 'btn-warning', 'btn-success');
+        deleteConfirmButton.classList.remove('btn-danger', 'btn-primary', 'btn-warning', 'btn-success', 'btn-secondary');
         deleteConfirmButton.classList.add(`btn-${confirmVariant}`);
         deleteConfirmButton.addEventListener('click', onConfirm);
         deleteConfirmModalElement.addEventListener('hidden.bs.modal', onHidden);
@@ -520,6 +535,54 @@
       }
     }
 
+    function toDatetimeLocalValue(value) {
+      if (!value) {
+        return '';
+      }
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return '';
+      }
+
+      const timezoneOffset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
+    }
+
+    function renderLiveStreamScheduleStatus() {
+      if (!liveStreamScheduleStatusElement) {
+        return;
+      }
+
+      const schedule = state.liveStreamSchedule || {};
+      if (!schedule.startsAt) {
+        liveStreamScheduleStatusElement.textContent = 'No incoming live video for the moment.';
+        if (clearLiveStreamScheduleBtn) {
+          clearLiveStreamScheduleBtn.setAttribute('disabled', 'disabled');
+        }
+        if (liveStreamStartsAt) {
+          liveStreamStartsAt.value = '';
+        }
+        if (liveStreamNote) {
+          liveStreamNote.value = '';
+        }
+        return;
+      }
+
+      const startsAtText = formatDateTime(schedule.startsAt);
+      const noteText = schedule.note ? ` | Note: ${schedule.note}` : '';
+      liveStreamScheduleStatusElement.textContent = `Incoming live video at ${startsAtText}${noteText}`;
+      if (clearLiveStreamScheduleBtn) {
+        clearLiveStreamScheduleBtn.removeAttribute('disabled');
+      }
+      if (liveStreamStartsAt) {
+        liveStreamStartsAt.value = toDatetimeLocalValue(schedule.startsAt);
+      }
+      if (liveStreamNote) {
+        liveStreamNote.value = schedule.note || '';
+      }
+    }
+
     async function loadCategories() {
       const payload = await request('/api/admin/video-categories');
       state.categories = payload.categories || [];
@@ -641,6 +704,17 @@
       renderClassSessions();
     }
 
+    async function loadLiveStreamSchedule() {
+      const payload = await request('/api/admin/live-stream-schedule');
+      const schedule = payload && payload.schedule ? payload.schedule : {};
+      state.liveStreamSchedule = {
+        startsAt: schedule.startsAt || null,
+        note: schedule.note || '',
+        updatedAt: schedule.updatedAt || null,
+      };
+      renderLiveStreamScheduleStatus();
+    }
+
     async function refreshAll() {
       await Promise.all([
         loadCategories(),
@@ -649,6 +723,7 @@
         loadQuestions(),
         loadArticles(),
         loadLiveClassStatus(),
+        loadLiveStreamSchedule(),
         loadClassSessions(),
       ]);
     }
@@ -804,6 +879,35 @@
           showFeedback(classFeedback, 'Session updated successfully.', 'success');
         } catch (error) {
           showFeedback(classSessionEditModalFeedback, error.message, 'error');
+        }
+      });
+    }
+
+    if (liveStreamScheduleForm) {
+      liveStreamScheduleForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearFeedback(liveStreamScheduleModalFeedback);
+        clearFeedback(classFeedback);
+
+        const startsAt = (liveStreamStartsAt && liveStreamStartsAt.value ? liveStreamStartsAt.value : '').trim();
+        const note = (liveStreamNote && liveStreamNote.value ? liveStreamNote.value : '').trim();
+
+        if (!startsAt) {
+          showFeedback(liveStreamScheduleModalFeedback, 'Start date/time is required.', 'error');
+          return;
+        }
+
+        try {
+          await request('/api/admin/live-stream-schedule', {
+            method: 'PUT',
+            body: JSON.stringify({ startsAt, note }),
+          });
+
+          hideModal(liveStreamScheduleModal, liveStreamScheduleModalElement);
+          await loadLiveStreamSchedule();
+          showFeedback(classFeedback, 'Live stream countdown updated successfully.', 'success');
+        } catch (error) {
+          showFeedback(liveStreamScheduleModalFeedback, error.message, 'error');
         }
       });
     }
@@ -1059,6 +1163,27 @@
           await loadLiveClassStatus();
           await loadClassSessions();
           showFeedback(classFeedback, 'Live class ended successfully.', 'success');
+        } catch (error) {
+          showFeedback(classFeedback, error.message, 'error');
+        }
+      });
+    }
+
+    if (clearLiveStreamScheduleBtn) {
+      clearLiveStreamScheduleBtn.addEventListener('click', async () => {
+        clearFeedback(classFeedback);
+        if (!(await confirmDelete('Clear incoming live video countdown from home page?', {
+          confirmTitle: 'Clear Countdown',
+          confirmText: 'Clear',
+          confirmVariant: 'secondary',
+        }))) {
+          return;
+        }
+
+        try {
+          await request('/api/admin/live-stream-schedule', { method: 'DELETE' });
+          await loadLiveStreamSchedule();
+          showFeedback(classFeedback, 'Live stream countdown cleared.', 'success');
         } catch (error) {
           showFeedback(classFeedback, error.message, 'error');
         }

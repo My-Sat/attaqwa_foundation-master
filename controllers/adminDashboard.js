@@ -7,6 +7,7 @@ const Article = require('../models/article');
 const ClassSession = require('../models/class_session');
 const Registration = require('../models/class_registration');
 const LiveClassState = require('../models/live_class_state');
+const LiveStreamSchedule = require('../models/live_stream_schedule');
 const Message = require('../models/messages');
 const sanitizeHtml = require('sanitize-html');
 
@@ -60,6 +61,18 @@ async function getOrCreateLiveState() {
     });
   }
   return liveState;
+}
+
+async function getOrCreateLiveStreamSchedule() {
+  let schedule = await LiveStreamSchedule.findOne({});
+  if (!schedule) {
+    schedule = await LiveStreamSchedule.create({
+      startsAt: null,
+      note: '',
+      updatedByName: '',
+    });
+  }
+  return schedule;
 }
 
 exports.getVideoCategories = asyncHandler(async (req, res) => {
@@ -657,6 +670,64 @@ exports.endLiveClass = asyncHandler(async (req, res) => {
   liveState.roomName = '';
   liveState.endedAt = new Date();
   await liveState.save();
+
+  return res.json({ success: true });
+});
+
+exports.getLiveStreamSchedule = asyncHandler(async (req, res) => {
+  const schedule = await getOrCreateLiveStreamSchedule();
+  return res.json({
+    schedule: {
+      startsAt: schedule.startsAt || null,
+      note: schedule.note || '',
+      updatedByName: schedule.updatedByName || '',
+      updatedAt: schedule.updatedAt || null,
+      isSet: Boolean(schedule.startsAt),
+    },
+  });
+});
+
+exports.upsertLiveStreamSchedule = asyncHandler(async (req, res) => {
+  const startsAtInput = (req.body.startsAt || '').trim();
+  const noteInput = (req.body.note || '').trim();
+  const updatedByName = req.session?.admin?.username || 'Admin';
+
+  if (!startsAtInput) {
+    return res.status(400).json({ error: 'Start date/time is required.' });
+  }
+
+  const parsedDate = new Date(startsAtInput);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return res.status(400).json({ error: 'Invalid start date/time.' });
+  }
+
+  if (noteInput.length > 220) {
+    return res.status(400).json({ error: 'Note must not exceed 220 characters.' });
+  }
+
+  const schedule = await getOrCreateLiveStreamSchedule();
+  schedule.startsAt = parsedDate;
+  schedule.note = noteInput;
+  schedule.updatedByName = updatedByName;
+  await schedule.save();
+
+  return res.json({
+    schedule: {
+      startsAt: schedule.startsAt,
+      note: schedule.note || '',
+      updatedByName: schedule.updatedByName || '',
+      updatedAt: schedule.updatedAt || null,
+      isSet: true,
+    },
+  });
+});
+
+exports.clearLiveStreamSchedule = asyncHandler(async (req, res) => {
+  const schedule = await getOrCreateLiveStreamSchedule();
+  schedule.startsAt = null;
+  schedule.note = '';
+  schedule.updatedByName = req.session?.admin?.username || 'Admin';
+  await schedule.save();
 
   return res.json({ success: true });
 });
