@@ -36,9 +36,16 @@ block content
         .admin-card-head
           h3.admin-card-title Class
           button.btn.admin-btn(type="button" data-bs-toggle="modal" data-bs-target="#classSessionModal") Add Session
-        .class-top-actions.mb-2
-          a.btn.btn-outline-secondary(href="/registrations/pending") Approve Registrations
-          a.btn.btn-outline-secondary(href="/registration_fee") Update Access Fee
+        .admin-card-head.mb-2
+          p.admin-card-note.mb-0 Manage class access approvals and registration fee settings.
+          .dropdown
+            button.btn.btn-outline-secondary.btn-sm(type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Class management actions")
+              i.bi.bi-three-dots-vertical
+            ul.dropdown-menu.dropdown-menu-end
+              li
+                a.dropdown-item(href="/registrations/pending") Approve Registrations
+              li
+                a.dropdown-item(href="/registration_fee") Update Access Fee
         p#liveClassStatus.admin-card-note Live class is currently not active.
         .d-flex.gap-2.mb-2
           button#endLiveClassBtn.btn.btn-outline-danger(type="button" data-no-loading) End Live Class

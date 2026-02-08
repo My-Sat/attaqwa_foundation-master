@@ -524,10 +524,6 @@ a:active {
   gap: 0.55rem;
 }
 
-.class-top-actions {
-  display: flex;
-  gap: 0.5rem;
-}
 
 .article-create-shell {
   padding-top: 0.4rem;
