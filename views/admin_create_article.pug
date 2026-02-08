@@ -3,26 +3,35 @@ extends layout
 block content
   - const pageTitle = title || 'Create Article'
   - const isEditing = Boolean(formData && formData.articleId)
+  - const pageMode = isEditing ? 'edit' : 'create'
   - const initialTitle = formData && formData.title ? formData.title : ''
   - const initialContent = formData && formData.content ? formData.content : ''
   - const initialArticleId = formData && formData.articleId ? formData.articleId : ''
+  - const initialLanguage = formData && formData.language === 'ar' ? 'ar' : 'en'
   - const titleError = errors && errors.title ? errors.title : ''
   - const contentError = errors && errors.content ? errors.content : ''
   section.article-create-shell
     .article-create-header
-      h1.article-create-title= pageTitle
-      p.article-create-subtitle= isEditing ? 'Continue editing this article, save as draft, or publish when final.' : 'Write and publish an article with rich formatting from one focused workspace.'
+      h1#articlePageTitle.article-create-title(data-mode=pageMode)= pageTitle
+      p#articlePageSubtitle.article-create-subtitle(data-mode=pageMode)= isEditing ? 'Continue editing this article, save as draft, or publish when final.' : 'Write and publish an article with rich formatting from one focused workspace.'
     .article-create-grid
       .article-create-card
         form#adminCreateArticleForm(method="POST" action="/create_article" novalidate)
           input(type="hidden" name="articleId" value=initialArticleId)
           .mb-3
-            label.form-label(for="articleTitle") Title
+            label#articleLanguageLabel.form-label(for="articleLanguage") Language
+            select#articleLanguage.form-select(name="language")
+              option(value="en" selected=initialLanguage === 'en') English
+              option(value="ar" selected=initialLanguage === 'ar') Arabic
+            .form-text#articleLanguageHelp English is default. Switch to Arabic for right-to-left writing.
+          .mb-3
+            label#articleTitleLabel.form-label(for="articleTitle") Title
             input#articleTitle.form-control.auth-input(
               type="text"
               name="title"
               maxlength="140"
               value=initialTitle
+              dir=initialLanguage === 'ar' ? 'rtl' : 'ltr'
               required
               aria-invalid=titleError ? 'true' : 'false'
               aria-describedby="articleTitleHelp articleTitleError"
@@ -34,10 +43,11 @@ block content
             else
               p#articleTitleError.admin-feedback.d-none
           .mb-3
-            label.form-label(for="content") Content
+            label#articleContentLabel.form-label(for="content") Content
             textarea#content.form-control.article-editor(
               name="content"
               rows="12"
+              dir=initialLanguage === 'ar' ? 'rtl' : 'ltr'
               aria-invalid=contentError ? 'true' : 'false'
               aria-describedby="articleContentError"
             )= initialContent
@@ -46,15 +56,15 @@ block content
             else
               p#articleContentError.admin-feedback.d-none
           .d-flex.flex-wrap.gap-2
-            button.btn.btn-outline-secondary(type="submit" name="intent" value="draft") Save Draft
-            button.btn.admin-btn(type="submit" name="intent" value="published") Publish Article
-            a.btn.btn-outline-secondary(href="/dashboard") Back to Dashboard
+            button#articleSaveDraftBtn.btn.btn-outline-secondary(type="submit" name="intent" value="draft") Save Draft
+            button#articlePublishBtn.btn.admin-btn(type="submit" name="intent" value="published") Publish Article
+            a#articleBackBtn.btn.btn-outline-secondary(href="/dashboard") Back to Dashboard
       .article-create-card
-        h2.article-preview-title Live Preview
-        p.article-preview-subtitle Review formatting before publishing.
+        h2#articlePreviewPanelTitle.article-preview-title Live Preview
+        p#articlePreviewPanelSubtitle.article-preview-subtitle Review formatting before publishing.
         .article-preview-box
-          h3#articlePreviewTitle.article-preview-heading= initialTitle || 'Untitled article'
-          .article-preview-content#articlePreviewContent
+          h3#articlePreviewTitle.article-preview-heading(dir=initialLanguage === 'ar' ? 'rtl' : 'ltr')= initialTitle || 'Untitled article'
+          .article-preview-content#articlePreviewContent(dir=initialLanguage === 'ar' ? 'rtl' : 'ltr')
             p.text-muted Content preview will appear here.
 
 block scripts

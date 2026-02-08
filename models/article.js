@@ -4,6 +4,7 @@ const articleSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     content: { type: String, default: '' }, // Stores formatted HTML content
+    language: { type: String, enum: ['en', 'ar'], default: 'en' },
     status: { type: String, enum: ['draft', 'published'], default: 'draft' },
     publishedAt: { type: Date, default: null },
   },

@@ -23,6 +23,10 @@ function getPublicArticleFilter() {
   };
 }
 
+function normalizeArticleLanguage(language) {
+  return String(language || '').trim().toLowerCase() === 'ar' ? 'ar' : 'en';
+}
+
 // GET: Form to Create Article (Admin only)
 exports.getCreateArticle = asyncHandler(async (req, res) => {
   const articleId = (req.params.id || '').trim();
@@ -30,6 +34,7 @@ exports.getCreateArticle = asyncHandler(async (req, res) => {
     articleId: '',
     title: '',
     content: '',
+    language: 'en',
   };
 
   if (articleId) {
@@ -46,6 +51,7 @@ exports.getCreateArticle = asyncHandler(async (req, res) => {
       articleId: String(article._id),
       title: article.title || '',
       content: article.content || '',
+      language: normalizeArticleLanguage(article.language),
     };
   }
 
@@ -61,6 +67,7 @@ exports.postCreateArticle = asyncHandler(async (req, res) => {
   const intent = req.body.intent;
   const shouldPublish = getIsPublishIntent(intent);
   const articleId = (req.body.articleId || '').trim();
+  const language = normalizeArticleLanguage(req.body.language);
   const rawTitle = (req.body.title || '').trim();
   const rawContent = (req.body.content || '').trim();
   const safeTitle = sanitizeHtml(rawTitle, { allowedTags: [], allowedAttributes: {} }).trim();
@@ -84,6 +91,7 @@ exports.postCreateArticle = asyncHandler(async (req, res) => {
         articleId,
         title: safeTitle,
         content: rawContent,
+        language,
       },
       errors,
     });
@@ -103,6 +111,7 @@ exports.postCreateArticle = asyncHandler(async (req, res) => {
           articleId: '',
           title: safeTitle,
           content: rawContent,
+          language,
         },
         errors: {
           title: 'Article could not be found.',
@@ -130,6 +139,7 @@ exports.postCreateArticle = asyncHandler(async (req, res) => {
       {
         title: safeTitle,
         content: sanitizedContent,
+        language,
         status,
         publishedAt: shouldPublish ? (existingArticle.publishedAt || publishDate) : null,
       },
@@ -139,6 +149,7 @@ exports.postCreateArticle = asyncHandler(async (req, res) => {
     savedArticle = await Article.create({
       title: safeTitle,
       content: sanitizedContent,
+      language,
       status,
       publishedAt: publishDate,
     });

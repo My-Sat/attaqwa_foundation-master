@@ -555,6 +555,11 @@ a:active {
   min-height: 280px;
 }
 
+.article-create-card .form-select:focus {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 0.2rem rgba(15, 107, 102, 0.14);
+}
+
 .article-preview-title,
 .article-preview-heading {
   margin: 0;
