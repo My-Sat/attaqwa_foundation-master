@@ -1,7 +1,7 @@
 const Registration = require('../models/class_registration');
 const ClassSession = require('../models/class_session');
-const RegistrationFee = require('../models/registrationFee');
 const asyncHandler = require('express-async-handler');
+const { getNextSessionStart, getScheduleSummary, getNormalizedSchedule } = require('../utils/sessionSchedule');
 
 // GET: Display registration form
 exports.getClassSessionRegistration = asyncHandler(async (req, res) => {
@@ -11,15 +11,19 @@ exports.getClassSessionRegistration = asyncHandler(async (req, res) => {
     : '';
   const success = req.flash('success');
   const error = req.flash('error');
-  const classSessions = await ClassSession.find();
-  const fee = await RegistrationFee.findOne();
+  const classSessions = await ClassSession.find().sort({ title: 1 });
+  const sessionOptions = classSessions.map((session) => ({
+    _id: session._id,
+    title: session.title,
+    price: Number.isFinite(Number(session.price)) ? Number(session.price) : 0,
+    scheduleSummary: getScheduleSummary(session),
+  }));
 
   res.render('session_registration', {
     title: 'Register for Class Session',
-    classSessions,
+    classSessions: sessionOptions,
     success,
     error,
-    fee,
     liveClassNotice,
     formData: {
       sessionId: '',
@@ -74,6 +78,7 @@ exports.postClassSessionRegistration = asyncHandler(async (req, res) => {
       classSessionId: sessionId,
       paymentMethod: paymentMethod || 'Other',
       paymentReference,
+      sessionPrice: Number.isFinite(Number(selectedSession.price)) ? Number(selectedSession.price) : 0,
       approved: false,
     });
 
@@ -92,7 +97,7 @@ exports.getPendingRegistrations = asyncHandler(async (req, res) => {
   const error = req.flash('error');
   const registrations = await Registration.find()
     .populate('userId', 'username')
-    .populate('classSessionId', 'title')
+    .populate('classSessionId', 'title price')
     .sort({ createdAt: -1 });
 
   res.render('admin_session_reg', {
@@ -156,7 +161,7 @@ exports.getMyClassSessions = asyncHandler(async (req, res) => {
   const now = new Date();
 
   const registrations = await Registration.find({ userId })
-    .populate('classSessionId', 'title')
+    .populate('classSessionId', 'title price schedule')
     .sort({ createdAt: -1 });
 
   const records = registrations.map((registration) => {
@@ -167,10 +172,26 @@ exports.getMyClassSessions = asyncHandler(async (req, res) => {
         : 'Expired';
     }
 
+    const sessionData = registration.classSessionId;
+    const normalizedSchedule = sessionData ? getNormalizedSchedule(sessionData) : null;
+    const nextSessionStartAt = sessionData && status === 'Approved'
+      ? getNextSessionStart(sessionData)
+      : null;
+
     return {
-      sessionTitle: registration.classSessionId ? registration.classSessionId.title : 'Unknown Session',
+      sessionTitle: sessionData ? sessionData.title : 'Unknown Session',
+      sessionPrice: Number.isFinite(Number(registration.sessionPrice))
+        ? Number(registration.sessionPrice)
+        : (sessionData && Number.isFinite(Number(sessionData.price)) ? Number(sessionData.price) : 0),
       paymentMethod: registration.paymentMethod || 'Other',
       paymentReference: registration.paymentReference || 'N/A',
+      scheduleSummary: sessionData ? getScheduleSummary(sessionData) : 'N/A',
+      durationMinutes: normalizedSchedule ? normalizedSchedule.durationMinutes : null,
+      nextSessionStartAt: nextSessionStartAt || null,
+      scheduleStartDate: normalizedSchedule && normalizedSchedule.startDate ? normalizedSchedule.startDate : null,
+      scheduleStartTime: normalizedSchedule ? normalizedSchedule.startTime : null,
+      scheduleFrequency: normalizedSchedule ? normalizedSchedule.frequency : null,
+      scheduleWeekDays: normalizedSchedule ? normalizedSchedule.weekDays : [],
       status,
       registeredAt: registration.createdAt || null,
       approvedAt: registration.approvedAt || null,

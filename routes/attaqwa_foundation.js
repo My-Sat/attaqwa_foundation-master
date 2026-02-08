@@ -184,7 +184,7 @@ router.get('/live_class', isAuthenticated, liveClassController.getLiveClass);
 router.get('/live_class/admin', isAdmin, liveClassController.getAdminLiveClass);
 router.get('/api/live-class/status', isAuthenticated, liveClassController.getLiveClassStatus);
 
-router.get('/registration_fee', isAdmin, adminAccount.getRegistrationFee);
-router.post('/registration_fee', isAdmin, adminAccount.postRegistrationFee);
+router.get('/registration_fee', isAdmin, redirectDeprecatedToDashboard);
+router.post('/registration_fee', isAdmin, redirectDeprecatedToDashboard);
 
 module.exports = router;

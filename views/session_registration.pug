@@ -17,12 +17,8 @@ block content
           each msg in error
             p.mb-0= msg
 
-      if fee
-        p.auth-subtitle
-          | Registration fee: GHC #{fee.amount}. You can pay via MoMo, bank transfer, or any supported method and submit your proof below.
-      else
-        p.auth-subtitle
-          | Pay via any supported method and submit your proof below.
+      p.auth-subtitle
+        | Each session has its own price. Select a session to view the exact amount and schedule.
 
       form(action='/register' method='POST')
         .mb-3
@@ -30,7 +26,16 @@ block content
           select#sessionId.form-select(name='sessionId' required)
             option(value='') Select a session
             each session in classSessions
-              option(value=session._id selected=formData && formData.sessionId && String(formData.sessionId) === String(session._id))= session.title
+              option(
+                value=session._id
+                data-price=(typeof session.price === 'number' ? session.price.toFixed(2) : '0.00')
+                data-schedule=session.scheduleSummary
+                selected=formData && formData.sessionId && String(formData.sessionId) === String(session._id)
+              )= session.title
+        .mb-3
+          .alert.alert-info.py-2.px-3.mb-0#sessionDetailsPanel
+            strong.d-block#selectedSessionPrice Select a session to see price.
+            small.text-muted#selectedSessionSchedule Schedule details will appear here.
         .mb-3
           label.form-label(for='paymentMethod') Payment Method
           select#paymentMethod.form-select(name='paymentMethod' required)
@@ -62,6 +67,35 @@ block content
             button.btn.admin-btn(type="button" data-bs-dismiss="modal") Okay
 
 block scripts
+  script.
+    (function () {
+      const sessionSelect = document.getElementById('sessionId');
+      const priceElement = document.getElementById('selectedSessionPrice');
+      const scheduleElement = document.getElementById('selectedSessionSchedule');
+
+      if (!sessionSelect || !priceElement || !scheduleElement) {
+        return;
+      }
+
+      const updateSessionDetails = function () {
+        const selectedOption = sessionSelect.options[sessionSelect.selectedIndex];
+        const price = selectedOption ? selectedOption.dataset.price : '';
+        const schedule = selectedOption ? selectedOption.dataset.schedule : '';
+
+        if (!selectedOption || !selectedOption.value) {
+          priceElement.textContent = 'Select a session to see price.';
+          scheduleElement.textContent = 'Schedule details will appear here.';
+          return;
+        }
+
+        priceElement.textContent = `Price: GHC ${price || '0.00'}`;
+        scheduleElement.textContent = schedule || 'Schedule details unavailable.';
+      };
+
+      sessionSelect.addEventListener('change', updateSessionDetails);
+      updateSessionDetails();
+    })();
+
   if liveClassNotice
     script.
       (function () {

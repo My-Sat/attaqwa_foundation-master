@@ -6,6 +6,38 @@ const classSessionSchema = new Schema({
     type: String,
     required: true,
   },
+  price: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0,
+  },
+  schedule: {
+    startDate: {
+      type: Date,
+      default: null,
+    },
+    startTime: {
+      type: String,
+      default: '18:00',
+      match: /^\d{2}:\d{2}$/,
+    },
+    durationMinutes: {
+      type: Number,
+      default: 60,
+      min: 15,
+      max: 720,
+    },
+    frequency: {
+      type: String,
+      enum: ['daily', 'weekly'],
+      default: 'weekly',
+    },
+    weekDays: {
+      type: [Number],
+      default: [1],
+    },
+  },
 }, {
   toJSON: { virtuals: true },
   toObject: { virtuals: true },

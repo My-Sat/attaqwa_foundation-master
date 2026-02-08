@@ -21,6 +21,11 @@ const registrationSchema = new Schema(
       type: String,
       default: 'Other',
     },
+    sessionPrice: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
     approved: {
       type: Boolean,
       default: false,

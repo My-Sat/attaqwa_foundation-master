@@ -311,6 +311,18 @@ a:active {
   box-shadow: 0 0 0 0.2rem rgba(15, 107, 102, 0.14);
 }
 
+.class-session-countdown-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--brand-600);
+  background: rgba(15, 107, 102, 0.1);
+  border: 1px solid rgba(15, 107, 102, 0.22);
+}
+
 .password-match-indicator {
   display: block;
   font-size: 0.86rem;

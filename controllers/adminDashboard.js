@@ -10,6 +10,15 @@ const LiveClassState = require('../models/live_class_state');
 const LiveStreamSchedule = require('../models/live_stream_schedule');
 const Message = require('../models/messages');
 const sanitizeHtml = require('sanitize-html');
+const {
+  normalizeWeekDays,
+  normalizeStartDate,
+  normalizeStartTime,
+  normalizeDurationMinutes,
+  normalizeFrequency,
+  getNormalizedSchedule,
+  getScheduleSummary,
+} = require('../utils/sessionSchedule');
 
 function getEmbedUrl(youtubeUrl) {
   if (!youtubeUrl) {
@@ -73,6 +82,80 @@ async function getOrCreateLiveStreamSchedule() {
     });
   }
   return schedule;
+}
+
+function getSessionPrice(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return null;
+  }
+  return Math.round(parsed * 100) / 100;
+}
+
+function parseClassSessionPayload(body) {
+  const title = (body.title || '').trim();
+  const rawStartDate = (body.scheduleStartDate || '').toString().trim();
+  const rawStartTime = (body.scheduleStartTime || '').toString().trim();
+  const price = getSessionPrice(body.price);
+  const startTime = normalizeStartTime(rawStartTime);
+  const durationMinutes = normalizeDurationMinutes(body.durationMinutes);
+  const frequency = normalizeFrequency(body.frequency);
+  const startDate = normalizeStartDate(rawStartDate);
+  const rawWeekDays = body.weekDays;
+  const weekDays = frequency === 'daily'
+    ? []
+    : normalizeWeekDays(Array.isArray(rawWeekDays) ? rawWeekDays : [rawWeekDays]);
+
+  if (!title) {
+    return { error: 'Session title is required.' };
+  }
+
+  if (price === null) {
+    return { error: 'Session price must be a valid number (0 or higher).' };
+  }
+
+  if (!rawStartDate || !startDate) {
+    return { error: 'Session start date is required.' };
+  }
+
+  if (!/^\d{2}:\d{2}$/.test(rawStartTime)) {
+    return { error: 'Session start time is required.' };
+  }
+
+  if (frequency === 'weekly' && !weekDays.length) {
+    return { error: 'Select at least one weekday for weekly sessions.' };
+  }
+
+  return {
+    title,
+    price,
+    schedule: {
+      startDate,
+      startTime,
+      durationMinutes,
+      frequency,
+      weekDays,
+    },
+  };
+}
+
+function buildClassSessionResponse(session, registrationCount, activeSessionId) {
+  const schedule = getNormalizedSchedule(session);
+  return {
+    _id: session._id,
+    title: session.title,
+    price: Number.isFinite(Number(session.price)) ? Number(session.price) : 0,
+    registrationCount,
+    schedule: {
+      startDate: schedule.startDate,
+      startTime: schedule.startTime,
+      durationMinutes: schedule.durationMinutes,
+      frequency: schedule.frequency,
+      weekDays: schedule.weekDays,
+    },
+    scheduleSummary: getScheduleSummary(session),
+    isLiveActive: activeSessionId && String(session._id) === activeSessionId,
+  };
 }
 
 exports.getVideoCategories = asyncHandler(async (req, res) => {
@@ -462,62 +545,62 @@ exports.getClassSessions = asyncHandler(async (req, res) => {
   const activeSessionId = liveState && liveState.isLive && liveState.activeSessionId
     ? String(liveState.activeSessionId)
     : '';
-
-  const classSessions = await ClassSession.aggregate([
-    {
-      $lookup: {
-        from: 'registrations',
-        localField: '_id',
-        foreignField: 'classSessionId',
-        as: 'registrations',
+  const [sessions, registrationCounts] = await Promise.all([
+    ClassSession.find().sort({ title: 1 }),
+    Registration.aggregate([
+      {
+        $group: {
+          _id: '$classSessionId',
+          registrationCount: { $sum: 1 },
+        },
       },
-    },
-    {
-      $project: {
-        title: 1,
-        registrationCount: { $size: '$registrations' },
-      },
-    },
-    { $sort: { title: 1 } },
+    ]),
   ]);
 
+  const registrationCountMap = new Map(
+    registrationCounts.map((item) => [String(item._id), item.registrationCount || 0])
+  );
+
   res.json({
-    classSessions: classSessions.map((session) => ({
-      ...session,
-      isLiveActive: activeSessionId && String(session._id) === activeSessionId,
-    })),
+    classSessions: sessions.map((session) => buildClassSessionResponse(
+      session,
+      registrationCountMap.get(String(session._id)) || 0,
+      activeSessionId
+    )),
   });
 });
 
 exports.createClassSession = asyncHandler(async (req, res) => {
-  const title = (req.body.title || '').trim();
-
-  if (!title) {
-    return res.status(400).json({ error: 'Session title is required.' });
+  const parsed = parseClassSessionPayload(req.body || {});
+  if (parsed.error) {
+    return res.status(400).json({ error: parsed.error });
   }
 
-  const classSession = await ClassSession.create({ title });
+  const classSession = await ClassSession.create({
+    title: parsed.title,
+    price: parsed.price,
+    schedule: parsed.schedule,
+  });
 
   return res.status(201).json({
-    classSession: {
-      _id: classSession._id,
-      title: classSession.title,
-      registrationCount: 0,
-    },
+    classSession: buildClassSessionResponse(classSession, 0, ''),
   });
 });
 
 exports.updateClassSession = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const title = (req.body.title || '').trim();
-
-  if (!title) {
-    return res.status(400).json({ error: 'Session title is required.' });
+  const parsed = parseClassSessionPayload(req.body || {});
+  if (parsed.error) {
+    return res.status(400).json({ error: parsed.error });
   }
 
   const updatedSession = await ClassSession.findByIdAndUpdate(
     id,
-    { title },
+    {
+      title: parsed.title,
+      price: parsed.price,
+      schedule: parsed.schedule,
+    },
     { new: true }
   );
 
@@ -528,11 +611,7 @@ exports.updateClassSession = asyncHandler(async (req, res) => {
   const registrationCount = await Registration.countDocuments({ classSessionId: id });
 
   return res.json({
-    classSession: {
-      _id: updatedSession._id,
-      title: updatedSession.title,
-      registrationCount,
-    },
+    classSession: buildClassSessionResponse(updatedSession, registrationCount, ''),
   });
 });
 

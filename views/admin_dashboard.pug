@@ -37,15 +37,13 @@ block content
           h3.admin-card-title Class
           button.btn.admin-btn(type="button" data-bs-toggle="modal" data-bs-target="#classSessionModal") Add Session
         .admin-card-head.mb-2
-          p.admin-card-note.mb-0 Manage class access approvals and registration fee settings.
+          p.admin-card-note.mb-0 Manage class access approvals and pending registrations.
           .dropdown
             button.btn.btn-outline-secondary.btn-sm(type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Class management actions")
               i.bi.bi-three-dots-vertical
             ul.dropdown-menu.dropdown-menu-end
               li
                 a.dropdown-item(href="/registrations/pending") Approve Registrations
-              li
-                a.dropdown-item(href="/registration_fee") Update Access Fee
         .admin-card-head.mb-2
           p#liveStreamScheduleStatus.admin-card-note.mb-0 No incoming live video for the moment.
           .dropdown
@@ -168,6 +166,36 @@ block content
             .mb-3
               label.form-label(for="classSessionTitle") Session Title
               input#classSessionTitle.form-control(type="text" name="title" required)
+            .mb-3
+              label.form-label(for="classSessionPrice") Session Price (GHC)
+              input#classSessionPrice.form-control(type="number" name="price" min="0" step="0.01" placeholder="e.g. 50" required)
+            .mb-3
+              label.form-label(for="classSessionStartDate") First Session Date
+              input#classSessionStartDate.form-control(type="date" name="scheduleStartDate" required)
+            .mb-3
+              label.form-label(for="classSessionStartTime") Session Start Time
+              input#classSessionStartTime.form-control(type="time" name="scheduleStartTime" required)
+            .mb-3
+              label.form-label(for="classSessionDurationMinutes") Session Duration (Minutes)
+              input#classSessionDurationMinutes.form-control(type="number" name="durationMinutes" min="15" max="720" step="5" value="60" required)
+            .mb-3
+              label.form-label(for="classSessionFrequency") Frequency
+              select#classSessionFrequency.form-select(name="frequency" required)
+                option(value="weekly" selected) Weekly
+                option(value="daily") Every day
+            .mb-3#classSessionWeekDaysGroup
+              label.form-label Week days (for weekly sessions)
+              .d-flex.flex-wrap.gap-2
+                each dayLabel, dayValue in ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+                  .form-check
+                    input.form-check-input(
+                      id=`classSessionWeekDay${dayValue}`
+                      type="checkbox"
+                      name="weekDays"
+                      value=dayValue
+                      checked=dayValue === 1
+                    )
+                    label.form-check-label(for=`classSessionWeekDay${dayValue}`)= dayLabel
             p#classSessionModalFeedback.admin-feedback.d-none
           .modal-footer
             button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
@@ -185,6 +213,35 @@ block content
             .mb-3
               label.form-label(for="classSessionEditTitle") Session Title
               input#classSessionEditTitle.form-control(type="text" name="title" required)
+            .mb-3
+              label.form-label(for="classSessionEditPrice") Session Price (GHC)
+              input#classSessionEditPrice.form-control(type="number" name="price" min="0" step="0.01" required)
+            .mb-3
+              label.form-label(for="classSessionEditStartDate") First Session Date
+              input#classSessionEditStartDate.form-control(type="date" name="scheduleStartDate" required)
+            .mb-3
+              label.form-label(for="classSessionEditStartTime") Session Start Time
+              input#classSessionEditStartTime.form-control(type="time" name="scheduleStartTime" required)
+            .mb-3
+              label.form-label(for="classSessionEditDurationMinutes") Session Duration (Minutes)
+              input#classSessionEditDurationMinutes.form-control(type="number" name="durationMinutes" min="15" max="720" step="5" required)
+            .mb-3
+              label.form-label(for="classSessionEditFrequency") Frequency
+              select#classSessionEditFrequency.form-select(name="frequency" required)
+                option(value="weekly") Weekly
+                option(value="daily") Every day
+            .mb-3#classSessionEditWeekDaysGroup
+              label.form-label Week days (for weekly sessions)
+              .d-flex.flex-wrap.gap-2
+                each dayLabel, dayValue in ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+                  .form-check
+                    input.form-check-input(
+                      id=`classSessionEditWeekDay${dayValue}`
+                      type="checkbox"
+                      name="weekDays"
+                      value=dayValue
+                    )
+                    label.form-check-label(for=`classSessionEditWeekDay${dayValue}`)= dayLabel
             p#classSessionEditModalFeedback.admin-feedback.d-none
           .modal-footer
             button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel

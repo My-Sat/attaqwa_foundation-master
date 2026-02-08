@@ -4,8 +4,11 @@ block content
   section.question-shell
     .question-card
       .question-head
-        h1.question-title My Class Sessions
-        p.question-subtitle Track your registrations, approval status, and access validity.
+        .d-flex.flex-wrap.justify-content-between.align-items-start.gap-2
+          div
+            h1.question-title My Class Sessions
+            p.question-subtitle.mb-0 Track your registrations, approval status, and access validity.
+          a.btn.admin-btn(href='/register') Register Session
 
       if records && records.length
         .table-responsive
@@ -13,7 +16,10 @@ block content
             thead
               tr
                 th Session
+                th Price
                 th Status
+                th Schedule
+                th Next Session
                 th Registered
                 th Approved
                 th Access Expires
@@ -22,6 +28,7 @@ block content
               each record in records
                 tr
                   td= record.sessionTitle
+                  td GHC #{Number(record.sessionPrice || 0).toFixed(2)}
                   td
                     if record.status === 'Approved'
                       span.badge.text-bg-success Approved
@@ -29,6 +36,22 @@ block content
                       span.badge.text-bg-secondary Expired
                     else
                       span.badge.text-bg-warning Pending Approval
+                  td
+                    div= record.scheduleSummary || 'N/A'
+                    if record.durationMinutes
+                      small.text-muted Duration: #{record.durationMinutes} min
+                  td
+                    if record.nextSessionStartAt
+                      span.class-session-countdown-badge(
+                        data-countdown-target=(new Date(record.nextSessionStartAt).toISOString())
+                        data-schedule-start-date=(record.scheduleStartDate ? new Date(record.scheduleStartDate).toISOString() : '')
+                        data-schedule-start-time=(record.scheduleStartTime || '')
+                        data-schedule-frequency=(record.scheduleFrequency || 'weekly')
+                        data-schedule-week-days=(record.scheduleWeekDays && record.scheduleWeekDays.length ? record.scheduleWeekDays.join(',') : '')
+                      )
+                        | Calculating...
+                    else
+                      span.text-muted N/A
                   td= record.registeredAt ? new Date(record.registeredAt).toLocaleString() : 'N/A'
                   td= record.approvedAt ? new Date(record.approvedAt).toLocaleString() : 'N/A'
                   td= record.accessExpiresAt ? new Date(record.accessExpiresAt).toLocaleString() : 'N/A'
@@ -37,3 +60,6 @@ block content
                     small.text-muted= record.paymentReference
       else
         p.text-muted.mb-0 You do not have class session records yet.
+
+block scripts
+  script(src='/javascripts/myClassSessions.js')

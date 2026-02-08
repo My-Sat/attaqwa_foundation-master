@@ -23,6 +23,7 @@ block content
             tr
               th Name
               th Session
+              th Price
               th Date & Time
               th Payment
               th Action
@@ -32,6 +33,7 @@ block content
                 tr
                   td= registration.userId && registration.userId.username ? registration.userId.username : 'Unknown'
                   td= registration.classSessionId && registration.classSessionId.title ? registration.classSessionId.title : 'Unknown'
+                  td GHC #{Number(typeof registration.sessionPrice === 'number' ? registration.sessionPrice : (registration.classSessionId && registration.classSessionId.price ? registration.classSessionId.price : 0)).toFixed(2)}
                   td= registration.createdAt ? new Date(registration.createdAt).toLocaleString() : 'N/A'
                   td
                     div #{registration.paymentMethod || 'Other'}
@@ -47,5 +49,5 @@ block content
                         button.btn.admin-btn(type='submit') Approve
             else
               tr
-                td(colspan='5')
+                td(colspan='6')
                   p.text-muted.mb-0 No registrations available yet.

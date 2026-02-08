@@ -26,9 +26,27 @@
     const videoForm = document.getElementById('videoForm');
     const classSessionForm = document.getElementById('classSessionForm');
     const classSessionTitle = document.getElementById('classSessionTitle');
+    const classSessionPrice = document.getElementById('classSessionPrice');
+    const classSessionStartDate = document.getElementById('classSessionStartDate');
+    const classSessionStartTime = document.getElementById('classSessionStartTime');
+    const classSessionDurationMinutes = document.getElementById('classSessionDurationMinutes');
+    const classSessionFrequency = document.getElementById('classSessionFrequency');
+    const classSessionWeekDaysGroup = document.getElementById('classSessionWeekDaysGroup');
+    const classSessionWeekDayInputs = classSessionWeekDaysGroup
+      ? Array.from(classSessionWeekDaysGroup.querySelectorAll('input[name="weekDays"]'))
+      : [];
     const classSessionEditForm = document.getElementById('classSessionEditForm');
     const classSessionEditId = document.getElementById('classSessionEditId');
     const classSessionEditTitle = document.getElementById('classSessionEditTitle');
+    const classSessionEditPrice = document.getElementById('classSessionEditPrice');
+    const classSessionEditStartDate = document.getElementById('classSessionEditStartDate');
+    const classSessionEditStartTime = document.getElementById('classSessionEditStartTime');
+    const classSessionEditDurationMinutes = document.getElementById('classSessionEditDurationMinutes');
+    const classSessionEditFrequency = document.getElementById('classSessionEditFrequency');
+    const classSessionEditWeekDaysGroup = document.getElementById('classSessionEditWeekDaysGroup');
+    const classSessionEditWeekDayInputs = classSessionEditWeekDaysGroup
+      ? Array.from(classSessionEditWeekDaysGroup.querySelectorAll('input[name="weekDays"]'))
+      : [];
     const liveStreamScheduleForm = document.getElementById('liveStreamScheduleForm');
     const liveStreamStartsAt = document.getElementById('liveStreamStartsAt');
     const liveStreamNote = document.getElementById('liveStreamNote');
@@ -153,6 +171,63 @@
       target.classList.remove('d-none', 'text-success', 'text-danger');
       target.classList.add(type === 'error' ? 'text-danger' : 'text-success');
       target.textContent = message;
+    }
+
+    function formatMoney(value) {
+      const amount = Number(value);
+      if (!Number.isFinite(amount)) {
+        return 'GHC 0.00';
+      }
+      return `GHC ${amount.toFixed(2)}`;
+    }
+
+    function toDateInputValue(value) {
+      if (!value) {
+        return '';
+      }
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return '';
+      }
+
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function normalizeWeekDays(values) {
+      const source = Array.isArray(values) ? values : [values];
+      const parsed = source
+        .map((item) => Number(item))
+        .filter((item) => Number.isInteger(item) && item >= 0 && item <= 6);
+      return Array.from(new Set(parsed)).sort((a, b) => a - b);
+    }
+
+    function setWeekDayInputs(inputs, days) {
+      const selected = new Set(normalizeWeekDays(days));
+      inputs.forEach((input) => {
+        input.checked = selected.has(Number(input.value));
+      });
+    }
+
+    function toggleWeekDaysGroup(groupElement, frequencyValue) {
+      if (!groupElement) {
+        return;
+      }
+      const isWeekly = String(frequencyValue || '').trim().toLowerCase() !== 'daily';
+      if (isWeekly) {
+        groupElement.classList.remove('d-none');
+      } else {
+        groupElement.classList.add('d-none');
+      }
+    }
+
+    function getSelectedWeekDays(inputs) {
+      return inputs
+        .filter((input) => input.checked)
+        .map((input) => Number(input.value));
     }
 
     function clearFeedback(target) {
@@ -466,7 +541,9 @@
             <li class="admin-item">
               <div>
                 <p class="admin-item-title">${escapeHtml(session.title)}</p>
-                <small class="text-muted">${session.registrationCount} registration(s)</small>
+                <small class="text-muted">${session.registrationCount} registration(s) | ${escapeHtml(formatMoney(session.price))}</small>
+                <small class="d-block text-muted">${escapeHtml(session.scheduleSummary || 'Schedule not configured')}</small>
+                <small class="d-block text-muted">Duration: ${escapeHtml(String(session.schedule && session.schedule.durationMinutes ? session.schedule.durationMinutes : 60))} min</small>
                 ${session.isLiveActive ? '<small class="d-block text-success fw-bold">Live now</small>' : ''}
               </div>
               <div class="dropdown">
@@ -823,25 +900,120 @@
       }
     });
 
+    function collectClassSessionPayload(options) {
+      const mode = options && options.mode === 'edit' ? 'edit' : 'create';
+      const titleInput = mode === 'edit' ? classSessionEditTitle : classSessionTitle;
+      const priceInput = mode === 'edit' ? classSessionEditPrice : classSessionPrice;
+      const startDateInput = mode === 'edit' ? classSessionEditStartDate : classSessionStartDate;
+      const startTimeInput = mode === 'edit' ? classSessionEditStartTime : classSessionStartTime;
+      const durationInput = mode === 'edit' ? classSessionEditDurationMinutes : classSessionDurationMinutes;
+      const frequencyInput = mode === 'edit' ? classSessionEditFrequency : classSessionFrequency;
+      const weekDayInputs = mode === 'edit' ? classSessionEditWeekDayInputs : classSessionWeekDayInputs;
+
+      const title = (titleInput && titleInput.value ? titleInput.value : '').trim();
+      const price = priceInput && priceInput.value ? Number(priceInput.value) : NaN;
+      const scheduleStartDate = (startDateInput && startDateInput.value ? startDateInput.value : '').trim();
+      const scheduleStartTime = (startTimeInput && startTimeInput.value ? startTimeInput.value : '').trim();
+      const durationMinutes = durationInput && durationInput.value ? Number(durationInput.value) : NaN;
+      const frequency = (frequencyInput && frequencyInput.value ? frequencyInput.value : 'weekly').trim().toLowerCase() === 'daily'
+        ? 'daily'
+        : 'weekly';
+      const weekDays = normalizeWeekDays(getSelectedWeekDays(weekDayInputs));
+
+      if (!title) {
+        return { error: 'Session title is required.' };
+      }
+      if (!Number.isFinite(price) || price < 0) {
+        return { error: 'Session price must be a valid number (0 or higher).' };
+      }
+      if (!scheduleStartDate) {
+        return { error: 'Session start date is required.' };
+      }
+      if (!scheduleStartTime) {
+        return { error: 'Session start time is required.' };
+      }
+      if (!Number.isFinite(durationMinutes) || durationMinutes < 15 || durationMinutes > 720) {
+        return { error: 'Duration must be between 15 and 720 minutes.' };
+      }
+      if (frequency === 'weekly' && !weekDays.length) {
+        return { error: 'Select at least one weekday for weekly sessions.' };
+      }
+
+      return {
+        payload: {
+          title,
+          price,
+          scheduleStartDate,
+          scheduleStartTime,
+          durationMinutes: Math.round(durationMinutes),
+          frequency,
+          weekDays,
+        },
+      };
+    }
+
+    if (classSessionFrequency) {
+      classSessionFrequency.addEventListener('change', () => {
+        toggleWeekDaysGroup(classSessionWeekDaysGroup, classSessionFrequency.value);
+      });
+      toggleWeekDaysGroup(classSessionWeekDaysGroup, classSessionFrequency.value);
+    }
+
+    if (classSessionEditFrequency) {
+      classSessionEditFrequency.addEventListener('change', () => {
+        toggleWeekDaysGroup(classSessionEditWeekDaysGroup, classSessionEditFrequency.value);
+      });
+      toggleWeekDaysGroup(classSessionEditWeekDaysGroup, classSessionEditFrequency.value);
+    }
+
+    if (classSessionStartDate && !classSessionStartDate.value) {
+      classSessionStartDate.value = toDateInputValue(new Date());
+    }
+    if (classSessionStartTime && !classSessionStartTime.value) {
+      classSessionStartTime.value = '18:00';
+    }
+    if (classSessionDurationMinutes && !classSessionDurationMinutes.value) {
+      classSessionDurationMinutes.value = '60';
+    }
+    if (classSessionPrice && !classSessionPrice.value) {
+      classSessionPrice.value = '0.00';
+    }
+
     if (classSessionForm) {
       classSessionForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         clearFeedback(classSessionModalFeedback);
         clearFeedback(classFeedback);
-
-        const title = (classSessionTitle.value || '').trim();
-        if (!title) {
-          showFeedback(classSessionModalFeedback, 'Session title is required.', 'error');
+        const parsed = collectClassSessionPayload({ mode: 'create' });
+        if (parsed.error) {
+          showFeedback(classSessionModalFeedback, parsed.error, 'error');
           return;
         }
 
         try {
           await request('/api/admin/class-sessions', {
             method: 'POST',
-            body: JSON.stringify({ title }),
+            body: JSON.stringify(parsed.payload),
           });
 
           classSessionForm.reset();
+          if (classSessionFrequency) {
+            classSessionFrequency.value = 'weekly';
+            toggleWeekDaysGroup(classSessionWeekDaysGroup, classSessionFrequency.value);
+          }
+          setWeekDayInputs(classSessionWeekDayInputs, [1]);
+          if (classSessionStartDate) {
+            classSessionStartDate.value = toDateInputValue(new Date());
+          }
+          if (classSessionStartTime) {
+            classSessionStartTime.value = '18:00';
+          }
+          if (classSessionDurationMinutes) {
+            classSessionDurationMinutes.value = '60';
+          }
+          if (classSessionPrice) {
+            classSessionPrice.value = '0.00';
+          }
           hideModal(classSessionModal, classSessionModalElement);
           await loadLiveClassStatus();
           await loadClassSessions();
@@ -859,17 +1031,20 @@
         clearFeedback(classFeedback);
 
         const sessionId = (classSessionEditId.value || '').trim();
-        const title = (classSessionEditTitle.value || '').trim();
-
-        if (!sessionId || !title) {
-          showFeedback(classSessionEditModalFeedback, 'Session title is required.', 'error');
+        const parsed = collectClassSessionPayload({ mode: 'edit' });
+        if (!sessionId) {
+          showFeedback(classSessionEditModalFeedback, 'Session id is required.', 'error');
+          return;
+        }
+        if (parsed.error) {
+          showFeedback(classSessionEditModalFeedback, parsed.error, 'error');
           return;
         }
 
         try {
           await request(`/api/admin/class-sessions/${sessionId}`, {
             method: 'PUT',
-            body: JSON.stringify({ title }),
+            body: JSON.stringify(parsed.payload),
           });
 
           classSessionEditForm.reset();
@@ -1122,6 +1297,32 @@
         clearFeedback(classSessionEditModalFeedback);
         classSessionEditId.value = session._id;
         classSessionEditTitle.value = session.title || '';
+        if (classSessionEditPrice) {
+          classSessionEditPrice.value = Number.isFinite(Number(session.price)) ? Number(session.price).toFixed(2) : '0.00';
+        }
+        if (classSessionEditStartDate) {
+          classSessionEditStartDate.value = toDateInputValue(session.schedule && session.schedule.startDate ? session.schedule.startDate : '');
+        }
+        if (classSessionEditStartTime) {
+          classSessionEditStartTime.value = session.schedule && session.schedule.startTime
+            ? session.schedule.startTime
+            : '18:00';
+        }
+        if (classSessionEditDurationMinutes) {
+          classSessionEditDurationMinutes.value = session.schedule && session.schedule.durationMinutes
+            ? session.schedule.durationMinutes
+            : 60;
+        }
+        if (classSessionEditFrequency) {
+          classSessionEditFrequency.value = session.schedule && session.schedule.frequency === 'daily'
+            ? 'daily'
+            : 'weekly';
+          toggleWeekDaysGroup(classSessionEditWeekDaysGroup, classSessionEditFrequency.value);
+        }
+        setWeekDayInputs(
+          classSessionEditWeekDayInputs,
+          session.schedule && Array.isArray(session.schedule.weekDays) ? session.schedule.weekDays : []
+        );
         showModal(classSessionEditModal, classSessionEditModalElement);
         return;
       }
