@@ -46,6 +46,9 @@ html(lang="en")
           ul.navbar-nav.me-auto.mb-2.mb-lg-0
             li.nav-item
               a.nav-link.active(aria-current="page" href="/") Home
+            if isLoggedIn && admin
+              li.nav-item
+                a.nav-link(href="/dashboard") Dashboard
             li.nav-item
               a.nav-link(href="/donate") Donate
             li.nav-item
@@ -66,8 +69,6 @@ html(lang="en")
                   i(class="fas fa-user-circle")
                 ul.dropdown-menu.dropdown-menu-end
                   li
-                    a.dropdown-item(href="/dashboard") Dashboard
-                  li
                     a.dropdown-item(href="/signout") Sign Out
             else if isLoggedIn && user
               // User Messages Link
@@ -75,6 +76,7 @@ html(lang="en")
                 i(class="fas fa-envelope")
                 if unreadMessages > 0
                   span.badge.bg-danger= unreadMessages
+              a.nav-link(href="/my_class_sessions") Class
               // User Username
               span.site-user-name= user.username ? user.username[0].toUpperCase() + user.username.slice(1).toLowerCase() : ''
               .dropdown

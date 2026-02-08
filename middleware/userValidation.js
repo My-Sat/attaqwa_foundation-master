@@ -1,6 +1,21 @@
 const { check } = require('express-validator');
 
 exports.validateUserSignUp = [
+  check('firstName')
+    .trim()
+    .notEmpty().withMessage('First name is required')
+    .isLength({ min: 2, max: 50 }).withMessage('First name must be 2-50 characters long'),
+
+  check('surname')
+    .trim()
+    .notEmpty().withMessage('Surname is required')
+    .isLength({ min: 2, max: 50 }).withMessage('Surname must be 2-50 characters long'),
+
+  check('otherNames')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 80 }).withMessage('Other names must not exceed 80 characters'),
+
   // Validate username (non-empty and length constraints)
   check('username')
     .trim()

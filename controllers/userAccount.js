@@ -5,16 +5,32 @@ const User = require('../models/users');
 const bcrypt = require('bcryptjs');
   
 exports.getUserSignUp = (req, res) => {
-    res.render('signup_user', {
-      title: 'User Sign Up',
-      errors: [],
-      oldInput: { username: '', phoneNumber: '' },
-    });
-  };
+  res.render('signup_user', {
+    title: 'User Sign Up',
+    errors: [],
+    oldInput: {
+      firstName: '',
+      surname: '',
+      otherNames: '',
+      phoneNumber: '',
+      username: '',
+    },
+  });
+};
     
 // User Sign-Up Logic
 exports.postUserSignUp = asyncHandler(async (req, res) => {
-  const { username, phoneNumber, password } = req.body;
+  const {
+    firstName,
+    surname,
+    otherNames,
+    username,
+    phoneNumber,
+    password,
+  } = req.body;
+
+  const normalizedUsername = (username || '').trim().toLowerCase();
+  const formattedPhoneNumber = (phoneNumber || '').trim();
 
   // Validate request fields
   const errors = validationResult(req);
@@ -22,15 +38,18 @@ exports.postUserSignUp = asyncHandler(async (req, res) => {
     return res.status(400).render('signup_user', {
       title: 'User Sign Up',
       errors: errors.array(),
-      oldInput: { username: username || '', phoneNumber: phoneNumber || '' },
+      oldInput: {
+        firstName: firstName || '',
+        surname: surname || '',
+        otherNames: otherNames || '',
+        username: username || '',
+        phoneNumber: phoneNumber || '',
+      },
     });
   }
 
-  // Normalize the username to lowercase
-  const normalizedUsername = username.toLowerCase();
-
   // Check for existing username or phone number
-  const existingPhoneNumber = await User.findOne({ phoneNumber });
+  const existingPhoneNumber = await User.findOne({ phoneNumber: formattedPhoneNumber });
   const existingUser = await User.findOne({ username: normalizedUsername });
 
   if (existingPhoneNumber || existingUser) {
@@ -41,7 +60,13 @@ exports.postUserSignUp = asyncHandler(async (req, res) => {
           ? { msg: 'Phone number is already registered' }
           : { msg: 'Username is already taken' },
       ],
-      oldInput: { username, phoneNumber },
+      oldInput: {
+        firstName: firstName || '',
+        surname: surname || '',
+        otherNames: otherNames || '',
+        username: username || '',
+        phoneNumber: phoneNumber || '',
+      },
     });
   }
 
@@ -50,8 +75,11 @@ exports.postUserSignUp = asyncHandler(async (req, res) => {
 
   // Save the new user
   const newUser = new User({
+    firstName: (firstName || '').trim(),
+    surname: (surname || '').trim(),
+    otherNames: (otherNames || '').trim(),
     username: normalizedUsername,
-    phoneNumber,
+    phoneNumber: formattedPhoneNumber,
     password: hashedPassword,
   });
   await newUser.save();

@@ -36,6 +36,9 @@ block content
         .admin-card-head
           h3.admin-card-title Class
           button.btn.admin-btn(type="button" data-bs-toggle="modal" data-bs-target="#classSessionModal") Add Session
+        .class-top-actions.mb-2
+          a.btn.btn-outline-secondary(href="/registrations/pending") Approve Registrations
+          a.btn.btn-outline-secondary(href="/registration_fee") Update Access Fee
         p#liveClassStatus.admin-card-note Live class is currently not active.
         .d-flex.gap-2.mb-2
           button#endLiveClassBtn.btn.btn-outline-danger(type="button" data-no-loading) End Live Class
@@ -43,9 +46,6 @@ block content
         p#classFeedback.admin-feedback.d-none
         ul#classList.admin-item-list
           li.text-muted Loading class sessions...
-        .admin-link-group
-          a.admin-link-chip(href="/registrations/pending") Approve Registrations
-          a.admin-link-chip(href="/registration_fee") Update Access Fee
 
       .admin-card
         .admin-card-head

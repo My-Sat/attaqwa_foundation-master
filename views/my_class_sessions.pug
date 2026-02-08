@@ -1,0 +1,39 @@
+extends layout
+
+block content
+  section.question-shell
+    .question-card
+      .question-head
+        h1.question-title My Class Sessions
+        p.question-subtitle Track your registrations, approval status, and access validity.
+
+      if records && records.length
+        .table-responsive
+          table.table.align-middle
+            thead
+              tr
+                th Session
+                th Status
+                th Registered
+                th Approved
+                th Access Expires
+                th Payment
+            tbody
+              each record in records
+                tr
+                  td= record.sessionTitle
+                  td
+                    if record.status === 'Approved'
+                      span.badge.text-bg-success Approved
+                    else if record.status === 'Expired'
+                      span.badge.text-bg-secondary Expired
+                    else
+                      span.badge.text-bg-warning Pending Approval
+                  td= record.registeredAt ? new Date(record.registeredAt).toLocaleString() : 'N/A'
+                  td= record.approvedAt ? new Date(record.approvedAt).toLocaleString() : 'N/A'
+                  td= record.accessExpiresAt ? new Date(record.accessExpiresAt).toLocaleString() : 'N/A'
+                  td
+                    div= record.paymentMethod
+                    small.text-muted= record.paymentReference
+      else
+        p.text-muted.mb-0 You do not have class session records yet.

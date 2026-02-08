@@ -1,41 +1,49 @@
 extends layout
 
 block content
-  h1.text-center= title
+  section.auth-shell
+    .auth-card
+      .auth-header
+        h1.auth-title= title || 'User Sign Up'
+        p.auth-subtitle Create your account with profile details for a better learning experience.
 
-  .container.mt-5
-    .row
-      .col-md-6.offset-md-3
-        h3.text-center User Sign Up
-        form(method="POST" action="/signup")
-          // Display error messages if any
-          if errors && errors.length
-            each error in errors
-              .alert.alert-danger= error.msg
-          .mb-3
-            label(for="username") Username
-            input.form-control(
-              type="text" 
-              name="username" 
-              value=(oldInput && oldInput.username ? oldInput.username : '') 
-              required
-            )
-          .mb-3
-            label(for="phoneNumber") Phone Number
-            input.form-control#phoneNumber(
-              type="text" 
-              name="phoneNumber" 
-              value=(oldInput && oldInput.phoneNumber ? oldInput.phoneNumber : '') 
-              required
-            )
-          .mb-3
-            label(for="password") Password
-            input.form-control(type="password" name="password" required)
-          .mb-3
-            label(for="confirmPassword") Confirm Password
-            input.form-control(type="password" name="confirmPassword" required)
-          button.btn.btn-primary(type="submit") Sign Up
+      if errors && errors.length
+        each error in errors
+          .alert.alert-danger.auth-alert(role="alert")= error.msg
 
-    .text-center.mt-4 
-      P Already have an account? 
-        a(href="/signin") Sign in
+      form#userSignUpForm.auth-form(method="POST" action="/signup")
+        .row.g-3
+          .col-12.col-md-6
+            label.form-label(for="firstName") First Name
+            input#firstName.form-control.auth-input(type="text" name="firstName" value=(oldInput && oldInput.firstName ? oldInput.firstName : '') autocomplete="given-name" required)
+          .col-12.col-md-6
+            label.form-label(for="surname") Surname
+            input#surname.form-control.auth-input(type="text" name="surname" value=(oldInput && oldInput.surname ? oldInput.surname : '') autocomplete="family-name" required)
+          .col-12
+            label.form-label(for="otherNames") Other Names
+            input#otherNames.form-control.auth-input(type="text" name="otherNames" value=(oldInput && oldInput.otherNames ? oldInput.otherNames : '') autocomplete="additional-name")
+          .col-12
+            label.form-label(for="phoneNumber") Phone Number
+            input#phoneNumber.form-control.auth-input(type="tel" name="phoneNumber" value=(oldInput && oldInput.phoneNumber ? oldInput.phoneNumber : '') autocomplete="tel" required)
+          .col-12
+            label.form-label(for="username") Username
+            input#username.form-control.auth-input(type="text" name="username" value=(oldInput && oldInput.username ? oldInput.username : '') autocomplete="username" required)
+          .col-12
+            label.form-label(for="password") Password
+            .password-field
+              input#password.form-control.auth-input(type="password" name="password" autocomplete="new-password" required)
+              button.password-toggle-btn(type="button" data-toggle-target="password" aria-label="Show password")
+                i.fas.fa-eye(aria-hidden="true")
+          .col-12
+            label.form-label(for="confirmPassword") Confirm Password
+            .password-field
+              input#confirmPassword.form-control.auth-input(type="password" name="confirmPassword" autocomplete="new-password" required)
+              button.password-toggle-btn(type="button" data-toggle-target="confirmPassword" aria-label="Show confirm password")
+                i.fas.fa-eye(aria-hidden="true")
+            small#userPasswordMatch.password-match-indicator.text-muted.mt-2 Type to confirm password.
+
+        button.btn.auth-submit.mt-3(type="submit") Sign Up
+
+      p.auth-footer.mb-0
+        | Already have an account?
+        a.ms-2(href="/signin") Sign in

@@ -31,6 +31,7 @@ router.get('/register', isAuthenticated, sessionController.getClassSessionRegist
 
 // Handle form submission
 router.post('/register', isAuthenticated, sessionController.postClassSessionRegistration);
+router.get('/my_class_sessions', isAuthenticated, sessionController.getMyClassSessions);
 
 // Display pending registrations
 router.get('/registrations/pending', isAdmin, sessionController.getPendingRegistrations);

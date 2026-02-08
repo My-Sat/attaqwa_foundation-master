@@ -149,3 +149,37 @@ exports.getLiveClassAuth = asyncHandler(async (req, res) => {
 exports.postLiveClassAuth = asyncHandler(async (req, res) => {
   res.redirect('/live_class');
 });
+
+// GET: Display logged-in user's class session records
+exports.getMyClassSessions = asyncHandler(async (req, res) => {
+  const userId = req.session.user.id;
+  const now = new Date();
+
+  const registrations = await Registration.find({ userId })
+    .populate('classSessionId', 'title')
+    .sort({ createdAt: -1 });
+
+  const records = registrations.map((registration) => {
+    let status = 'Pending Approval';
+    if (registration.approved) {
+      status = registration.accessExpiresAt && registration.accessExpiresAt > now
+        ? 'Approved'
+        : 'Expired';
+    }
+
+    return {
+      sessionTitle: registration.classSessionId ? registration.classSessionId.title : 'Unknown Session',
+      paymentMethod: registration.paymentMethod || 'Other',
+      paymentReference: registration.paymentReference || 'N/A',
+      status,
+      registeredAt: registration.createdAt || null,
+      approvedAt: registration.approvedAt || null,
+      accessExpiresAt: registration.accessExpiresAt || null,
+    };
+  });
+
+  res.render('my_class_sessions', {
+    title: 'My Class Sessions',
+    records,
+  });
+});

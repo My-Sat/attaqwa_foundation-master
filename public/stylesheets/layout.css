@@ -108,7 +108,8 @@ a:active {
 }
 
 .site-search .form-control {
-  min-width: 190px;
+  width: 150px;
+  min-width: 150px;
   border: 1px solid var(--border-0);
 }
 
@@ -521,6 +522,11 @@ a:active {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
+}
+
+.class-top-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .article-create-shell {
