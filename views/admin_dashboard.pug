@@ -1,76 +1,131 @@
 extends layout
 
 block content
-  h1.text-center.mt-4 Admin Dashboard
+  section.admin-shell
+    .admin-header
+      h1.admin-title Admin Dashboard
+      p.admin-subtitle Manage content and platform operations from one workspace.
 
-  .container
-    .row
-      // Manage Admin Section
-      .col-md-4
-        .card.mb-4.shadow-sm.border.border-primary
-          .card-header.text-center.bg-primary.text-white
-            h5 Manage Admin
-          .card-body
-            ul.list-group.list-group-flush
-              li.list-group-item
-                a(href="/signup/admin", class='nav-link') Admin Sign Up
-              li.list-group-item
-                a(href='/delete_admin', class='nav-link') Delete Admin
+    .admin-manage-grid
+      .admin-card
+        .admin-card-head
+          h3.admin-card-title Admin
+          a.btn.admin-btn(href="/signup/admin") Add Admin
+        p#adminFeedback.admin-feedback.d-none
+        ul#adminList.admin-item-list
+          li.text-muted Loading admins...
 
-      // Manage Videos Section
-      .col-md-4
-        .card.mb-4.shadow-sm.border.border-success
-          .card-header.text-center.bg-success.text-white
-            h5 Manage Videos
-          .card-body
-            ul.list-group.list-group-flush
-              li.list-group-item
-                a(href='/add_video', class='nav-link') Add Video
-              li.list-group-item
-                a(href='/delete_video_list', class='nav-link') Delete Video
-              li.list-group-item
-                a(href='/add_category', class='nav-link') Add Video Category
-              li.list-group-item
-                a(href='/delete_category', class='nav-link') Delete Video Category
+      .admin-card
+        .admin-card-head
+          h3.admin-card-title Questions
+          a.btn.admin-btn(href="/manage_questions") Answer Questions
+        p#questionFeedback.admin-feedback.d-none
+        ul#questionList.admin-item-list
+          li.text-muted Loading questions...
 
-      // Manage Questions Section
-      .col-md-4
-        .card.mb-4.shadow-sm.border.border-warning
-          .card-header.text-center.bg-warning.text-dark
-            h5 Manage Questions
-          .card-body
-            ul.list-group.list-group-flush
-              li.list-group-item
-                a(href='/manage_questions', class='nav-link') Answer Questions
-              li.list-group-item 
-                a(href='/delete_question', class='nav-link') Delete Question
+      .admin-card
+        .admin-card-head
+          h3.admin-card-title Articles
+          a.btn.admin-btn(href="/create_article") Add Article
+        p#articleFeedback.admin-feedback.d-none
+        ul#articleList.admin-item-list
+          li.text-muted Loading articles...
 
-      // Manage Articles Section
-      .col-md-4
-        .card.mb-4.shadow-sm.border.border-warning
-          .card-header.text-center.bg-warning.text-dark
-            h5 Manage Articles
-          .card-body
-            ul.list-group.list-group-flush
-              li.list-group-item
-                a(href='/create_article', class='nav-link') Create Article
-              li.list-group-item 
-                a(href='/delete_article', class='nav-link') Delete article
-              li.list-group-item 
-                a(href='/edit_article', class='nav-link') Edit article
-      // Manage Class
-      .col-md-4
-        .card.mb-4.shadow-sm.border.border-warning
-          .card-header.text-center.bg-warning.text-dark
-            h5 Manage Class
-          .card-body
-            ul.list-group.list-group-flush
-              li.list-group-item
-                a(href='/add_session', class='nav-link') Add Class Session
-              li.list-group-item 
-                a(href='/all_class_sessions', class='nav-link') View class sessions
-              li.list-group-item 
-                a(href='/registrations/pending', class='nav-link') Approve Registrations
-              li.list-group-item 
-                a(href='/registration_fee', class='nav-link') State/update access code fee
+      .admin-card
+        .admin-card-head
+          h3.admin-card-title Class
+          a.btn.admin-btn(href="/add_session") Add Session
+        p#classFeedback.admin-feedback.d-none
+        ul#classList.admin-item-list
+          li.text-muted Loading class sessions...
 
+      .admin-card
+        .admin-card-head
+          h3.admin-card-title Class Operations
+        .admin-link-group
+          a.admin-link-chip(href="/registrations/pending") Approve Registrations
+          a.admin-link-chip(href="/all_class_sessions") View Session Users
+          a.admin-link-chip(href="/registration_fee") Update Access Fee
+
+      .admin-card
+        .admin-card-head
+          h3.admin-card-title Categories
+          button.btn.admin-btn(type="button" data-bs-toggle="modal" data-bs-target="#categoryModal") Add Category
+        p.admin-card-note Manage video categories and remove outdated groups.
+        p#categoryFeedback.admin-feedback.d-none
+        ul#categoryList.admin-item-list
+          li.text-muted Loading categories...
+
+      .admin-card
+        .admin-card-head
+          h3.admin-card-title Videos
+          button.btn.admin-btn(type="button" data-bs-toggle="modal" data-bs-target="#videoModal") Add Video
+        .admin-filter-row
+          label.form-label(for="videoCategoryFilter") Filter by category
+          select#videoCategoryFilter.form-select
+            option(value="") All categories
+        p#videoFeedback.admin-feedback.d-none
+        ul#videoList.admin-item-list
+          li.text-muted Loading videos...
+
+  .modal.fade#categoryModal(tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5#categoryModalLabel.modal-title Add Category
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        form#categoryForm
+          .modal-body
+            .mb-3
+              label.form-label(for="categoryTitle") Category Title
+              input#categoryTitle.form-control(type="text" name="title" placeholder="e.g. Quran Reflections" required)
+            p#categoryModalFeedback.admin-feedback.d-none
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button.btn.admin-btn(type="submit") Save Category
+
+  .modal.fade#videoModal(tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5#videoModalLabel.modal-title Add Video
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        form#videoForm
+          .modal-body
+            .mb-3
+              label.form-label(for="videoTitle") Video Title
+              input#videoTitle.form-control(type="text" name="title" required)
+            .mb-3
+              label.form-label(for="videoCategory") Category
+              select#videoCategory.form-select(name="category" required)
+                option(value="") Select category
+            .mb-3
+              label.form-label(for="youtubeUrl") YouTube URL
+              input#youtubeUrl.form-control(type="url" name="youtubeUrl" placeholder="https://youtube.com/watch?v=..." required)
+            p#videoModalFeedback.admin-feedback.d-none
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button.btn.admin-btn(type="submit") Save Video
+
+  .modal.fade#articleEditModal(tabindex="-1" aria-labelledby="articleEditModalLabel" aria-hidden="true")
+    .modal-dialog.modal-lg
+      .modal-content
+        .modal-header
+          h5#articleEditModalLabel.modal-title Edit Article
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        form#articleEditForm
+          input#articleEditId(type="hidden" name="articleId")
+          .modal-body
+            .mb-3
+              label.form-label(for="articleEditTitle") Title
+              input#articleEditTitle.form-control(type="text" name="title" required)
+            .mb-3
+              label.form-label(for="articleEditContent") Content
+              textarea#articleEditContent.form-control(name="content" rows="10" required)
+            p#articleEditModalFeedback.admin-feedback.d-none
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button.btn.admin-btn(type="submit") Save Changes
+
+block scripts
+  script(src="/javascripts/adminDashboard.js")

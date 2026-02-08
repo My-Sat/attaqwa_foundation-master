@@ -9,6 +9,7 @@ const asyncHandler = require('express-async-handler');
 const YOUTUBE_API_KEY = 'AIzaSyCZV3KPk9vQK3Rrkwz4alWgslhHmoVSf14'; // Replace with your API Key
 const CHANNEL_ID = 'UCuc74pUfHQ0w4wLxe9yeIRg'; // Replace with your channel ID
 const HOME_PAGE_SIZE = 5;
+const HOME_EAGER_LOAD_THRESHOLD = 25;
 
 exports.index = asyncHandler(async (req, res) => {
   let liveVideoUrl = "https://www.youtube.com/embed/xjxOWSmSjnU"; // Fallback video
@@ -39,13 +40,23 @@ exports.index = asyncHandler(async (req, res) => {
   }
 
   // Fetch video categories and answered questions from the database
-  const [videoCategories, questions, articles, totalQuestions, totalVideoCategories, totalArticles] = await Promise.all([
-    VideoCategory.find().sort({ _id: 1 }).limit(HOME_PAGE_SIZE),
-    Question.find({ isAnswered: true }).sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE),
-    Article.find().sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE),
+  const [totalQuestions, totalVideoCategories, totalArticles] = await Promise.all([
     Question.countDocuments({ isAnswered: true }),
     VideoCategory.countDocuments(),
     Article.countDocuments(),
+  ]);
+
+  const shouldLazyLoadVideos = totalVideoCategories > HOME_EAGER_LOAD_THRESHOLD;
+  const shouldLazyLoadArticles = totalArticles > HOME_EAGER_LOAD_THRESHOLD;
+
+  const [videoCategories, questions, articles] = await Promise.all([
+    shouldLazyLoadVideos
+      ? VideoCategory.find().sort({ _id: -1 }).limit(HOME_PAGE_SIZE)
+      : VideoCategory.find().sort({ _id: -1 }),
+    Question.find({ isAnswered: true }).sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE),
+    shouldLazyLoadArticles
+      ? Article.find().sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE)
+      : Article.find().sort({ createdAt: -1 }),
   ]);
   
   // Update visitor count
@@ -97,7 +108,7 @@ exports.getHomeFeed = asyncHandler(async (req, res) => {
 
   if (feedType === 'videos') {
     [items, total] = await Promise.all([
-      VideoCategory.find().sort({ _id: 1 }).skip(skip).limit(limit),
+      VideoCategory.find().sort({ _id: -1 }).skip(skip).limit(limit),
       VideoCategory.countDocuments(),
     ]);
 

@@ -1,8 +1,5 @@
 const index_controller = require("../controllers/index");
-const categoryController = require('../controllers/addCategory');
 const sessionController = require('../controllers/class_session');
-const deleteCategoryController = require('../controllers/deleteCategory');
-const deleteVideoController = require('../controllers/deleteVideo');
 const userAccount = require("../controllers/userAccount");
 const adminAccount = require('../controllers/adminAccount');
 const authController = require('../controllers/auth');
@@ -10,16 +7,18 @@ const questionController = require("../controllers/question");
 const sessionSignOut = require("../controllers/signOut");
 const { validateUserSignUp } = require("../middleware/userValidation");
 const { validateAdminSignUp } = require("../middleware/adminValidation");
-const addVideoController = require("../controllers/addVideo");
 const donateController = require('../controllers/donatePage');
 const videoListController = require("../controllers/videoList");
 const articleController = require('../controllers/article');
 const liveClassController = require('../controllers/live_class'); 
 const searchController = require("../controllers/searchController");
+const adminDashboardController = require('../controllers/adminDashboard');
 const isAuthenticated = require("../middleware/userSessionAuth");
 const isAdmin = require("../middleware/adminSessionAuth");
 const express = require("express");
 const router = express.Router();
+
+const redirectDeprecatedToDashboard = (req, res) => res.redirect('/dashboard');
 
 /* GET home page. */
 router.get("/", index_controller.index);
@@ -45,11 +44,9 @@ router.get('/all_class_sessions', isAdmin, sessionController.getAllClassSessions
 //Display specific class session participants
 router.get('/class_session/:id', isAdmin, sessionController.getUsersForClassSession);
 
-//Get: Add video category
-router.get('/add_category', isAdmin, categoryController.getAddCategory);
-
-//Post: Add video category
-router.post('/add_category', isAdmin, categoryController.postAddCategory);
+// Deprecated standalone page: add category
+router.get('/add_category', isAdmin, redirectDeprecatedToDashboard);
+router.post('/add_category', isAdmin, redirectDeprecatedToDashboard);
 
 //Get: Add class Session
 router.get('/add_session', isAdmin, sessionController.getAddClassSession);
@@ -60,10 +57,9 @@ router.post('/add_session', isAdmin, sessionController.postAddClassSession);
 
 router.get('/video_categories/:id', videoListController.getVideoList);
 
-// Add routes for deleting a video category
-router.get('/delete_category', isAdmin, deleteCategoryController.getDeleteCategory);
-
-router.post('/delete_category', isAdmin, deleteCategoryController.postDeleteCategory);
+// Deprecated standalone page: delete category
+router.get('/delete_category', isAdmin, redirectDeprecatedToDashboard);
+router.post('/delete_category', isAdmin, redirectDeprecatedToDashboard);
 
 // Admin Routes for Articles
 router.get('/create_article', isAdmin, articleController.getCreateArticle); // Form to create articles
@@ -73,29 +69,21 @@ router.post('/create_article', isAdmin, articleController.postCreateArticle); //
 router.get('/article/:id', articleController.getArticle); // View a specific article
 router.get('/all_articles', articleController.getAllArticles); // View all articles
 
-// Fetch and List Articles for Delete
-router.get('/delete_article', articleController.getDeleteArticle);
-router.post('/delete_article', articleController.postDeleteArticle);
+// Deprecated standalone pages: article delete/edit
+router.get('/delete_article', isAdmin, redirectDeprecatedToDashboard);
+router.post('/delete_article', isAdmin, redirectDeprecatedToDashboard);
+router.get('/edit_article', isAdmin, redirectDeprecatedToDashboard);
+router.post('/edit_article', isAdmin, redirectDeprecatedToDashboard);
+router.post('/update_article', isAdmin, redirectDeprecatedToDashboard);
 
-// Fetch and List Articles for Edit
-router.get('/edit_article', articleController.getEditArticleList);
-router.post('/edit_article', articleController.getArticleForEdit);
-router.post('/update_article', articleController.postUpdateArticle);
+// Deprecated standalone page: add video
+router.get('/add_video', isAdmin, redirectDeprecatedToDashboard);
+router.post('/add_video', isAdmin, redirectDeprecatedToDashboard);
 
-// GET: Render add video form
-router.get('/add_video', addVideoController.getAddVideo);
-
-// POST: Handle video form submission
-router.post('/add_video', addVideoController.postAddVideo);
-
-// Get: Display delete video category dropdown
-router.get("/delete_video_list", isAdmin, deleteVideoController.getVideoCategories);
-
-// Post: Display videos under selected category
-router.post("/delete_video", isAdmin, deleteVideoController.postVideoList);
-
-// Post: Delete a specific video
-router.post("/delete_video/:id", isAdmin, deleteVideoController.postDeleteVideo);
+// Deprecated standalone pages: delete video flow
+router.get("/delete_video_list", isAdmin, redirectDeprecatedToDashboard);
+router.post("/delete_video", isAdmin, redirectDeprecatedToDashboard);
+router.post("/delete_video/:id", isAdmin, redirectDeprecatedToDashboard);
 
 
 // GET: Display the sign-in page
@@ -128,12 +116,26 @@ router.post('/signup/admin',validateAdminSignUp,isAdmin, adminAccount.postAdminS
 
 // GET: Admin Dashboard
 router.get('/dashboard',isAdmin, adminAccount.getAdminDashboard);
+router.get('/api/admin/video-categories', isAdmin, adminDashboardController.getVideoCategories);
+router.post('/api/admin/video-categories', isAdmin, adminDashboardController.createVideoCategory);
+router.delete('/api/admin/video-categories/:id', isAdmin, adminDashboardController.deleteVideoCategory);
+router.get('/api/admin/videos', isAdmin, adminDashboardController.getVideos);
+router.post('/api/admin/videos', isAdmin, adminDashboardController.createVideo);
+router.delete('/api/admin/videos/:id', isAdmin, adminDashboardController.deleteVideo);
+router.get('/api/admin/admins', isAdmin, adminDashboardController.getAdmins);
+router.delete('/api/admin/admins/:id', isAdmin, adminDashboardController.deleteAdmin);
+router.get('/api/admin/questions', isAdmin, adminDashboardController.getQuestions);
+router.delete('/api/admin/questions/:id', isAdmin, adminDashboardController.deleteQuestion);
+router.get('/api/admin/articles', isAdmin, adminDashboardController.getArticles);
+router.get('/api/admin/articles/:id', isAdmin, adminDashboardController.getArticleById);
+router.put('/api/admin/articles/:id', isAdmin, adminDashboardController.updateArticle);
+router.delete('/api/admin/articles/:id', isAdmin, adminDashboardController.deleteArticle);
+router.get('/api/admin/class-sessions', isAdmin, adminDashboardController.getClassSessions);
+router.delete('/api/admin/class-sessions/:id', isAdmin, adminDashboardController.deleteClassSession);
 
-// GET: Display list of admins for deletion
-router.get('/delete_admin', isAdmin, adminAccount.getDeleteAdminPage);
-
-// POST: Handle admin deletion
-router.post('/delete_admin', isAdmin, adminAccount.postDeleteAdmin);
+// Deprecated standalone page: delete admin
+router.get('/delete_admin', isAdmin, redirectDeprecatedToDashboard);
+router.post('/delete_admin', isAdmin, redirectDeprecatedToDashboard);
 
 
 //GET signout
@@ -153,11 +155,9 @@ router.get('/all_questions', questionController.getAllQuestions);
 // Route to get question details by ID
 router.get('/question/:id', questionController.getQuestionDetails);
 
-// GET: Display all questions to be deleted
-router.get('/delete_question', isAdmin, questionController.getDisplayDeleteQuestions);
-
-// POST: Delete a question
-router.post('/delete_question', isAdmin, questionController.postDeleteQuestion);
+// Deprecated standalone page: delete question
+router.get('/delete_question', isAdmin, redirectDeprecatedToDashboard);
+router.post('/delete_question', isAdmin, redirectDeprecatedToDashboard);
 
 //Donate Page
 router.get('/donate', donateController.getDonatePage);
