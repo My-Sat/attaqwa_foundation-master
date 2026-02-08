@@ -6,6 +6,7 @@ const Question = require('../models/question');
 const Article = require('../models/article');
 const ClassSession = require('../models/class_session');
 const Registration = require('../models/class_registration');
+const LiveClassState = require('../models/live_class_state');
 const Message = require('../models/messages');
 const sanitizeHtml = require('sanitize-html');
 
@@ -39,6 +40,26 @@ function sanitizeArticleBody(content) {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1', 'h2', 'h3', 'p', 'strong', 'em', 'ul', 'li']),
     allowedAttributes: false,
   });
+}
+
+function buildLiveRoomName(session) {
+  const base = String(session.title || 'live-class')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48);
+  const suffix = String(session._id).slice(-8);
+  return `attaqwa-${base || 'live'}-${suffix}`;
+}
+
+async function getOrCreateLiveState() {
+  let liveState = await LiveClassState.findOne({});
+  if (!liveState) {
+    liveState = await LiveClassState.create({
+      isLive: false,
+    });
+  }
+  return liveState;
 }
 
 exports.getVideoCategories = asyncHandler(async (req, res) => {
@@ -424,6 +445,11 @@ exports.deleteArticle = asyncHandler(async (req, res) => {
 });
 
 exports.getClassSessions = asyncHandler(async (req, res) => {
+  const liveState = await LiveClassState.findOne({}, 'isLive activeSessionId');
+  const activeSessionId = liveState && liveState.isLive && liveState.activeSessionId
+    ? String(liveState.activeSessionId)
+    : '';
+
   const classSessions = await ClassSession.aggregate([
     {
       $lookup: {
@@ -442,7 +468,12 @@ exports.getClassSessions = asyncHandler(async (req, res) => {
     { $sort: { title: 1 } },
   ]);
 
-  res.json({ classSessions });
+  res.json({
+    classSessions: classSessions.map((session) => ({
+      ...session,
+      isLiveActive: activeSessionId && String(session._id) === activeSessionId,
+    })),
+  });
 });
 
 exports.createClassSession = asyncHandler(async (req, res) => {
@@ -513,9 +544,12 @@ exports.getClassSessionUsers = asyncHandler(async (req, res) => {
       registrationId: registration._id,
       username: registration.userId ? registration.userId.username : 'Unknown',
       phoneNumber: registration.userId ? registration.userId.phoneNumber : '',
-      momoReferenceName: registration.momoReferenceName,
-      accessCodeAssigned: registration.accessCodeAssigned,
-      accessCode: registration.accessCode || '',
+      paymentMethod: registration.paymentMethod || 'Other',
+      paymentReference: registration.paymentReference || '',
+      approved: Boolean(registration.approved),
+      approvedAt: registration.approvedAt || null,
+      accessExpiresAt: registration.accessExpiresAt || null,
+      createdAt: registration.createdAt || null,
     })),
   });
 });
@@ -528,10 +562,101 @@ exports.deleteClassSession = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Class session not found.' });
   }
 
+  const liveState = await LiveClassState.findOne({});
+  if (liveState && liveState.isLive && liveState.activeSessionId && String(liveState.activeSessionId) === String(id)) {
+    return res.status(400).json({ error: 'Cannot delete an active live session. End class first.' });
+  }
+
   await Promise.all([
     Registration.deleteMany({ classSessionId: id }),
     ClassSession.findByIdAndDelete(id),
   ]);
+
+  return res.json({ success: true });
+});
+
+exports.getLiveClassStatus = asyncHandler(async (req, res) => {
+  const liveState = await LiveClassState.findOne({}).populate('activeSessionId', 'title');
+
+  if (!liveState || !liveState.isLive || !liveState.activeSessionId) {
+    return res.json({
+      isLive: false,
+      activeSession: null,
+      startedAt: null,
+      roomName: '',
+      startedByName: '',
+    });
+  }
+
+  return res.json({
+    isLive: true,
+    activeSession: {
+      _id: liveState.activeSessionId._id,
+      title: liveState.activeSessionId.title,
+    },
+    startedAt: liveState.startedAt || null,
+    roomName: liveState.roomName || '',
+    startedByName: liveState.startedByName || '',
+  });
+});
+
+exports.startLiveClass = asyncHandler(async (req, res) => {
+  const sessionId = (req.body.sessionId || '').trim();
+  if (!sessionId) {
+    return res.status(400).json({ error: 'Session is required to start class.' });
+  }
+
+  const selectedSession = await ClassSession.findById(sessionId);
+  if (!selectedSession) {
+    return res.status(404).json({ error: 'Class session not found.' });
+  }
+
+  const adminName = req.session?.admin?.username || 'Admin';
+  const liveState = await getOrCreateLiveState();
+
+  if (liveState.isLive && liveState.activeSessionId) {
+    if (String(liveState.activeSessionId) === String(selectedSession._id)) {
+      return res.status(400).json({ error: 'This session is already live.' });
+    }
+
+    return res.status(400).json({ error: 'A live class is already running. End it before starting another session.' });
+  }
+
+  liveState.isLive = true;
+  liveState.activeSessionId = selectedSession._id;
+  liveState.roomName = buildLiveRoomName(selectedSession);
+  liveState.startedAt = new Date();
+  liveState.endedAt = null;
+  liveState.startedByName = adminName;
+  await liveState.save();
+
+  return res.json({
+    success: true,
+    liveClass: {
+      isLive: true,
+      activeSession: {
+        _id: selectedSession._id,
+        title: selectedSession.title,
+      },
+      startedAt: liveState.startedAt,
+      roomName: liveState.roomName,
+      startedByName: liveState.startedByName,
+    },
+  });
+});
+
+exports.endLiveClass = asyncHandler(async (req, res) => {
+  const liveState = await getOrCreateLiveState();
+
+  if (!liveState.isLive) {
+    return res.status(400).json({ error: 'No live class is currently active.' });
+  }
+
+  liveState.isLive = false;
+  liveState.activeSessionId = null;
+  liveState.roomName = '';
+  liveState.endedAt = new Date();
+  await liveState.save();
 
   return res.json({ success: true });
 });

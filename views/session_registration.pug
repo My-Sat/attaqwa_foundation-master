@@ -1,33 +1,50 @@
 extends layout
 
 block content
-  h1= title
+  section.auth-shell
+    .auth-card
+      .auth-header
+        h1.auth-title= title
+        p.auth-subtitle Submit your payment proof and wait for admin approval.
 
-  if success && success.length > 0
-    .alert.alert-success
-      each msg in success
-        p= msg
+      if success && success.length > 0
+        .alert.alert-success.auth-alert
+          each msg in success
+            p.mb-0= msg
 
-  if error && error.length > 0
-    .alert.alert-danger
-      each msg in error
-        p= msg
+      if error && error.length > 0
+        .alert.alert-danger.auth-alert
+          each msg in error
+            p.mb-0= msg
 
-  if fee
-    p(style='font-size: 1.2em; font-weight: bold;')
-      | Pay GHC#{fee.amount} via MoMo: "+233591459200", Name: "At-taqwafoundation and Humanitarian Service" to acquire an access code. Enter MoMo reference name in the field below to register. Access code is valid for 30 days.
-  else
-    p(style='font-size: 1.2em; font-weight: bold;')
-      | Pay the registration fee via MoMo or bank to acquire an access code. Enter MoMo reference name or bank details in the field below to register. Access code is valid for 30 days.
+      if fee
+        p.auth-subtitle
+          | Registration fee: GHC #{fee.amount}. You can pay via MoMo, bank transfer, or any supported method and submit your proof below.
+      else
+        p.auth-subtitle
+          | Pay via any supported method and submit your proof below.
 
-  form(action='/register' method='POST')
-    .form-group
-      label(for='sessionId') Select Class Session
-      select.form-control(name='sessionId' required)
-        option(value='') Select a session
-        each session in classSessions
-          option(value=session._id)= session.title
-    .form-group
-      label(for='momoReference') MoMo Reference Name
-      input.form-control(type='text' name='momoReference' required)
-    button.btn.btn-primary(type='submit') Register
+      form(action='/register' method='POST')
+        .mb-3
+          label.form-label(for='sessionId') Select Class Session
+          select#sessionId.form-select(name='sessionId' required)
+            option(value='') Select a session
+            each session in classSessions
+              option(value=session._id selected=formData && formData.sessionId && String(formData.sessionId) === String(session._id))= session.title
+        .mb-3
+          label.form-label(for='paymentMethod') Payment Method
+          select#paymentMethod.form-select(name='paymentMethod' required)
+            option(value='MoMo' selected=formData && formData.paymentMethod === 'MoMo') MoMo
+            option(value='Bank Transfer' selected=formData && formData.paymentMethod === 'Bank Transfer') Bank Transfer
+            option(value='Card' selected=formData && formData.paymentMethod === 'Card') Card
+            option(value='Other' selected=!formData || !formData.paymentMethod || formData.paymentMethod === 'Other') Other
+        .mb-3
+          label.form-label(for='paymentReference') Payment Proof / Reference
+          input#paymentReference.auth-input.form-control(
+            type='text'
+            name='paymentReference'
+            value=formData && formData.paymentReference ? formData.paymentReference : ''
+            placeholder='e.g. transaction ID, bank receipt number, sender name'
+            required
+          )
+        button.btn.auth-submit(type='submit') Register

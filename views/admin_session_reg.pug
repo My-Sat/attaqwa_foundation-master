@@ -1,34 +1,51 @@
 extends layout
 
 block content
-  h1= title
-  if success && success.length > 0
-    p.alert.alert-success= success
-  if error && error.length > 0
-    p.alert.alert-danger= error    
-  table.table
-    thead
-      tr
-        th User
-        th Session
-        th MoMo Reference
-        th Assign Access Code
-    tbody
-      each registration in registrations
-        tr
-          td= registration.userId.username
-          td= registration.classSessionId.title
-          td= registration.momoReferenceName
-          td
-            form(action='/registrations/pending' method='POST')
-              input(type='hidden' name='registrationId' value=registration._id)
-              input.form-control(
-                type='text',
-                name='code',
-                required,
-                disabled=registration.accessCodeAssigned
-              )
-              button.btn.btn-primary(
-                type='submit',
-                disabled=registration.accessCodeAssigned
-              ) Assign Code
+  section.admin-shell
+    .admin-header
+      h1.admin-title= title
+      p.admin-subtitle Review submitted payment proofs and grant 30-day access.
+
+    if success && success.length > 0
+      .alert.alert-success
+        each msg in success
+          p.mb-0= msg
+
+    if error && error.length > 0
+      .alert.alert-danger
+        each msg in error
+          p.mb-0= msg
+
+    .admin-card
+      .table-responsive
+        table.table.align-middle
+          thead
+            tr
+              th Name
+              th Session
+              th Date & Time
+              th Payment
+              th Action
+          tbody
+            if registrations.length
+              each registration in registrations
+                tr
+                  td= registration.userId && registration.userId.username ? registration.userId.username : 'Unknown'
+                  td= registration.classSessionId && registration.classSessionId.title ? registration.classSessionId.title : 'Unknown'
+                  td= registration.createdAt ? new Date(registration.createdAt).toLocaleString() : 'N/A'
+                  td
+                    div #{registration.paymentMethod || 'Other'}
+                    small.text-muted #{registration.paymentReference || 'N/A'}
+                  td
+                    if registration.approved
+                      span.badge.text-bg-success Approved
+                      if registration.accessExpiresAt
+                        small.d-block.text-muted Expires: #{new Date(registration.accessExpiresAt).toLocaleString()}
+                    else
+                      form(action='/registrations/pending' method='POST')
+                        input(type='hidden' name='registrationId' value=registration._id)
+                        button.btn.admin-btn(type='submit') Approve
+            else
+              tr
+                td(colspan='5')
+                  p.text-muted.mb-0 No registrations available yet.

@@ -7,6 +7,8 @@
     const answerQuestionsBtn = document.getElementById('answerQuestionsBtn');
     const articleList = document.getElementById('articleList');
     const classList = document.getElementById('classList');
+    const liveClassStatusElement = document.getElementById('liveClassStatus');
+    const endLiveClassBtn = document.getElementById('endLiveClassBtn');
 
     if (!categoryList || !videoList || !adminList || !questionList || !articleList || !classList) {
       return;
@@ -96,6 +98,11 @@
       questions: [],
       articles: [],
       classSessions: [],
+      liveClassStatus: {
+        isLive: false,
+        activeSession: null,
+        startedAt: null,
+      },
       activeCategory: '',
     };
 
@@ -385,6 +392,7 @@
         classList.innerHTML = '<li class="text-muted">No class sessions found.</li>';
         return;
       }
+      const isAnyLive = Boolean(state.liveClassStatus && state.liveClassStatus.isLive);
 
       classList.innerHTML = state.classSessions
         .map(
@@ -393,8 +401,12 @@
               <div>
                 <p class="admin-item-title">${escapeHtml(session.title)}</p>
                 <small class="text-muted">${session.registrationCount} registration(s)</small>
+                ${session.isLiveActive ? '<small class="d-block text-success fw-bold">Live now</small>' : ''}
               </div>
               <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-success" data-action="start-class-session" data-id="${session._id}" ${(isAnyLive || session.isLiveActive) ? 'disabled' : ''}>
+                  ${session.isLiveActive ? 'Active' : 'Start'}
+                </button>
                 <button class="btn btn-sm btn-outline-secondary" data-action="view-class-session" data-id="${session._id}">
                   View
                 </button>
@@ -409,6 +421,26 @@
           `
         )
         .join('');
+    }
+
+    function renderLiveClassStatus() {
+      if (!liveClassStatusElement) {
+        return;
+      }
+
+      const status = state.liveClassStatus || { isLive: false, activeSession: null };
+      if (!status.isLive || !status.activeSession) {
+        liveClassStatusElement.textContent = 'Live class is currently not active.';
+        if (endLiveClassBtn) {
+          endLiveClassBtn.setAttribute('disabled', 'disabled');
+        }
+        return;
+      }
+
+      liveClassStatusElement.textContent = `Live now: ${status.activeSession.title} (started ${formatDateTime(status.startedAt)})`;
+      if (endLiveClassBtn) {
+        endLiveClassBtn.removeAttribute('disabled');
+      }
     }
 
     async function loadCategories() {
@@ -521,6 +553,17 @@
       renderClassSessions();
     }
 
+    async function loadLiveClassStatus() {
+      const payload = await request('/api/admin/live-class/status');
+      state.liveClassStatus = {
+        isLive: Boolean(payload.isLive),
+        activeSession: payload.activeSession || null,
+        startedAt: payload.startedAt || null,
+      };
+      renderLiveClassStatus();
+      renderClassSessions();
+    }
+
     async function refreshAll() {
       await Promise.all([
         loadCategories(),
@@ -528,6 +571,7 @@
         loadAdmins(),
         loadQuestions(),
         loadArticles(),
+        loadLiveClassStatus(),
         loadClassSessions(),
       ]);
     }
@@ -647,6 +691,7 @@
 
           classSessionForm.reset();
           hideModal(classSessionModal, classSessionModalElement);
+          await loadLiveClassStatus();
           await loadClassSessions();
           showFeedback(classFeedback, 'Session added successfully.', 'success');
         } catch (error) {
@@ -677,6 +722,7 @@
 
           classSessionEditForm.reset();
           hideModal(classSessionEditModal, classSessionEditModalElement);
+          await loadLiveClassStatus();
           await loadClassSessions();
           showFeedback(classFeedback, 'Session updated successfully.', 'success');
         } catch (error) {
@@ -814,6 +860,27 @@
     });
 
     classList.addEventListener('click', async (event) => {
+      const startButton = event.target.closest('[data-action="start-class-session"]');
+      if (startButton) {
+        const { id } = startButton.dataset;
+        if (!id || !(await confirmDelete('Start live class with this session? This will set the current active session.'))) {
+          return;
+        }
+
+        try {
+          await request('/api/admin/live-class/start', {
+            method: 'POST',
+            body: JSON.stringify({ sessionId: id }),
+          });
+          await loadLiveClassStatus();
+          await loadClassSessions();
+          showFeedback(classFeedback, 'Live class started successfully.', 'success');
+        } catch (error) {
+          showFeedback(classFeedback, error.message, 'error');
+        }
+        return;
+      }
+
       const viewButton = event.target.closest('[data-action="view-class-session"]');
       if (viewButton) {
         const { id } = viewButton.dataset;
@@ -840,10 +907,11 @@
                 <li class="admin-item">
                   <div>
                     <p class="admin-item-title">${escapeHtml(user.username)}</p>
-                    <small class="text-muted">Phone: ${escapeHtml(user.phoneNumber || 'N/A')} | MoMo: ${escapeHtml(user.momoReferenceName || 'N/A')}</small>
+                    <small class="text-muted">Phone: ${escapeHtml(user.phoneNumber || 'N/A')} | Payment: ${escapeHtml(user.paymentMethod || 'N/A')} - ${escapeHtml(user.paymentReference || 'N/A')}</small>
+                    <small class="d-block text-muted">Registered: ${escapeHtml(formatDateTime(user.createdAt))}</small>
                   </div>
-                  <span class="badge ${user.accessCodeAssigned ? 'text-bg-success' : 'text-bg-secondary'}">
-                    ${user.accessCodeAssigned ? 'Code Assigned' : 'Pending Code'}
+                  <span class="badge ${user.approved ? 'text-bg-success' : 'text-bg-secondary'}">
+                    ${user.approved ? `Approved (expires ${escapeHtml(formatDateTime(user.accessExpiresAt))})` : 'Pending Approval'}
                   </span>
                 </li>
               `
@@ -885,12 +953,32 @@
 
       try {
         await request(`/api/admin/class-sessions/${id}`, { method: 'DELETE' });
+        await loadLiveClassStatus();
         await loadClassSessions();
         showFeedback(classFeedback, 'Class session deleted successfully.', 'success');
       } catch (error) {
         showFeedback(classFeedback, error.message, 'error');
       }
     });
+
+    if (endLiveClassBtn) {
+      endLiveClassBtn.addEventListener('click', async () => {
+        clearFeedback(classFeedback);
+
+        if (!(await confirmDelete('End the current live class?'))) {
+          return;
+        }
+
+        try {
+          await request('/api/admin/live-class/end', { method: 'POST' });
+          await loadLiveClassStatus();
+          await loadClassSessions();
+          showFeedback(classFeedback, 'Live class ended successfully.', 'success');
+        } catch (error) {
+          showFeedback(classFeedback, error.message, 'error');
+        }
+      });
+    }
 
     categoryList.addEventListener('click', async (event) => {
       const editButton = event.target.closest('[data-action="edit-category"]');

@@ -1,10 +1,18 @@
 extends layout
 
 block content
-  .container
+  .container.py-3
     .row.justify-content-center
       .col-12
         h3.text-center Live Class
+        if classSession && classSession.title
+          p.text-center.text-muted.mb-1 Session: #{classSession.title}
+        if liveStartedAt
+          p.text-center.text-muted.mb-1 Started: #{new Date(liveStartedAt).toLocaleString()}
+        if accessExpiresAt
+          p.text-center.text-muted Access valid until #{new Date(accessExpiresAt).toLocaleString()}
+        .d-flex.justify-content-center.mb-3
+          a.btn.btn-outline-secondary(href="/") Exit Class
 
     .row.justify-content-center
       .col-12
@@ -15,9 +23,36 @@ block content
 
   script.
     window.onload = () => {
+      const roomName = "vpaas-magic-cookie-7614453dbd0f4854940c861ddc93636a/#{roomName}";
       const api = new JitsiMeetExternalAPI("8x8.vc", {
-        roomName: "vpaas-magic-cookie-7614453dbd0f4854940c861ddc93636a/SampleAppPatientJurisdictionsEnactInevitably", // Update with your room name
-        parentNode: document.querySelector('#jaas-container')
-        // jwt: "null" // Optional, if you need JWT for premium features
+        roomName,
+        parentNode: document.querySelector('#jaas-container'),
+        userInfo: {
+          displayName: "#{attendeeName}"
+        },
+        configOverwrite: {
+          prejoinConfig: {
+            enabled: false
+          },
+          disableModeratorIndicator: true
+        }
       });
+
+      const pollLiveStatus = async () => {
+        try {
+          const response = await fetch('/api/live-class/status', {
+            credentials: 'same-origin'
+          });
+          const payload = await response.json();
+
+          if (!payload.isLive || payload.roomName !== "#{roomName}") {
+            alert('Class has ended by admin.');
+            window.location.href = '/';
+          }
+        } catch (error) {
+          // Keep session alive even if a single poll fails
+        }
+      };
+
+      window.setInterval(pollLiveStatus, 20000);
     }

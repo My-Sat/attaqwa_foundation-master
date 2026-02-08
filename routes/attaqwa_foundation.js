@@ -138,6 +138,9 @@ router.post('/api/admin/class-sessions', isAdmin, adminDashboardController.creat
 router.get('/api/admin/class-sessions/:id/users', isAdmin, adminDashboardController.getClassSessionUsers);
 router.put('/api/admin/class-sessions/:id', isAdmin, adminDashboardController.updateClassSession);
 router.delete('/api/admin/class-sessions/:id', isAdmin, adminDashboardController.deleteClassSession);
+router.get('/api/admin/live-class/status', isAdmin, adminDashboardController.getLiveClassStatus);
+router.post('/api/admin/live-class/start', isAdmin, adminDashboardController.startLiveClass);
+router.post('/api/admin/live-class/end', isAdmin, adminDashboardController.endLiveClass);
 
 // Deprecated standalone page: delete admin
 router.get('/delete_admin', isAdmin, redirectDeprecatedToDashboard);
@@ -174,6 +177,7 @@ router.get('/live_class_auth', isAuthenticated, sessionController.getLiveClassAu
 router.post('/live_class_auth', isAuthenticated, sessionController.postLiveClassAuth);
 
 router.get('/live_class', isAuthenticated, liveClassController.getLiveClass);
+router.get('/api/live-class/status', isAuthenticated, liveClassController.getLiveClassStatus);
 
 router.get('/registration_fee', isAdmin, adminAccount.getRegistrationFee);
 router.post('/registration_fee', isAdmin, adminAccount.postRegistrationFee);

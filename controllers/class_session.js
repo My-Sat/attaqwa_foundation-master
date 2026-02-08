@@ -1,5 +1,4 @@
 const Registration = require('../models/class_registration');
-const Message = require('../models/messages');
 const ClassSession = require('../models/class_session');
 const RegistrationFee = require('../models/registrationFee');
 const asyncHandler = require('express-async-handler');
@@ -17,128 +16,131 @@ exports.getClassSessionRegistration = asyncHandler(async (req, res) => {
     success,
     error,
     fee,
+    formData: {
+      sessionId: '',
+      paymentMethod: 'MoMo',
+      paymentReference: '',
+    },
   });
 });
 
-  // POST: Handle registration form submission
-  exports.postClassSessionRegistration = asyncHandler(async (req, res) => {
-    const { sessionId, momoReference } = req.body;
-    const userId = req.session.user.id;
-    
-    if (!sessionId || !momoReference) {
-      req.flash('error', 'All fields are required.');
-      return res.redirect('/register');
-    }
-    
-    try {
-      await Registration.create({
-        userId,
-        classSessionId: sessionId,
-        momoReferenceName: momoReference,
-      });
-      req.flash('success', 'Registration successful, patiently wait for Admin to assign an access code to you, check your attaqwa message box for the code .');
-      res.redirect('/register');
-    } catch (err) {
-      console.error('Registration error:', err);
-      req.flash('error', 'Registration failed. Please try again later.');
-      res.redirect('/register');
-    }
-      });
-  
-  // GET: Display all pending registrations
-  exports.getPendingRegistrations = asyncHandler(async (req, res) => {
-    const success = req.flash('success');
-    const error = req.flash('error');
-    const registrations = await Registration.find()
-      .populate('userId')
-      .populate('classSessionId')
-      .sort({ createdAt: -1 });
-  
-    res.render('admin_session_reg', {
-      title: 'Class Session Registration',
-      registrations,
-      success,
-      error,
-    });
-  });
-    
-// POST: Assign code to user
-exports.postPendingRegistrations = asyncHandler(async (req, res) => {
-  const { registrationId, code } = req.body;
+// POST: Handle registration form submission
+exports.postClassSessionRegistration = asyncHandler(async (req, res) => {
+  const sessionId = (req.body.sessionId || '').trim();
+  const paymentMethod = (req.body.paymentMethod || 'Other').trim();
+  const paymentReference = (req.body.paymentReference || '').trim();
+  const userId = req.session.user.id;
 
-  if (!code) {
-    req.flash('error', 'Code is required.');
+  if (!sessionId || !paymentReference) {
+    req.flash('error', 'Session and payment proof are required.');
+    return res.redirect('/register');
+  }
+
+  const selectedSession = await ClassSession.findById(sessionId);
+  if (!selectedSession) {
+    req.flash('error', 'Selected session does not exist.');
+    return res.redirect('/register');
+  }
+
+  const pendingRegistration = await Registration.findOne({
+    userId,
+    classSessionId: sessionId,
+    approved: false,
+  });
+  if (pendingRegistration) {
+    req.flash('error', 'You already have a pending request for this session.');
+    return res.redirect('/register');
+  }
+
+  const approvedRegistration = await Registration.findOne({
+    userId,
+    classSessionId: sessionId,
+    approved: true,
+    accessExpiresAt: { $gt: new Date() },
+  });
+  if (approvedRegistration) {
+    req.flash('success', `You already have active access for this session until ${approvedRegistration.accessExpiresAt.toLocaleString()}.`);
+    return res.redirect('/register');
+  }
+
+  try {
+    await Registration.create({
+      userId,
+      classSessionId: sessionId,
+      paymentMethod: paymentMethod || 'Other',
+      paymentReference,
+      approved: false,
+    });
+
+    req.flash('success', 'Registration submitted. Wait for admin approval to get 30 days access.');
+    res.redirect('/register');
+  } catch (err) {
+    console.error('Registration error:', err);
+    req.flash('error', 'Registration failed. Please try again later.');
+    res.redirect('/register');
+  }
+});
+
+// GET: Display all registrations for approval
+exports.getPendingRegistrations = asyncHandler(async (req, res) => {
+  const success = req.flash('success');
+  const error = req.flash('error');
+  const registrations = await Registration.find()
+    .populate('userId', 'username')
+    .populate('classSessionId', 'title')
+    .sort({ createdAt: -1 });
+
+  res.render('admin_session_reg', {
+    title: 'Class Session Registration',
+    registrations,
+    success,
+    error,
+  });
+});
+
+// POST: Approve registration and grant 30-day access
+exports.postPendingRegistrations = asyncHandler(async (req, res) => {
+  const registrationId = (req.body.registrationId || '').trim();
+  if (!registrationId) {
+    req.flash('error', 'Registration id is required.');
     return res.redirect('/registrations/pending');
   }
 
   try {
-    const registration = await Registration.findById(registrationId).populate('userId');
-
+    const registration = await Registration.findById(registrationId)
+      .populate('userId', 'username')
+      .populate('classSessionId', 'title');
     if (!registration) {
       req.flash('error', 'Registration not found.');
       return res.redirect('/registrations/pending');
     }
 
-    // Assign the code and set the expiration date
-    registration.accessCode = code;
-    registration.codeExpiration = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
-    registration.accessCodeAssigned = true;
+    if (registration.approved && registration.accessExpiresAt && registration.accessExpiresAt > new Date()) {
+      req.flash('success', `${registration.userId.username} already has active access until ${registration.accessExpiresAt.toLocaleString()}.`);
+      return res.redirect('/registrations/pending');
+    }
+
+    const now = new Date();
+    registration.approved = true;
+    registration.approvedAt = now;
+    registration.accessExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     await registration.save();
 
-    // Send the code to the user
-    await Message.create({
-      userId: registration.userId._id,
-      question: 'Your class session code is',
-      answer: code,
-    });
-
-    req.flash('success', 'Code assigned successfully!');
+    req.flash('success', `Approved ${registration.userId.username} for ${registration.classSessionId.title}. Access is active for 30 days.`);
     res.redirect('/registrations/pending');
   } catch (err) {
-    req.flash('error', 'Failed to assign code. Please try again later.');
+    console.error('Approval error:', err);
+    req.flash('error', 'Failed to approve registration. Please try again later.');
     res.redirect('/registrations/pending');
   }
 });
-  
-// Display the form for users to submit their access code
+
+// Backward compatibility route
 exports.getLiveClassAuth = asyncHandler(async (req, res) => {
-  res.render('codeSubmission', {
-    title: 'Join Live Class',
-    success: req.flash('success'),
-    error: req.flash('error'),
-  });
+  res.redirect('/live_class');
 });
 
-// Handle the form submission
+// Backward compatibility route
 exports.postLiveClassAuth = asyncHandler(async (req, res) => {
-  const { code } = req.body;
-  const userId = req.session.user.id; // Assuming req.user contains the authenticated user's information
-
-  if (!code) {
-    req.flash('error', 'Access code is required.');
-    return res.redirect('/live_class_auth');
-  }
-
-  try {
-    const registration = await Registration.findOne({ userId, accessCode: code }).populate('classSessionId');
-
-    if (!registration) {
-      req.flash('error', 'Invalid access code.');
-      return res.redirect('/live_class_auth');
-    }
-
-    if (registration.codeExpiration < new Date()) {
-      req.flash('error', 'Access code has expired.');
-      return res.redirect('/live_class_auth');
-    }
-
-    // Store the access code in the session to authorize the user for the live class
-    req.session.accessCode = code;
-
-    // Redirect to the live class page or render the live class view
-    res.redirect('/live_class');
-    } catch (err) {
-    req.flash('error', 'An error occurred. Please try again.');
-    res.redirect('/live_class_auth');
-  }
+  res.redirect('/live_class');
 });
