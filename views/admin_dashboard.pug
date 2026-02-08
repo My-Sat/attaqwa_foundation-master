@@ -27,6 +27,7 @@ block content
         .admin-card-head
           h3.admin-card-title Articles
           a.btn.admin-btn(href="/create_article") Add Article
+        p.admin-card-note Draft articles stay private until published.
         p#articleFeedback.admin-feedback.d-none
         ul#articleList.admin-item-list
           li.text-muted Loading articles...
@@ -202,26 +203,6 @@ block content
           p#classSessionUsersTitle.fw-bold.mb-3
           ul#classSessionUsersList.admin-item-list
             li.text-muted Loading users...
-
-  .modal.fade#articleEditModal(tabindex="-1" aria-labelledby="articleEditModalLabel" aria-hidden="true")
-    .modal-dialog.modal-lg
-      .modal-content
-        .modal-header
-          h5#articleEditModalLabel.modal-title Edit Article
-          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
-        form#articleEditForm
-          input#articleEditId(type="hidden" name="articleId")
-          .modal-body
-            .mb-3
-              label.form-label(for="articleEditTitle") Title
-              input#articleEditTitle.form-control(type="text" name="title" required)
-            .mb-3
-              label.form-label(for="articleEditContent") Content
-              textarea#articleEditContent.form-control(name="content" rows="10" required)
-            p#articleEditModalFeedback.admin-feedback.d-none
-          .modal-footer
-            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
-            button.btn.admin-btn(type="submit") Save Changes
 
   .modal.fade#deleteConfirmModal(tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true")
     .modal-dialog

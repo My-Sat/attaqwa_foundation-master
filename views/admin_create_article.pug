@@ -1,33 +1,62 @@
 extends layout
 
 block content
-  .container.mt-5
-    h2 Create New Article
-    form(method="POST" action="/create_article")
-      .form-group
-        label(for="title") Title
-        input#title.form-control(name="title" required)
+  - const pageTitle = title || 'Create Article'
+  - const isEditing = Boolean(formData && formData.articleId)
+  - const initialTitle = formData && formData.title ? formData.title : ''
+  - const initialContent = formData && formData.content ? formData.content : ''
+  - const initialArticleId = formData && formData.articleId ? formData.articleId : ''
+  - const titleError = errors && errors.title ? errors.title : ''
+  - const contentError = errors && errors.content ? errors.content : ''
+  section.article-create-shell
+    .article-create-header
+      h1.article-create-title= pageTitle
+      p.article-create-subtitle= isEditing ? 'Continue editing this article, save as draft, or publish when final.' : 'Write and publish an article with rich formatting from one focused workspace.'
+    .article-create-grid
+      .article-create-card
+        form#adminCreateArticleForm(method="POST" action="/create_article" novalidate)
+          input(type="hidden" name="articleId" value=initialArticleId)
+          .mb-3
+            label.form-label(for="articleTitle") Title
+            input#articleTitle.form-control.auth-input(
+              type="text"
+              name="title"
+              maxlength="140"
+              value=initialTitle
+              required
+              aria-invalid=titleError ? 'true' : 'false'
+              aria-describedby="articleTitleHelp articleTitleError"
+              placeholder="e.g. Building disciplined worship habits"
+            )
+            .form-text#articleTitleHelp Keep it concise and clear (max 140 characters).
+            if titleError
+              p#articleTitleError.admin-feedback.text-danger= titleError
+            else
+              p#articleTitleError.admin-feedback.d-none
+          .mb-3
+            label.form-label(for="content") Content
+            textarea#content.form-control.article-editor(
+              name="content"
+              rows="12"
+              aria-invalid=contentError ? 'true' : 'false'
+              aria-describedby="articleContentError"
+            )= initialContent
+            if contentError
+              p#articleContentError.admin-feedback.text-danger= contentError
+            else
+              p#articleContentError.admin-feedback.d-none
+          .d-flex.flex-wrap.gap-2
+            button.btn.btn-outline-secondary(type="submit" name="intent" value="draft") Save Draft
+            button.btn.admin-btn(type="submit" name="intent" value="published") Publish Article
+            a.btn.btn-outline-secondary(href="/dashboard") Back to Dashboard
+      .article-create-card
+        h2.article-preview-title Live Preview
+        p.article-preview-subtitle Review formatting before publishing.
+        .article-preview-box
+          h3#articlePreviewTitle.article-preview-heading= initialTitle || 'Untitled article'
+          .article-preview-content#articlePreviewContent
+            p.text-muted Content preview will appear here.
 
-      .form-group
-        label(for="content") Content
-        textarea#content.form-control(name="content" rows="10")
-
-      button.btn.btn-primary.mt-3(type="submit") Submit
-
+block scripts
   script(src="https://cdn.ckeditor.com/ckeditor5/39.0.0/classic/ckeditor.js")
-  script.
-    ClassicEditor
-      .create(document.querySelector('#content'))
-      .then(editor => {
-        // Ensure form submission includes CKEditor content
-        document.querySelector('form').addEventListener('submit', (event) => {
-          const editorData = editor.getData();
-          if (!editorData.trim()) {
-            event.preventDefault(); // Prevent form submission if content is empty
-            alert('Content cannot be empty');
-          }
-        });
-      })
-      .catch(error => {
-          console.error(error);
-      });
+  script(src="/javascripts/adminCreateArticle.js")

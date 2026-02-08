@@ -28,10 +28,6 @@
     const classSessionUsersList = document.getElementById('classSessionUsersList');
     const videoPreviewFrame = document.getElementById('videoPreviewFrame');
     const videoPreviewTitle = document.getElementById('videoPreviewTitle');
-    const articleEditForm = document.getElementById('articleEditForm');
-    const articleEditId = document.getElementById('articleEditId');
-    const articleEditTitle = document.getElementById('articleEditTitle');
-    const articleEditContent = document.getElementById('articleEditContent');
     const questionAnswerForm = document.getElementById('questionAnswerForm');
     const questionAnswerId = document.getElementById('questionAnswerId');
     const questionAnswerSelect = document.getElementById('questionAnswerSelect');
@@ -51,7 +47,6 @@
     const videoModalFeedback = document.getElementById('videoModalFeedback');
     const classSessionModalFeedback = document.getElementById('classSessionModalFeedback');
     const classSessionEditModalFeedback = document.getElementById('classSessionEditModalFeedback');
-    const articleEditModalFeedback = document.getElementById('articleEditModalFeedback');
     const questionAnswerModalFeedback = document.getElementById('questionAnswerModalFeedback');
     const deleteConfirmMessage = document.getElementById('deleteConfirmMessage');
     const deleteConfirmButton = document.getElementById('deleteConfirmButton');
@@ -62,7 +57,6 @@
     const classSessionEditModalElement = document.getElementById('classSessionEditModal');
     const classSessionUsersModalElement = document.getElementById('classSessionUsersModal');
     const videoPreviewModalElement = document.getElementById('videoPreviewModal');
-    const articleEditModalElement = document.getElementById('articleEditModal');
     const questionAnswerModalElement = document.getElementById('questionAnswerModal');
     const deleteConfirmModalElement = document.getElementById('deleteConfirmModal');
 
@@ -87,9 +81,6 @@
       : null;
     const videoPreviewModal = hasBootstrapModal && videoPreviewModalElement
       ? window.bootstrap.Modal.getOrCreateInstance(videoPreviewModalElement)
-      : null;
-    const articleEditModal = hasBootstrapModal && articleEditModalElement
-      ? window.bootstrap.Modal.getOrCreateInstance(articleEditModalElement)
       : null;
     const questionAnswerModal = hasBootstrapModal && questionAnswerModalElement
       ? window.bootstrap.Modal.getOrCreateInstance(questionAnswerModalElement)
@@ -373,11 +364,12 @@
             <li class="admin-item">
               <div>
                 <p class="admin-item-title">${escapeHtml(article.title)}</p>
+                <small class="text-muted">${article.status === 'draft' ? 'Draft (private)' : 'Published'}</small>
               </div>
               <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-secondary" data-action="edit-article" data-id="${article._id}">
+                <a class="btn btn-sm btn-outline-secondary" href="/create_article/${article._id}">
                   Edit
-                </button>
+                </a>
                 <button class="btn btn-sm btn-outline-danger" data-action="delete-article" data-id="${article._id}">
                   Delete
                 </button>
@@ -693,37 +685,6 @@
       });
     }
 
-    if (articleEditForm) {
-      articleEditForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        clearFeedback(articleEditModalFeedback);
-        clearFeedback(articleFeedback);
-
-        const id = (articleEditId.value || '').trim();
-        const title = (articleEditTitle.value || '').trim();
-        const content = (articleEditContent.value || '').trim();
-
-        if (!id || !title || !content) {
-          showFeedback(articleEditModalFeedback, 'Title and content are required.', 'error');
-          return;
-        }
-
-        try {
-          await request(`/api/admin/articles/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({ title, content }),
-          });
-
-          hideModal(articleEditModal, articleEditModalElement);
-          articleEditForm.reset();
-          await loadArticles();
-          showFeedback(articleFeedback, 'Article updated successfully.', 'success');
-        } catch (error) {
-          showFeedback(articleEditModalFeedback, error.message, 'error');
-        }
-      });
-    }
-
     if (questionAnswerForm) {
       questionAnswerForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -833,28 +794,6 @@
     });
 
     articleList.addEventListener('click', async (event) => {
-      const editButton = event.target.closest('[data-action="edit-article"]');
-      if (editButton) {
-        const { id } = editButton.dataset;
-        if (!id || !articleEditForm) {
-          return;
-        }
-
-        clearFeedback(articleEditModalFeedback);
-
-        try {
-          const payload = await request(`/api/admin/articles/${id}`);
-          const article = payload.article;
-          articleEditId.value = article._id;
-          articleEditTitle.value = article.title || '';
-          articleEditContent.value = article.content || '';
-          showModal(articleEditModal, articleEditModalElement);
-        } catch (error) {
-          showFeedback(articleFeedback, error.message, 'error');
-        }
-        return;
-      }
-
       const button = event.target.closest('[data-action="delete-article"]');
       if (!button) {
         return;

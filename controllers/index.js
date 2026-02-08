@@ -11,6 +11,15 @@ const CHANNEL_ID = 'UCuc74pUfHQ0w4wLxe9yeIRg'; // Replace with your channel ID
 const HOME_PAGE_SIZE = 5;
 const HOME_EAGER_LOAD_THRESHOLD = 25;
 
+function getPublicArticleFilter() {
+  return {
+    $or: [
+      { status: 'published' },
+      { status: { $exists: false } },
+    ],
+  };
+}
+
 exports.index = asyncHandler(async (req, res) => {
   let liveVideoUrl = "https://www.youtube.com/embed/xjxOWSmSjnU"; // Fallback video
 
@@ -43,7 +52,7 @@ exports.index = asyncHandler(async (req, res) => {
   const [totalQuestions, totalVideoCategories, totalArticles] = await Promise.all([
     Question.countDocuments({ isAnswered: true }),
     VideoCategory.countDocuments(),
-    Article.countDocuments(),
+    Article.countDocuments(getPublicArticleFilter()),
   ]);
 
   const shouldLazyLoadVideos = totalVideoCategories > HOME_EAGER_LOAD_THRESHOLD;
@@ -55,8 +64,8 @@ exports.index = asyncHandler(async (req, res) => {
       : VideoCategory.find().sort({ _id: -1 }),
     Question.find({ isAnswered: true }).sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE),
     shouldLazyLoadArticles
-      ? Article.find().sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE)
-      : Article.find().sort({ createdAt: -1 }),
+      ? Article.find(getPublicArticleFilter()).sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE)
+      : Article.find(getPublicArticleFilter()).sort({ createdAt: -1 }),
   ]);
   
   // Update visitor count
@@ -124,8 +133,8 @@ exports.getHomeFeed = asyncHandler(async (req, res) => {
 
   if (feedType === 'articles') {
     [items, total] = await Promise.all([
-      Article.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
-      Article.countDocuments(),
+      Article.find(getPublicArticleFilter()).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Article.countDocuments(getPublicArticleFilter()),
     ]);
 
     return res.json({

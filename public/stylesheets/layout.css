@@ -517,6 +517,82 @@ a:active {
   gap: 0.55rem;
 }
 
+.article-create-shell {
+  padding-top: 0.4rem;
+}
+
+.article-create-header {
+  margin-bottom: 0.95rem;
+}
+
+.article-create-title {
+  margin: 0;
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 800;
+  color: var(--text-0);
+}
+
+.article-create-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--text-1);
+}
+
+.article-create-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 1rem;
+}
+
+.article-create-card {
+  border: 1px solid var(--border-0);
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+  padding: 1rem;
+}
+
+.article-editor {
+  min-height: 280px;
+}
+
+.article-preview-title,
+.article-preview-heading {
+  margin: 0;
+  font-weight: 800;
+  color: var(--text-0);
+}
+
+.article-preview-title {
+  font-size: 1.06rem;
+}
+
+.article-preview-subtitle {
+  margin: 0.35rem 0 0.75rem;
+  color: var(--text-1);
+  font-size: 0.92rem;
+}
+
+.article-preview-box {
+  border: 1px solid var(--border-0);
+  border-radius: 0.8rem;
+  background: #fbfdfd;
+  padding: 0.85rem;
+}
+
+.article-preview-heading {
+  margin-bottom: 0.7rem;
+  font-size: 1.18rem;
+}
+
+.article-preview-content {
+  color: var(--text-1);
+  word-break: break-word;
+}
+
+.article-preview-content > *:last-child {
+  margin-bottom: 0;
+}
+
 .question-shell,
 .search-shell {
   display: flex;
@@ -889,5 +965,9 @@ a:active {
 
   .ask-brand {
     justify-content: flex-start;
+  }
+
+  .article-create-grid {
+    grid-template-columns: 1fr;
   }
 }

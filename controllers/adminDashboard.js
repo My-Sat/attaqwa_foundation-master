@@ -34,6 +34,13 @@ function getEmbedUrl(youtubeUrl) {
   return null;
 }
 
+function sanitizeArticleBody(content) {
+  return sanitizeHtml(content, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1', 'h2', 'h3', 'p', 'strong', 'em', 'ul', 'li']),
+    allowedAttributes: false,
+  });
+}
+
 exports.getVideoCategories = asyncHandler(async (req, res) => {
   const categories = await VideoCategory.aggregate([
     {
@@ -316,13 +323,16 @@ exports.deleteQuestion = asyncHandler(async (req, res) => {
 });
 
 exports.getArticles = asyncHandler(async (req, res) => {
-  const articles = await Article.find({}, 'title createdAt').sort({ createdAt: -1 });
+  const articles = await Article.find({}, 'title createdAt updatedAt status publishedAt').sort({ updatedAt: -1 });
 
   res.json({
     articles: articles.map((article) => ({
       _id: article._id,
       title: article.title,
+      status: article.status || 'published',
+      publishedAt: article.publishedAt || null,
       createdAt: article.createdAt,
+      updatedAt: article.updatedAt,
     })),
   });
 });
@@ -340,27 +350,50 @@ exports.getArticleById = asyncHandler(async (req, res) => {
       _id: article._id,
       title: article.title,
       content: article.content,
+      status: article.status || 'published',
+      publishedAt: article.publishedAt || null,
     },
   });
 });
 
 exports.updateArticle = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const title = (req.body.title || '').trim();
+  const title = sanitizeHtml((req.body.title || '').trim(), { allowedTags: [], allowedAttributes: {} });
   const content = (req.body.content || '').trim();
+  const requestedStatus = (req.body.status || '').trim().toLowerCase();
+  const status = requestedStatus === 'published' ? 'published' : 'draft';
+  const plainContent = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).trim();
 
-  if (!title || !content) {
-    return res.status(400).json({ error: 'Title and content are required.' });
+  if (!title) {
+    return res.status(400).json({ error: 'Title is required.' });
   }
 
-  const sanitizedContent = sanitizeHtml(content, {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1', 'h2', 'h3', 'p', 'strong', 'em', 'ul', 'li']),
-    allowedAttributes: false,
-  });
+  if (status === 'published' && !plainContent) {
+    return res.status(400).json({ error: 'Content is required before publishing.' });
+  }
+
+  const existingArticle = await Article.findById(id);
+  if (!existingArticle) {
+    return res.status(404).json({ error: 'Article not found.' });
+  }
+
+  const sanitizedContent = sanitizeArticleBody(content);
+
+  const updatePayload = {
+    title,
+    content: sanitizedContent,
+    status,
+  };
+
+  if (status === 'published') {
+    updatePayload.publishedAt = existingArticle.publishedAt || new Date();
+  } else {
+    updatePayload.publishedAt = null;
+  }
 
   const updatedArticle = await Article.findByIdAndUpdate(
     id,
-    { title, content: sanitizedContent },
+    updatePayload,
     { new: true }
   );
 
@@ -373,6 +406,8 @@ exports.updateArticle = asyncHandler(async (req, res) => {
       _id: updatedArticle._id,
       title: updatedArticle.title,
       content: updatedArticle.content,
+      status: updatedArticle.status || 'published',
+      publishedAt: updatedArticle.publishedAt || null,
     },
   });
 });

@@ -63,6 +63,7 @@ router.post('/delete_category', isAdmin, redirectDeprecatedToDashboard);
 
 // Admin Routes for Articles
 router.get('/create_article', isAdmin, articleController.getCreateArticle); // Form to create articles
+router.get('/create_article/:id', isAdmin, articleController.getCreateArticle); // Form to edit article
 router.post('/create_article', isAdmin, articleController.postCreateArticle); // Save article
 
 // Public Routes for Articles
