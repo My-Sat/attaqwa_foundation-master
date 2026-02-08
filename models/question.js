@@ -5,6 +5,10 @@ const questionSchema = new mongoose.Schema({
   question: { type: String, required: true },
   answer: { type: String },
   isAnswered: { type: Boolean, default: false },
+  answeredByName: { type: String, default: '' },
+  answeredAt: { type: Date },
+  updatedByName: { type: String, default: '' },
+  updatedAt: { type: Date },
   createdAt: { type: Date, default: Date.now },
 });
 

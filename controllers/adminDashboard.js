@@ -243,6 +243,10 @@ exports.getQuestions = asyncHandler(async (req, res) => {
       answer: question.answer || '',
       isAnswered: question.isAnswered,
       username: question.userId ? question.userId.username : 'Unknown',
+      answeredByName: question.answeredByName || '',
+      answeredAt: question.answeredAt || null,
+      updatedByName: question.updatedByName || '',
+      updatedAt: question.updatedAt || null,
       createdAt: question.createdAt,
     })),
   });
@@ -251,6 +255,7 @@ exports.getQuestions = asyncHandler(async (req, res) => {
 exports.updateQuestionAnswer = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const answer = (req.body.answer || '').trim();
+  const adminName = req.session?.admin?.username || 'Admin';
 
   if (!answer) {
     return res.status(400).json({ error: 'Answer is required.' });
@@ -264,6 +269,17 @@ exports.updateQuestionAnswer = asyncHandler(async (req, res) => {
   const previousAnswer = question.answer || '';
   question.answer = answer;
   question.isAnswered = true;
+
+  if (!question.answeredByName) {
+    question.answeredByName = adminName;
+    question.answeredAt = new Date();
+  }
+
+  if (previousAnswer && previousAnswer !== answer) {
+    question.updatedByName = adminName;
+    question.updatedAt = new Date();
+  }
+
   await question.save();
 
   if (question.userId && previousAnswer !== answer) {
@@ -280,6 +296,10 @@ exports.updateQuestionAnswer = asyncHandler(async (req, res) => {
       question: question.question,
       answer: question.answer,
       isAnswered: question.isAnswered,
+      answeredByName: question.answeredByName || '',
+      answeredAt: question.answeredAt || null,
+      updatedByName: question.updatedByName || '',
+      updatedAt: question.updatedAt || null,
     },
   });
 });

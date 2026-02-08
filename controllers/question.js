@@ -60,3 +60,47 @@ exports.getAllQuestions = asyncHandler(async (req, res) => {
     questions
   });
 });
+
+exports.postAnswerQuestion = asyncHandler(async (req, res) => {
+  const { questionId, answer } = req.body;
+  const trimmedAnswer = (answer || '').trim();
+  const adminName = req.session?.admin?.username || 'Admin';
+
+  if (!trimmedAnswer) {
+    req.flash('error', 'Answer is required.');
+    return res.redirect('/dashboard');
+  }
+
+  const question = await Question.findById(questionId);
+  if (!question) {
+    req.flash('error', 'Question not found.');
+    return res.redirect('/dashboard');
+  }
+
+  const previousAnswer = question.answer || '';
+  question.answer = trimmedAnswer;
+  question.isAnswered = true;
+
+  if (!question.answeredByName) {
+    question.answeredByName = adminName;
+    question.answeredAt = new Date();
+  }
+
+  if (previousAnswer && previousAnswer !== trimmedAnswer) {
+    question.updatedByName = adminName;
+    question.updatedAt = new Date();
+  }
+
+  await question.save();
+
+  if (question.userId && previousAnswer !== trimmedAnswer) {
+    await Message.create({
+      userId: question.userId,
+      question: question.question,
+      answer: trimmedAnswer,
+    });
+  }
+
+  req.flash('success', 'Question answered successfully.');
+  res.redirect('/dashboard');
+});

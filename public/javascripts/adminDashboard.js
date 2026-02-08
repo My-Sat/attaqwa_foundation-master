@@ -117,6 +117,19 @@
         .replace(/'/g, '&#39;');
     }
 
+    function formatDateTime(value) {
+      if (!value) {
+        return 'N/A';
+      }
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return 'N/A';
+      }
+
+      return date.toLocaleString();
+    }
+
     function showFeedback(target, message, type) {
       if (!target) {
         return;
@@ -329,6 +342,10 @@
               <div>
                 <p class="admin-item-title">${escapeHtml(question.question)}</p>
                 <small class="text-muted">${escapeHtml(question.username)} | ${question.isAnswered ? 'Answered' : 'Pending'}</small>
+                <small class="d-block text-muted">Answered by: ${escapeHtml(question.answeredByName || 'N/A')} at ${escapeHtml(formatDateTime(question.answeredAt))}</small>
+                ${question.updatedByName || question.updatedAt
+                  ? `<small class="d-block text-muted">Updated by: ${escapeHtml(question.updatedByName || 'N/A')} at ${escapeHtml(formatDateTime(question.updatedAt))}</small>`
+                  : ''}
               </div>
               <div class="d-flex gap-2">
                 <button class="btn btn-sm btn-outline-primary" data-action="edit-answer" data-id="${question._id}">
