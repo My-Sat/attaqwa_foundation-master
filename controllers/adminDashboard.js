@@ -77,6 +77,40 @@ exports.createVideoCategory = asyncHandler(async (req, res) => {
   });
 });
 
+exports.updateVideoCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const title = (req.body.title || '').trim();
+
+  if (!title) {
+    return res.status(400).json({ error: 'Category title is required.' });
+  }
+
+  const existingCategory = await VideoCategory.findOne({ title, _id: { $ne: id } });
+  if (existingCategory) {
+    return res.status(409).json({ error: 'Category already exists.' });
+  }
+
+  const updatedCategory = await VideoCategory.findByIdAndUpdate(
+    id,
+    { title },
+    { new: true }
+  );
+
+  if (!updatedCategory) {
+    return res.status(404).json({ error: 'Category not found.' });
+  }
+
+  const videoCount = await Video.countDocuments({ category: id });
+
+  return res.json({
+    category: {
+      _id: updatedCategory._id,
+      title: updatedCategory.title,
+      videoCount,
+    },
+  });
+});
+
 exports.deleteVideoCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const category = await VideoCategory.findById(id);
@@ -205,10 +239,38 @@ exports.getQuestions = asyncHandler(async (req, res) => {
     questions: questions.map((question) => ({
       _id: question._id,
       question: question.question,
+      answer: question.answer || '',
       isAnswered: question.isAnswered,
       username: question.userId ? question.userId.username : 'Unknown',
       createdAt: question.createdAt,
     })),
+  });
+});
+
+exports.updateQuestionAnswer = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const answer = (req.body.answer || '').trim();
+
+  if (!answer) {
+    return res.status(400).json({ error: 'Answer is required.' });
+  }
+
+  const question = await Question.findById(id);
+  if (!question) {
+    return res.status(404).json({ error: 'Question not found.' });
+  }
+
+  question.answer = answer;
+  question.isAnswered = true;
+  await question.save();
+
+  return res.json({
+    question: {
+      _id: question._id,
+      question: question.question,
+      answer: question.answer,
+      isAnswered: question.isAnswered,
+    },
   });
 });
 

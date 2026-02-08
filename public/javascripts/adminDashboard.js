@@ -14,6 +14,9 @@
     const categoryFilter = document.getElementById('videoCategoryFilter');
     const categorySelect = document.getElementById('videoCategory');
     const categoryForm = document.getElementById('categoryForm');
+    const categoryEditForm = document.getElementById('categoryEditForm');
+    const categoryEditId = document.getElementById('categoryEditId');
+    const categoryEditTitle = document.getElementById('categoryEditTitle');
     const videoForm = document.getElementById('videoForm');
     const classSessionForm = document.getElementById('classSessionForm');
     const classSessionTitle = document.getElementById('classSessionTitle');
@@ -28,6 +31,10 @@
     const articleEditId = document.getElementById('articleEditId');
     const articleEditTitle = document.getElementById('articleEditTitle');
     const articleEditContent = document.getElementById('articleEditContent');
+    const questionAnswerForm = document.getElementById('questionAnswerForm');
+    const questionAnswerId = document.getElementById('questionAnswerId');
+    const questionAnswerText = document.getElementById('questionAnswerText');
+    const questionAnswerInput = document.getElementById('questionAnswerInput');
 
     const adminFeedback = document.getElementById('adminFeedback');
     const questionFeedback = document.getElementById('questionFeedback');
@@ -37,24 +44,31 @@
     const videoFeedback = document.getElementById('videoFeedback');
 
     const categoryModalFeedback = document.getElementById('categoryModalFeedback');
+    const categoryEditModalFeedback = document.getElementById('categoryEditModalFeedback');
     const videoModalFeedback = document.getElementById('videoModalFeedback');
     const classSessionModalFeedback = document.getElementById('classSessionModalFeedback');
     const classSessionEditModalFeedback = document.getElementById('classSessionEditModalFeedback');
     const articleEditModalFeedback = document.getElementById('articleEditModalFeedback');
+    const questionAnswerModalFeedback = document.getElementById('questionAnswerModalFeedback');
     const deleteConfirmMessage = document.getElementById('deleteConfirmMessage');
     const deleteConfirmButton = document.getElementById('deleteConfirmButton');
     const categoryModalElement = document.getElementById('categoryModal');
+    const categoryEditModalElement = document.getElementById('categoryEditModal');
     const videoModalElement = document.getElementById('videoModal');
     const classSessionModalElement = document.getElementById('classSessionModal');
     const classSessionEditModalElement = document.getElementById('classSessionEditModal');
     const classSessionUsersModalElement = document.getElementById('classSessionUsersModal');
     const videoPreviewModalElement = document.getElementById('videoPreviewModal');
     const articleEditModalElement = document.getElementById('articleEditModal');
+    const questionAnswerModalElement = document.getElementById('questionAnswerModal');
     const deleteConfirmModalElement = document.getElementById('deleteConfirmModal');
 
     const hasBootstrapModal = Boolean(window.bootstrap && window.bootstrap.Modal);
     const categoryModal = hasBootstrapModal && categoryModalElement
       ? window.bootstrap.Modal.getOrCreateInstance(categoryModalElement)
+      : null;
+    const categoryEditModal = hasBootstrapModal && categoryEditModalElement
+      ? window.bootstrap.Modal.getOrCreateInstance(categoryEditModalElement)
       : null;
     const videoModal = hasBootstrapModal && videoModalElement
       ? window.bootstrap.Modal.getOrCreateInstance(videoModalElement)
@@ -73,6 +87,9 @@
       : null;
     const articleEditModal = hasBootstrapModal && articleEditModalElement
       ? window.bootstrap.Modal.getOrCreateInstance(articleEditModalElement)
+      : null;
+    const questionAnswerModal = hasBootstrapModal && questionAnswerModalElement
+      ? window.bootstrap.Modal.getOrCreateInstance(questionAnswerModalElement)
       : null;
     const deleteConfirmModal = hasBootstrapModal && deleteConfirmModalElement
       ? window.bootstrap.Modal.getOrCreateInstance(deleteConfirmModalElement)
@@ -232,9 +249,14 @@
                 <p class="admin-item-title">${escapeHtml(category.title)}</p>
                 <small class="text-muted">${category.videoCount} video(s)</small>
               </div>
-              <button class="btn btn-sm btn-outline-danger" data-action="delete-category" data-id="${category._id}">
-                Delete
-              </button>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary" data-action="edit-category" data-id="${category._id}">
+                  Edit
+                </button>
+                <button class="btn btn-sm btn-outline-danger" data-action="delete-category" data-id="${category._id}">
+                  Delete
+                </button>
+              </div>
             </li>
           `
         )
@@ -305,9 +327,14 @@
                 <p class="admin-item-title">${escapeHtml(question.question)}</p>
                 <small class="text-muted">${escapeHtml(question.username)} | ${question.isAnswered ? 'Answered' : 'Pending'}</small>
               </div>
-              <button class="btn btn-sm btn-outline-danger" data-action="delete-question" data-id="${question._id}">
-                Delete
-              </button>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary" data-action="edit-answer" data-id="${question._id}">
+                  Edit
+                </button>
+                <button class="btn btn-sm btn-outline-danger" data-action="delete-question" data-id="${question._id}">
+                  Delete
+                </button>
+              </div>
             </li>
           `
         )
@@ -451,6 +478,37 @@
       }
     });
 
+    if (categoryEditForm) {
+      categoryEditForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearFeedback(categoryEditModalFeedback);
+        clearFeedback(categoryFeedback);
+
+        const categoryId = (categoryEditId.value || '').trim();
+        const title = (categoryEditTitle.value || '').trim();
+
+        if (!categoryId || !title) {
+          showFeedback(categoryEditModalFeedback, 'Category title is required.', 'error');
+          return;
+        }
+
+        try {
+          await request(`/api/admin/video-categories/${categoryId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ title }),
+          });
+
+          categoryEditForm.reset();
+          hideModal(categoryEditModal, categoryEditModalElement);
+          await loadCategories();
+          await loadVideos();
+          showFeedback(categoryFeedback, 'Category updated successfully.', 'success');
+        } catch (error) {
+          showFeedback(categoryEditModalFeedback, error.message, 'error');
+        }
+      });
+    }
+
     videoForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       clearFeedback(videoModalFeedback);
@@ -574,6 +632,36 @@
       });
     }
 
+    if (questionAnswerForm) {
+      questionAnswerForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearFeedback(questionAnswerModalFeedback);
+        clearFeedback(questionFeedback);
+
+        const questionId = (questionAnswerId.value || '').trim();
+        const answer = (questionAnswerInput.value || '').trim();
+
+        if (!questionId || !answer) {
+          showFeedback(questionAnswerModalFeedback, 'Answer is required.', 'error');
+          return;
+        }
+
+        try {
+          await request(`/api/admin/questions/${questionId}/answer`, {
+            method: 'PUT',
+            body: JSON.stringify({ answer }),
+          });
+
+          questionAnswerForm.reset();
+          hideModal(questionAnswerModal, questionAnswerModalElement);
+          await loadQuestions();
+          showFeedback(questionFeedback, 'Answer updated successfully.', 'success');
+        } catch (error) {
+          showFeedback(questionAnswerModalFeedback, error.message, 'error');
+        }
+      });
+    }
+
     categoryFilter.addEventListener('change', async (event) => {
       state.activeCategory = event.target.value;
       clearFeedback(videoFeedback);
@@ -601,6 +689,24 @@
     });
 
     questionList.addEventListener('click', async (event) => {
+      const editButton = event.target.closest('[data-action="edit-answer"]');
+      if (editButton) {
+        const { id } = editButton.dataset;
+        const question = state.questions.find((item) => String(item._id) === String(id));
+
+        if (!question || !questionAnswerForm || !questionAnswerId || !questionAnswerText || !questionAnswerInput) {
+          showFeedback(questionFeedback, 'Unable to load question answer editor.', 'error');
+          return;
+        }
+
+        clearFeedback(questionAnswerModalFeedback);
+        questionAnswerId.value = question._id;
+        questionAnswerText.value = question.question || '';
+        questionAnswerInput.value = question.answer || '';
+        showModal(questionAnswerModal, questionAnswerModalElement);
+        return;
+      }
+
       const button = event.target.closest('[data-action="delete-question"]');
       if (!button) {
         return;
@@ -742,6 +848,23 @@
     });
 
     categoryList.addEventListener('click', async (event) => {
+      const editButton = event.target.closest('[data-action="edit-category"]');
+      if (editButton) {
+        const { id } = editButton.dataset;
+        const category = state.categories.find((item) => String(item._id) === String(id));
+
+        if (!category || !categoryEditForm || !categoryEditId || !categoryEditTitle) {
+          showFeedback(categoryFeedback, 'Unable to load category editor.', 'error');
+          return;
+        }
+
+        clearFeedback(categoryEditModalFeedback);
+        categoryEditId.value = category._id;
+        categoryEditTitle.value = category.title || '';
+        showModal(categoryEditModal, categoryEditModalElement);
+        return;
+      }
+
       const button = event.target.closest('[data-action="delete-category"]');
       if (!button) {
         return;

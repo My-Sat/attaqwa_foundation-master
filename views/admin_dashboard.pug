@@ -79,6 +79,23 @@ block content
             button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
             button.btn.admin-btn(type="submit") Save Category
 
+  .modal.fade#categoryEditModal(tabindex="-1" aria-labelledby="categoryEditModalLabel" aria-hidden="true")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5#categoryEditModalLabel.modal-title Edit Category
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        form#categoryEditForm
+          input#categoryEditId(type="hidden" name="categoryId")
+          .modal-body
+            .mb-3
+              label.form-label(for="categoryEditTitle") Category Title
+              input#categoryEditTitle.form-control(type="text" name="title" required)
+            p#categoryEditModalFeedback.admin-feedback.d-none
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button.btn.admin-btn(type="submit") Save Changes
+
   .modal.fade#videoModal(tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true")
     .modal-dialog
       .modal-content
@@ -150,6 +167,26 @@ block content
           .modal-footer
             button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
             button.btn.admin-btn(type="submit") Save Changes
+
+  .modal.fade#questionAnswerModal(tabindex="-1" aria-labelledby="questionAnswerModalLabel" aria-hidden="true")
+    .modal-dialog.modal-lg
+      .modal-content
+        .modal-header
+          h5#questionAnswerModalLabel.modal-title Edit Answer
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        form#questionAnswerForm
+          input#questionAnswerId(type="hidden" name="questionId")
+          .modal-body
+            .mb-3
+              label.form-label(for="questionAnswerText") Question
+              textarea#questionAnswerText.form-control(rows="3" readonly)
+            .mb-3
+              label.form-label(for="questionAnswerInput") Answer
+              textarea#questionAnswerInput.form-control(name="answer" rows="8" required)
+            p#questionAnswerModalFeedback.admin-feedback.d-none
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button.btn.admin-btn(type="submit") Save Answer
 
   .modal.fade#classSessionUsersModal(tabindex="-1" aria-labelledby="classSessionUsersModalLabel" aria-hidden="true")
     .modal-dialog.modal-lg

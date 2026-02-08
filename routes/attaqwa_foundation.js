@@ -118,6 +118,7 @@ router.post('/signup/admin',validateAdminSignUp,isAdmin, adminAccount.postAdminS
 router.get('/dashboard',isAdmin, adminAccount.getAdminDashboard);
 router.get('/api/admin/video-categories', isAdmin, adminDashboardController.getVideoCategories);
 router.post('/api/admin/video-categories', isAdmin, adminDashboardController.createVideoCategory);
+router.put('/api/admin/video-categories/:id', isAdmin, adminDashboardController.updateVideoCategory);
 router.delete('/api/admin/video-categories/:id', isAdmin, adminDashboardController.deleteVideoCategory);
 router.get('/api/admin/videos', isAdmin, adminDashboardController.getVideos);
 router.post('/api/admin/videos', isAdmin, adminDashboardController.createVideo);
@@ -125,6 +126,7 @@ router.delete('/api/admin/videos/:id', isAdmin, adminDashboardController.deleteV
 router.get('/api/admin/admins', isAdmin, adminDashboardController.getAdmins);
 router.delete('/api/admin/admins/:id', isAdmin, adminDashboardController.deleteAdmin);
 router.get('/api/admin/questions', isAdmin, adminDashboardController.getQuestions);
+router.put('/api/admin/questions/:id/answer', isAdmin, adminDashboardController.updateQuestionAnswer);
 router.delete('/api/admin/questions/:id', isAdmin, adminDashboardController.deleteQuestion);
 router.get('/api/admin/articles', isAdmin, adminDashboardController.getArticles);
 router.get('/api/admin/articles/:id', isAdmin, adminDashboardController.getArticleById);
