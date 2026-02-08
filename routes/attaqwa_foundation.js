@@ -39,20 +39,20 @@ router.get('/registrations/pending', isAdmin, sessionController.getPendingRegist
 router.post('/registrations/pending', isAdmin, sessionController.postPendingRegistrations);
 
 //Display all class sessions
-router.get('/all_class_sessions', isAdmin, sessionController.getAllClassSessions);
+router.get('/all_class_sessions', isAdmin, redirectDeprecatedToDashboard);
 
 //Display specific class session participants
-router.get('/class_session/:id', isAdmin, sessionController.getUsersForClassSession);
+router.get('/class_session/:id', isAdmin, redirectDeprecatedToDashboard);
 
 // Deprecated standalone page: add category
 router.get('/add_category', isAdmin, redirectDeprecatedToDashboard);
 router.post('/add_category', isAdmin, redirectDeprecatedToDashboard);
 
 //Get: Add class Session
-router.get('/add_session', isAdmin, sessionController.getAddClassSession);
+router.get('/add_session', isAdmin, redirectDeprecatedToDashboard);
 
 //Post: Add class session
-router.post('/add_session', isAdmin, sessionController.postAddClassSession);
+router.post('/add_session', isAdmin, redirectDeprecatedToDashboard);
 
 
 router.get('/video_categories/:id', videoListController.getVideoList);
@@ -131,6 +131,9 @@ router.get('/api/admin/articles/:id', isAdmin, adminDashboardController.getArtic
 router.put('/api/admin/articles/:id', isAdmin, adminDashboardController.updateArticle);
 router.delete('/api/admin/articles/:id', isAdmin, adminDashboardController.deleteArticle);
 router.get('/api/admin/class-sessions', isAdmin, adminDashboardController.getClassSessions);
+router.post('/api/admin/class-sessions', isAdmin, adminDashboardController.createClassSession);
+router.get('/api/admin/class-sessions/:id/users', isAdmin, adminDashboardController.getClassSessionUsers);
+router.put('/api/admin/class-sessions/:id', isAdmin, adminDashboardController.updateClassSession);
 router.delete('/api/admin/class-sessions/:id', isAdmin, adminDashboardController.deleteClassSession);
 
 // Deprecated standalone page: delete admin

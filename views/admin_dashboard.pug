@@ -34,17 +34,12 @@ block content
       .admin-card
         .admin-card-head
           h3.admin-card-title Class
-          a.btn.admin-btn(href="/add_session") Add Session
+          button.btn.admin-btn(type="button" data-bs-toggle="modal" data-bs-target="#classSessionModal") Add Session
         p#classFeedback.admin-feedback.d-none
         ul#classList.admin-item-list
           li.text-muted Loading class sessions...
-
-      .admin-card
-        .admin-card-head
-          h3.admin-card-title Class Operations
         .admin-link-group
           a.admin-link-chip(href="/registrations/pending") Approve Registrations
-          a.admin-link-chip(href="/all_class_sessions") View Session Users
           a.admin-link-chip(href="/registration_fee") Update Access Fee
 
       .admin-card
@@ -107,6 +102,66 @@ block content
             button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
             button.btn.admin-btn(type="submit") Save Video
 
+  .modal.fade#videoPreviewModal(tabindex="-1" aria-labelledby="videoPreviewModalLabel" aria-hidden="true")
+    .modal-dialog.modal-lg
+      .modal-content
+        .modal-header
+          h5#videoPreviewModalLabel.modal-title Video Preview
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        .modal-body
+          h6#videoPreviewTitle.mb-3
+          .iframe-container
+            iframe#videoPreviewFrame(
+              src=""
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            )
+
+  .modal.fade#classSessionModal(tabindex="-1" aria-labelledby="classSessionModalLabel" aria-hidden="true")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5#classSessionModalLabel.modal-title Add Session
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        form#classSessionForm
+          .modal-body
+            .mb-3
+              label.form-label(for="classSessionTitle") Session Title
+              input#classSessionTitle.form-control(type="text" name="title" required)
+            p#classSessionModalFeedback.admin-feedback.d-none
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button.btn.admin-btn(type="submit") Save Session
+
+  .modal.fade#classSessionEditModal(tabindex="-1" aria-labelledby="classSessionEditModalLabel" aria-hidden="true")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5#classSessionEditModalLabel.modal-title Edit Session
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        form#classSessionEditForm
+          input#classSessionEditId(type="hidden" name="sessionId")
+          .modal-body
+            .mb-3
+              label.form-label(for="classSessionEditTitle") Session Title
+              input#classSessionEditTitle.form-control(type="text" name="title" required)
+            p#classSessionEditModalFeedback.admin-feedback.d-none
+          .modal-footer
+            button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button.btn.admin-btn(type="submit") Save Changes
+
+  .modal.fade#classSessionUsersModal(tabindex="-1" aria-labelledby="classSessionUsersModalLabel" aria-hidden="true")
+    .modal-dialog.modal-lg
+      .modal-content
+        .modal-header
+          h5#classSessionUsersModalLabel.modal-title Session Users
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        .modal-body
+          p#classSessionUsersTitle.fw-bold.mb-3
+          ul#classSessionUsersList.admin-item-list
+            li.text-muted Loading users...
+
   .modal.fade#articleEditModal(tabindex="-1" aria-labelledby="articleEditModalLabel" aria-hidden="true")
     .modal-dialog.modal-lg
       .modal-content
@@ -126,6 +181,18 @@ block content
           .modal-footer
             button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
             button.btn.admin-btn(type="submit") Save Changes
+
+  .modal.fade#deleteConfirmModal(tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5#deleteConfirmModalLabel.modal-title Confirm Delete
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        .modal-body
+          p#deleteConfirmMessage.mb-0 Are you sure you want to delete this item?
+        .modal-footer
+          button.btn.btn-outline-secondary(type="button" data-bs-dismiss="modal") Cancel
+          button#deleteConfirmButton.btn.btn-danger(type="button") Delete
 
 block scripts
   script(src="/javascripts/adminDashboard.js")

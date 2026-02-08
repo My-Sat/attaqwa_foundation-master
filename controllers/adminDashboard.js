@@ -318,6 +318,81 @@ exports.getClassSessions = asyncHandler(async (req, res) => {
   res.json({ classSessions });
 });
 
+exports.createClassSession = asyncHandler(async (req, res) => {
+  const title = (req.body.title || '').trim();
+
+  if (!title) {
+    return res.status(400).json({ error: 'Session title is required.' });
+  }
+
+  const classSession = await ClassSession.create({ title });
+
+  return res.status(201).json({
+    classSession: {
+      _id: classSession._id,
+      title: classSession.title,
+      registrationCount: 0,
+    },
+  });
+});
+
+exports.updateClassSession = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const title = (req.body.title || '').trim();
+
+  if (!title) {
+    return res.status(400).json({ error: 'Session title is required.' });
+  }
+
+  const updatedSession = await ClassSession.findByIdAndUpdate(
+    id,
+    { title },
+    { new: true }
+  );
+
+  if (!updatedSession) {
+    return res.status(404).json({ error: 'Class session not found.' });
+  }
+
+  const registrationCount = await Registration.countDocuments({ classSessionId: id });
+
+  return res.json({
+    classSession: {
+      _id: updatedSession._id,
+      title: updatedSession.title,
+      registrationCount,
+    },
+  });
+});
+
+exports.getClassSessionUsers = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const classSession = await ClassSession.findById(id);
+
+  if (!classSession) {
+    return res.status(404).json({ error: 'Class session not found.' });
+  }
+
+  const registrations = await Registration.find({ classSessionId: id })
+    .populate('userId', 'username phoneNumber')
+    .sort({ _id: -1 });
+
+  return res.json({
+    classSession: {
+      _id: classSession._id,
+      title: classSession.title,
+    },
+    users: registrations.map((registration) => ({
+      registrationId: registration._id,
+      username: registration.userId ? registration.userId.username : 'Unknown',
+      phoneNumber: registration.userId ? registration.userId.phoneNumber : '',
+      momoReferenceName: registration.momoReferenceName,
+      accessCodeAssigned: registration.accessCodeAssigned,
+      accessCode: registration.accessCode || '',
+    })),
+  });
+});
+
 exports.deleteClassSession = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const classSession = await ClassSession.findById(id);

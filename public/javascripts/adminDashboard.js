@@ -15,6 +15,15 @@
     const categorySelect = document.getElementById('videoCategory');
     const categoryForm = document.getElementById('categoryForm');
     const videoForm = document.getElementById('videoForm');
+    const classSessionForm = document.getElementById('classSessionForm');
+    const classSessionTitle = document.getElementById('classSessionTitle');
+    const classSessionEditForm = document.getElementById('classSessionEditForm');
+    const classSessionEditId = document.getElementById('classSessionEditId');
+    const classSessionEditTitle = document.getElementById('classSessionEditTitle');
+    const classSessionUsersTitle = document.getElementById('classSessionUsersTitle');
+    const classSessionUsersList = document.getElementById('classSessionUsersList');
+    const videoPreviewFrame = document.getElementById('videoPreviewFrame');
+    const videoPreviewTitle = document.getElementById('videoPreviewTitle');
     const articleEditForm = document.getElementById('articleEditForm');
     const articleEditId = document.getElementById('articleEditId');
     const articleEditTitle = document.getElementById('articleEditTitle');
@@ -29,10 +38,19 @@
 
     const categoryModalFeedback = document.getElementById('categoryModalFeedback');
     const videoModalFeedback = document.getElementById('videoModalFeedback');
+    const classSessionModalFeedback = document.getElementById('classSessionModalFeedback');
+    const classSessionEditModalFeedback = document.getElementById('classSessionEditModalFeedback');
     const articleEditModalFeedback = document.getElementById('articleEditModalFeedback');
+    const deleteConfirmMessage = document.getElementById('deleteConfirmMessage');
+    const deleteConfirmButton = document.getElementById('deleteConfirmButton');
     const categoryModalElement = document.getElementById('categoryModal');
     const videoModalElement = document.getElementById('videoModal');
+    const classSessionModalElement = document.getElementById('classSessionModal');
+    const classSessionEditModalElement = document.getElementById('classSessionEditModal');
+    const classSessionUsersModalElement = document.getElementById('classSessionUsersModal');
+    const videoPreviewModalElement = document.getElementById('videoPreviewModal');
     const articleEditModalElement = document.getElementById('articleEditModal');
+    const deleteConfirmModalElement = document.getElementById('deleteConfirmModal');
 
     const hasBootstrapModal = Boolean(window.bootstrap && window.bootstrap.Modal);
     const categoryModal = hasBootstrapModal && categoryModalElement
@@ -41,8 +59,23 @@
     const videoModal = hasBootstrapModal && videoModalElement
       ? window.bootstrap.Modal.getOrCreateInstance(videoModalElement)
       : null;
+    const classSessionModal = hasBootstrapModal && classSessionModalElement
+      ? window.bootstrap.Modal.getOrCreateInstance(classSessionModalElement)
+      : null;
+    const classSessionEditModal = hasBootstrapModal && classSessionEditModalElement
+      ? window.bootstrap.Modal.getOrCreateInstance(classSessionEditModalElement)
+      : null;
+    const classSessionUsersModal = hasBootstrapModal && classSessionUsersModalElement
+      ? window.bootstrap.Modal.getOrCreateInstance(classSessionUsersModalElement)
+      : null;
+    const videoPreviewModal = hasBootstrapModal && videoPreviewModalElement
+      ? window.bootstrap.Modal.getOrCreateInstance(videoPreviewModalElement)
+      : null;
     const articleEditModal = hasBootstrapModal && articleEditModalElement
       ? window.bootstrap.Modal.getOrCreateInstance(articleEditModalElement)
+      : null;
+    const deleteConfirmModal = hasBootstrapModal && deleteConfirmModalElement
+      ? window.bootstrap.Modal.getOrCreateInstance(deleteConfirmModalElement)
       : null;
 
     const state = {
@@ -117,6 +150,47 @@
       document.body.classList.add('modal-open');
     }
 
+    function confirmDelete(message) {
+      if (!deleteConfirmModalElement || !deleteConfirmButton || !deleteConfirmMessage) {
+        return Promise.resolve(window.confirm(message));
+      }
+
+      return new Promise((resolve) => {
+        let isResolved = false;
+
+        const cleanup = () => {
+          deleteConfirmButton.removeEventListener('click', onConfirm);
+          deleteConfirmModalElement.removeEventListener('hidden.bs.modal', onHidden);
+        };
+
+        const onConfirm = () => {
+          if (isResolved) {
+            return;
+          }
+
+          isResolved = true;
+          cleanup();
+          hideModal(deleteConfirmModal, deleteConfirmModalElement);
+          resolve(true);
+        };
+
+        const onHidden = () => {
+          if (isResolved) {
+            return;
+          }
+
+          isResolved = true;
+          cleanup();
+          resolve(false);
+        };
+
+        deleteConfirmMessage.textContent = message;
+        deleteConfirmButton.addEventListener('click', onConfirm);
+        deleteConfirmModalElement.addEventListener('hidden.bs.modal', onHidden);
+        showModal(deleteConfirmModal, deleteConfirmModalElement);
+      });
+    }
+
     async function request(url, options) {
       const response = await fetch(url, {
         headers: { 'Content-Type': 'application/json' },
@@ -182,7 +256,9 @@
                 <small class="text-muted">${escapeHtml(video.category ? video.category.title : 'No category')}</small>
               </div>
               <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="${video.youtubeUrl}" target="_blank" rel="noopener noreferrer">Preview</a>
+                <button class="btn btn-sm btn-outline-secondary" data-action="preview-video" data-id="${video._id}">
+                  Preview
+                </button>
                 <button class="btn btn-sm btn-outline-danger" data-action="delete-video" data-id="${video._id}">
                   Delete
                 </button>
@@ -279,9 +355,17 @@
                 <p class="admin-item-title">${escapeHtml(session.title)}</p>
                 <small class="text-muted">${session.registrationCount} registration(s)</small>
               </div>
-              <button class="btn btn-sm btn-outline-danger" data-action="delete-class-session" data-id="${session._id}">
-                Delete
-              </button>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" data-action="view-class-session" data-id="${session._id}">
+                  View
+                </button>
+                <button class="btn btn-sm btn-outline-primary" data-action="edit-class-session" data-id="${session._id}">
+                  Edit
+                </button>
+                <button class="btn btn-sm btn-outline-danger" data-action="delete-class-session" data-id="${session._id}">
+                  Delete
+                </button>
+              </div>
             </li>
           `
         )
@@ -401,6 +485,64 @@
       }
     });
 
+    if (classSessionForm) {
+      classSessionForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearFeedback(classSessionModalFeedback);
+        clearFeedback(classFeedback);
+
+        const title = (classSessionTitle.value || '').trim();
+        if (!title) {
+          showFeedback(classSessionModalFeedback, 'Session title is required.', 'error');
+          return;
+        }
+
+        try {
+          await request('/api/admin/class-sessions', {
+            method: 'POST',
+            body: JSON.stringify({ title }),
+          });
+
+          classSessionForm.reset();
+          hideModal(classSessionModal, classSessionModalElement);
+          await loadClassSessions();
+          showFeedback(classFeedback, 'Session added successfully.', 'success');
+        } catch (error) {
+          showFeedback(classSessionModalFeedback, error.message, 'error');
+        }
+      });
+    }
+
+    if (classSessionEditForm) {
+      classSessionEditForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearFeedback(classSessionEditModalFeedback);
+        clearFeedback(classFeedback);
+
+        const sessionId = (classSessionEditId.value || '').trim();
+        const title = (classSessionEditTitle.value || '').trim();
+
+        if (!sessionId || !title) {
+          showFeedback(classSessionEditModalFeedback, 'Session title is required.', 'error');
+          return;
+        }
+
+        try {
+          await request(`/api/admin/class-sessions/${sessionId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ title }),
+          });
+
+          classSessionEditForm.reset();
+          hideModal(classSessionEditModal, classSessionEditModalElement);
+          await loadClassSessions();
+          showFeedback(classFeedback, 'Session updated successfully.', 'success');
+        } catch (error) {
+          showFeedback(classSessionEditModalFeedback, error.message, 'error');
+        }
+      });
+    }
+
     if (articleEditForm) {
       articleEditForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -445,7 +587,7 @@
       }
 
       const { id } = button.dataset;
-      if (!id || !window.confirm('Delete this admin account?')) {
+      if (!id || !(await confirmDelete('Delete this admin account?'))) {
         return;
       }
 
@@ -465,7 +607,7 @@
       }
 
       const { id } = button.dataset;
-      if (!id || !window.confirm('Delete this question?')) {
+      if (!id || !(await confirmDelete('Delete this question?'))) {
         return;
       }
 
@@ -507,7 +649,7 @@
       }
 
       const { id } = button.dataset;
-      if (!id || !window.confirm('Delete this article?')) {
+      if (!id || !(await confirmDelete('Delete this article?'))) {
         return;
       }
 
@@ -521,13 +663,72 @@
     });
 
     classList.addEventListener('click', async (event) => {
+      const viewButton = event.target.closest('[data-action="view-class-session"]');
+      if (viewButton) {
+        const { id } = viewButton.dataset;
+        if (!id || !classSessionUsersList || !classSessionUsersTitle) {
+          return;
+        }
+
+        classSessionUsersTitle.textContent = 'Session Users';
+        classSessionUsersList.innerHTML = '<li class="text-muted">Loading users...</li>';
+        showModal(classSessionUsersModal, classSessionUsersModalElement);
+
+        try {
+          const payload = await request(`/api/admin/class-sessions/${id}/users`);
+          classSessionUsersTitle.textContent = payload.classSession.title;
+
+          if (!payload.users || !payload.users.length) {
+            classSessionUsersList.innerHTML = '<li class="text-muted">No users registered under this session yet.</li>';
+            return;
+          }
+
+          classSessionUsersList.innerHTML = payload.users
+            .map(
+              (user) => `
+                <li class="admin-item">
+                  <div>
+                    <p class="admin-item-title">${escapeHtml(user.username)}</p>
+                    <small class="text-muted">Phone: ${escapeHtml(user.phoneNumber || 'N/A')} | MoMo: ${escapeHtml(user.momoReferenceName || 'N/A')}</small>
+                  </div>
+                  <span class="badge ${user.accessCodeAssigned ? 'text-bg-success' : 'text-bg-secondary'}">
+                    ${user.accessCodeAssigned ? 'Code Assigned' : 'Pending Code'}
+                  </span>
+                </li>
+              `
+            )
+            .join('');
+        } catch (error) {
+          classSessionUsersList.innerHTML = `<li class="text-danger">${escapeHtml(error.message)}</li>`;
+        }
+
+        return;
+      }
+
+      const editButton = event.target.closest('[data-action="edit-class-session"]');
+      if (editButton) {
+        const { id } = editButton.dataset;
+        const session = state.classSessions.find((item) => String(item._id) === String(id));
+
+        if (!session || !classSessionEditId || !classSessionEditTitle) {
+          showFeedback(classFeedback, 'Unable to load session for editing.', 'error');
+          return;
+        }
+
+        clearFeedback(classSessionEditModalFeedback);
+        classSessionEditId.value = session._id;
+        classSessionEditTitle.value = session.title || '';
+        showModal(classSessionEditModal, classSessionEditModalElement);
+        return;
+      }
+
       const button = event.target.closest('[data-action="delete-class-session"]');
       if (!button) {
         return;
       }
 
       const { id } = button.dataset;
-      if (!id || !window.confirm('Delete this class session and related registrations?')) {
+      if (!id || !(await confirmDelete('Delete this class session and related registrations?'))) {
         return;
       }
 
@@ -547,7 +748,7 @@
       }
 
       const { id } = button.dataset;
-      if (!id || !window.confirm('Delete this category and all videos inside it?')) {
+      if (!id || !(await confirmDelete('Delete this category and all videos inside it?'))) {
         return;
       }
 
@@ -565,13 +766,29 @@
     });
 
     videoList.addEventListener('click', async (event) => {
+      const previewButton = event.target.closest('[data-action="preview-video"]');
+      if (previewButton) {
+        const { id } = previewButton.dataset;
+        const video = state.videos.find((item) => String(item._id) === String(id));
+
+        if (!video || !videoPreviewFrame || !videoPreviewTitle) {
+          showFeedback(videoFeedback, 'Unable to preview this video.', 'error');
+          return;
+        }
+
+        videoPreviewTitle.textContent = video.title || 'Video Preview';
+        videoPreviewFrame.src = video.youtubeUrl;
+        showModal(videoPreviewModal, videoPreviewModalElement);
+        return;
+      }
+
       const button = event.target.closest('[data-action="delete-video"]');
       if (!button) {
         return;
       }
 
       const { id } = button.dataset;
-      if (!id || !window.confirm('Delete this video?')) {
+      if (!id || !(await confirmDelete('Delete this video?'))) {
         return;
       }
 
@@ -584,6 +801,12 @@
         showFeedback(videoFeedback, error.message, 'error');
       }
     });
+
+    if (videoPreviewModalElement && videoPreviewFrame) {
+      videoPreviewModalElement.addEventListener('hidden.bs.modal', () => {
+        videoPreviewFrame.src = '';
+      });
+    }
 
     refreshAll().catch((error) => {
       const message = escapeHtml(error.message);

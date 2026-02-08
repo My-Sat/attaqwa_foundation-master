@@ -4,37 +4,6 @@ const ClassSession = require('../models/class_session');
 const RegistrationFee = require('../models/registrationFee');
 const asyncHandler = require('express-async-handler');
 
-// GET: Display form for adding new class session
-exports.getAddClassSession = asyncHandler(async (req, res) => {
-  const success = req.flash('success');
-  const error = req.flash('error');
-
-  res.render('addClassSession', {
-    title: 'Add Class Session',
-    success,
-    error,
-  });
-});
-
-// POST: Add a session
-exports.postAddClassSession = asyncHandler(async (req, res) => {
-  const { title } = req.body;
-
-  if (!title) {
-    req.flash('error', 'Session title is required.');
-    return res.redirect('/add_session');
-  }
-
-  try {
-    await ClassSession.create({ title });
-    req.flash('success', 'Session added successfully!');
-    res.redirect('/add_session');
-  } catch (err) {
-    req.flash('error', 'Failed to add session. Please try again later.');
-    res.redirect('/add_session');
-  }
-});
-
 // GET: Display registration form
 exports.getClassSessionRegistration = asyncHandler(async (req, res) => {
   const success = req.flash('success');
@@ -131,47 +100,6 @@ exports.postPendingRegistrations = asyncHandler(async (req, res) => {
   }
 });
   
-  // GET: Display all class sessions
-  exports.getAllClassSessions = asyncHandler(async (req, res) => {
-    const success = req.flash('success');
-    const error = req.flash('error');
-    const classSessions = await ClassSession.find();
-  
-    res.render('all_class_sessions', {
-      title: 'Class Sessions',
-      classSessions,
-      success,
-      error,
-    });
-  });
-    
-// GET: Display users for a specific class session
-exports.getUsersForClassSession = asyncHandler(async (req, res) => {
-  const success = req.flash('success');
-  const error = req.flash('error');
-  const classSessionId = req.params.id;
-  const classSession = await ClassSession.findById(classSessionId)
-  .populate({
-    path: 'users',
-    populate: {
-      path: 'userId',
-      model: 'User',
-    },
-  });
-
-  if (!classSession) {
-    req.flash('error', 'Class session not found.');
-    return res.redirect('/class_sessions');
-  }
-
-  res.render('class_session_list', {
-    title: classSession.title,
-    classSession,
-    success,
-    error,
-  });
-});
-
 // Display the form for users to submit their access code
 exports.getLiveClassAuth = asyncHandler(async (req, res) => {
   res.render('codeSubmission', {
