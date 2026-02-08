@@ -21,6 +21,10 @@ function getPublicArticleFilter() {
 }
 
 exports.index = asyncHandler(async (req, res) => {
+  const noticeType = (req.query.liveClassNotice || '').trim();
+  const liveClassNotice = noticeType === 'not_started'
+    ? 'No class is active right now. Please wait for admin to start the live class.'
+    : '';
   let liveVideoUrl = "https://www.youtube.com/embed/xjxOWSmSjnU"; // Fallback video
 
   try {
@@ -88,6 +92,7 @@ exports.index = asyncHandler(async (req, res) => {
     hasMoreQuestions: totalQuestions > questions.length,
     hasMoreVideos: totalVideoCategories > videoCategories.length,
     hasMoreArticles: totalArticles > articles.length,
+    liveClassNotice,
   });
 });
 

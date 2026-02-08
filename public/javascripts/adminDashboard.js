@@ -9,6 +9,7 @@
     const classList = document.getElementById('classList');
     const liveClassStatusElement = document.getElementById('liveClassStatus');
     const endLiveClassBtn = document.getElementById('endLiveClassBtn');
+    const joinLiveClassBtn = document.getElementById('joinLiveClassBtn');
 
     if (!categoryList || !videoList || !adminList || !questionList || !articleList || !classList) {
       return;
@@ -50,6 +51,7 @@
     const classSessionModalFeedback = document.getElementById('classSessionModalFeedback');
     const classSessionEditModalFeedback = document.getElementById('classSessionEditModalFeedback');
     const questionAnswerModalFeedback = document.getElementById('questionAnswerModalFeedback');
+    const deleteConfirmModalLabel = document.getElementById('deleteConfirmModalLabel');
     const deleteConfirmMessage = document.getElementById('deleteConfirmMessage');
     const deleteConfirmButton = document.getElementById('deleteConfirmButton');
     const categoryModalElement = document.getElementById('categoryModal');
@@ -181,7 +183,10 @@
       document.body.classList.add('modal-open');
     }
 
-    function confirmDelete(message) {
+    function confirmDelete(message, options) {
+      const confirmText = options && options.confirmText ? options.confirmText : 'Delete';
+      const confirmVariant = options && options.confirmVariant ? options.confirmVariant : 'danger';
+      const confirmTitle = options && options.confirmTitle ? options.confirmTitle : 'Confirm Delete';
       if (!deleteConfirmModalElement || !deleteConfirmButton || !deleteConfirmMessage) {
         return Promise.resolve(window.confirm(message));
       }
@@ -216,6 +221,12 @@
         };
 
         deleteConfirmMessage.textContent = message;
+        if (deleteConfirmModalLabel) {
+          deleteConfirmModalLabel.textContent = confirmTitle;
+        }
+        deleteConfirmButton.textContent = confirmText;
+        deleteConfirmButton.classList.remove('btn-danger', 'btn-primary', 'btn-warning', 'btn-success');
+        deleteConfirmButton.classList.add(`btn-${confirmVariant}`);
         deleteConfirmButton.addEventListener('click', onConfirm);
         deleteConfirmModalElement.addEventListener('hidden.bs.modal', onHidden);
         showModal(deleteConfirmModal, deleteConfirmModalElement);
@@ -263,13 +274,23 @@
                 <p class="admin-item-title">${escapeHtml(category.title)}</p>
                 <small class="text-muted">${category.videoCount} video(s)</small>
               </div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary" data-action="edit-category" data-id="${category._id}">
-                  Edit
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Category actions">
+                  <i class="bi bi-three-dots-vertical"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" data-action="delete-category" data-id="${category._id}">
-                  Delete
-                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <button class="dropdown-item" data-action="edit-category" data-id="${category._id}">
+                      Edit
+                    </button>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <button class="dropdown-item text-danger" data-action="delete-category" data-id="${category._id}">
+                      Delete
+                    </button>
+                  </li>
+                </ul>
               </div>
             </li>
           `
@@ -291,13 +312,23 @@
                 <p class="admin-item-title">${escapeHtml(video.title)}</p>
                 <small class="text-muted">${escapeHtml(video.category ? video.category.title : 'No category')}</small>
               </div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-secondary" data-action="preview-video" data-id="${video._id}">
-                  Preview
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Video actions">
+                  <i class="bi bi-three-dots-vertical"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" data-action="delete-video" data-id="${video._id}">
-                  Delete
-                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <button class="dropdown-item" data-action="preview-video" data-id="${video._id}">
+                      Preview
+                    </button>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <button class="dropdown-item text-danger" data-action="delete-video" data-id="${video._id}">
+                      Delete
+                    </button>
+                  </li>
+                </ul>
               </div>
             </li>
           `
@@ -345,13 +376,23 @@
                   ? `<small class="d-block text-muted">Updated by: ${escapeHtml(question.updatedByName || 'N/A')} at ${escapeHtml(formatDateTime(question.updatedAt))}</small>`
                   : ''}
               </div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary" data-action="edit-answer" data-id="${question._id}">
-                  Edit
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Question actions">
+                  <i class="bi bi-three-dots-vertical"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" data-action="delete-question" data-id="${question._id}">
-                  Delete
-                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <button class="dropdown-item" data-action="edit-answer" data-id="${question._id}">
+                      Edit
+                    </button>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <button class="dropdown-item text-danger" data-action="delete-question" data-id="${question._id}">
+                      Delete
+                    </button>
+                  </li>
+                </ul>
               </div>
             </li>
           `
@@ -373,13 +414,23 @@
                 <p class="admin-item-title">${escapeHtml(article.title)}</p>
                 <small class="text-muted">${article.status === 'draft' ? 'Draft (private)' : 'Published'}</small>
               </div>
-              <div class="d-flex gap-2">
-                <a class="btn btn-sm btn-outline-secondary" href="/create_article/${article._id}">
-                  Edit
-                </a>
-                <button class="btn btn-sm btn-outline-danger" data-action="delete-article" data-id="${article._id}">
-                  Delete
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Article actions">
+                  <i class="bi bi-three-dots-vertical"></i>
                 </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" href="/create_article/${article._id}">
+                      Edit
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <button class="dropdown-item text-danger" data-action="delete-article" data-id="${article._id}">
+                      Delete
+                    </button>
+                  </li>
+                </ul>
               </div>
             </li>
           `
@@ -403,19 +454,39 @@
                 <small class="text-muted">${session.registrationCount} registration(s)</small>
                 ${session.isLiveActive ? '<small class="d-block text-success fw-bold">Live now</small>' : ''}
               </div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-success" data-action="start-class-session" data-id="${session._id}" ${(isAnyLive || session.isLiveActive) ? 'disabled' : ''}>
-                  ${session.isLiveActive ? 'Active' : 'Start'}
+              <div class="dropdown">
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  aria-label="Class actions"
+                >
+                  <i class="bi bi-three-dots-vertical"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-secondary" data-action="view-class-session" data-id="${session._id}">
-                  View
-                </button>
-                <button class="btn btn-sm btn-outline-primary" data-action="edit-class-session" data-id="${session._id}">
-                  Edit
-                </button>
-                <button class="btn btn-sm btn-outline-danger" data-action="delete-class-session" data-id="${session._id}">
-                  Delete
-                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <button class="dropdown-item ${session.isLiveActive ? 'text-success' : ''}" data-action="start-class-session" data-id="${session._id}" ${(isAnyLive || session.isLiveActive) ? 'disabled' : ''}>
+                      ${session.isLiveActive ? 'Active' : 'Start'}
+                    </button>
+                  </li>
+                  <li>
+                    <button class="dropdown-item" data-action="view-class-session" data-id="${session._id}">
+                      View
+                    </button>
+                  </li>
+                  <li>
+                    <button class="dropdown-item" data-action="edit-class-session" data-id="${session._id}">
+                      Edit
+                    </button>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <button class="dropdown-item text-danger" data-action="delete-class-session" data-id="${session._id}">
+                      Delete
+                    </button>
+                  </li>
+                </ul>
               </div>
             </li>
           `
@@ -434,12 +505,18 @@
         if (endLiveClassBtn) {
           endLiveClassBtn.setAttribute('disabled', 'disabled');
         }
+        if (joinLiveClassBtn) {
+          joinLiveClassBtn.setAttribute('disabled', 'disabled');
+        }
         return;
       }
 
       liveClassStatusElement.textContent = `Live now: ${status.activeSession.title} (started ${formatDateTime(status.startedAt)})`;
       if (endLiveClassBtn) {
         endLiveClassBtn.removeAttribute('disabled');
+      }
+      if (joinLiveClassBtn) {
+        joinLiveClassBtn.removeAttribute('disabled');
       }
     }
 
@@ -863,7 +940,11 @@
       const startButton = event.target.closest('[data-action="start-class-session"]');
       if (startButton) {
         const { id } = startButton.dataset;
-        if (!id || !(await confirmDelete('Start live class with this session? This will set the current active session.'))) {
+        if (!id || !(await confirmDelete('Start live class with this session? This will set the current active session.', {
+          confirmTitle: 'Confirm Start',
+          confirmText: 'Start',
+          confirmVariant: 'success',
+        }))) {
           return;
         }
 
@@ -965,7 +1046,11 @@
       endLiveClassBtn.addEventListener('click', async () => {
         clearFeedback(classFeedback);
 
-        if (!(await confirmDelete('End the current live class?'))) {
+        if (!(await confirmDelete('End the current live class?', {
+          confirmTitle: 'Confirm End',
+          confirmText: 'End',
+          confirmVariant: 'warning',
+        }))) {
           return;
         }
 
@@ -977,6 +1062,15 @@
         } catch (error) {
           showFeedback(classFeedback, error.message, 'error');
         }
+      });
+    }
+
+    if (joinLiveClassBtn) {
+      joinLiveClassBtn.addEventListener('click', () => {
+        if (joinLiveClassBtn.hasAttribute('disabled')) {
+          return;
+        }
+        window.location.href = '/live_class/admin';
       });
     }
 

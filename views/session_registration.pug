@@ -48,3 +48,42 @@ block content
             required
           )
         button.btn.auth-submit(type='submit') Register
+
+  if liveClassNotice
+    .modal.fade#sessionAccessNoticeModal(tabindex="-1" aria-labelledby="sessionAccessNoticeModalLabel" aria-hidden="true")
+      .modal-dialog
+        .modal-content
+          .modal-header
+            h5#sessionAccessNoticeModalLabel.modal-title Live Class Access Notice
+            button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+          .modal-body
+            p.mb-0= liveClassNotice
+          .modal-footer
+            button.btn.admin-btn(type="button" data-bs-dismiss="modal") Okay
+
+block scripts
+  if liveClassNotice
+    script.
+      (function () {
+        const showNoticeModal = function () {
+          const modalElement = document.getElementById('sessionAccessNoticeModal');
+          if (!modalElement) {
+            return;
+          }
+
+          if (window.bootstrap && window.bootstrap.Modal) {
+            const noticeModal = window.bootstrap.Modal.getOrCreateInstance(modalElement);
+            noticeModal.show();
+            return;
+          }
+
+          window.alert("#{liveClassNotice}");
+        };
+
+        if (document.readyState === 'complete') {
+          showNoticeModal();
+          return;
+        }
+
+        window.addEventListener('load', showNoticeModal, { once: true });
+      })();

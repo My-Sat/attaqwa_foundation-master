@@ -11,8 +11,7 @@ exports.getLiveClass = asyncHandler(async (req, res) => {
   const liveState = await getCurrentLiveState();
 
   if (!liveState || !liveState.isLive || !liveState.activeSessionId) {
-    req.flash('error', 'Class has not started yet. Please wait for admin to start the live class.');
-    return res.redirect('/');
+    return res.redirect('/?liveClassNotice=not_started');
   }
 
   const activeSessionId = liveState.activeSessionId._id;
@@ -26,8 +25,7 @@ exports.getLiveClass = asyncHandler(async (req, res) => {
     .sort({ accessExpiresAt: -1, createdAt: -1 });
 
   if (!registration) {
-    req.flash('error', 'You do not have active access for the current live session. Register and wait for approval.');
-    return res.redirect('/register');
+    return res.redirect('/register?liveClassNotice=no_access');
   }
 
   res.render('live_class', {
@@ -37,6 +35,25 @@ exports.getLiveClass = asyncHandler(async (req, res) => {
     roomName: liveState.roomName,
     liveStartedAt: liveState.startedAt,
     attendeeName: req.session.user.username || 'User',
+    isAdminViewer: false,
+  });
+});
+
+exports.getAdminLiveClass = asyncHandler(async (req, res) => {
+  const liveState = await getCurrentLiveState();
+
+  if (!liveState || !liveState.isLive || !liveState.activeSessionId) {
+    return res.status(400).send('No live class is currently active.');
+  }
+
+  return res.render('live_class', {
+    title: 'Live Class',
+    classSession: liveState.activeSessionId,
+    accessExpiresAt: null,
+    roomName: liveState.roomName,
+    liveStartedAt: liveState.startedAt,
+    attendeeName: req.session?.admin?.username || 'Admin',
+    isAdminViewer: true,
   });
 });
 

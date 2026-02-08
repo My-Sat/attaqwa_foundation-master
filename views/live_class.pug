@@ -9,10 +9,10 @@ block content
           p.text-center.text-muted.mb-1 Session: #{classSession.title}
         if liveStartedAt
           p.text-center.text-muted.mb-1 Started: #{new Date(liveStartedAt).toLocaleString()}
-        if accessExpiresAt
+        if !isAdminViewer && accessExpiresAt
           p.text-center.text-muted Access valid until #{new Date(accessExpiresAt).toLocaleString()}
         .d-flex.justify-content-center.mb-3
-          a.btn.btn-outline-secondary(href="/") Exit Class
+          a.btn.btn-outline-secondary(href=isAdminViewer ? "/dashboard" : "/") Exit Class
 
     .row.justify-content-center
       .col-12

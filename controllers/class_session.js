@@ -5,6 +5,10 @@ const asyncHandler = require('express-async-handler');
 
 // GET: Display registration form
 exports.getClassSessionRegistration = asyncHandler(async (req, res) => {
+  const noticeType = (req.query.liveClassNotice || '').trim();
+  const liveClassNotice = noticeType === 'no_access'
+    ? 'You currently do not have access to the active live class. Register and wait for admin approval.'
+    : '';
   const success = req.flash('success');
   const error = req.flash('error');
   const classSessions = await ClassSession.find();
@@ -16,6 +20,7 @@ exports.getClassSessionRegistration = asyncHandler(async (req, res) => {
     success,
     error,
     fee,
+    liveClassNotice,
     formData: {
       sessionId: '',
       paymentMethod: 'MoMo',

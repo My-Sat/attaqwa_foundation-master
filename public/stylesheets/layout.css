@@ -490,6 +490,12 @@ a:active {
   margin-bottom: 0.62rem;
 }
 
+.admin-item > .d-flex.gap-2 {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  row-gap: 0.45rem;
+}
+
 .admin-item:last-child {
   margin-bottom: 0;
 }

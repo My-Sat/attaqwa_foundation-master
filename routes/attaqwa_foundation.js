@@ -177,6 +177,7 @@ router.get('/live_class_auth', isAuthenticated, sessionController.getLiveClassAu
 router.post('/live_class_auth', isAuthenticated, sessionController.postLiveClassAuth);
 
 router.get('/live_class', isAuthenticated, liveClassController.getLiveClass);
+router.get('/live_class/admin', isAdmin, liveClassController.getAdminLiveClass);
 router.get('/api/live-class/status', isAuthenticated, liveClassController.getLiveClassStatus);
 
 router.get('/registration_fee', isAdmin, adminAccount.getRegistrationFee);
