@@ -1158,7 +1158,7 @@
 
       try {
         await request(`/api/admin/admins/${id}`, { method: 'DELETE' });
-        await loadAdmins();
+        await refreshAll();
         showFeedback(adminFeedback, 'Admin deleted successfully.', 'success');
       } catch (error) {
         showFeedback(adminFeedback, error.message, 'error');
@@ -1188,7 +1188,7 @@
 
       try {
         await request(`/api/admin/questions/${id}`, { method: 'DELETE' });
-        await loadQuestions();
+        await refreshAll();
         showFeedback(questionFeedback, 'Question deleted successfully.', 'success');
       } catch (error) {
         showFeedback(questionFeedback, error.message, 'error');
@@ -1208,7 +1208,7 @@
 
       try {
         await request(`/api/admin/articles/${id}`, { method: 'DELETE' });
-        await loadArticles();
+        await refreshAll();
         showFeedback(articleFeedback, 'Article deleted successfully.', 'success');
       } catch (error) {
         showFeedback(articleFeedback, error.message, 'error');
@@ -1339,8 +1339,7 @@
 
       try {
         await request(`/api/admin/class-sessions/${id}`, { method: 'DELETE' });
-        await loadLiveClassStatus();
-        await loadClassSessions();
+        await refreshAll();
         showFeedback(classFeedback, 'Class session deleted successfully.', 'success');
       } catch (error) {
         showFeedback(classFeedback, error.message, 'error');
@@ -1433,8 +1432,7 @@
         if (state.activeCategory === id) {
           state.activeCategory = '';
         }
-        await loadCategories();
-        await loadVideos();
+        await refreshAll();
         showFeedback(categoryFeedback, 'Category deleted successfully.', 'success');
       } catch (error) {
         showFeedback(categoryFeedback, error.message, 'error');
@@ -1470,8 +1468,7 @@
 
       try {
         await request(`/api/admin/videos/${id}`, { method: 'DELETE' });
-        await loadCategories();
-        await loadVideos();
+        await refreshAll();
         showFeedback(videoFeedback, 'Video deleted successfully.', 'success');
       } catch (error) {
         showFeedback(videoFeedback, error.message, 'error');
