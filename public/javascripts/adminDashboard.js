@@ -5,6 +5,7 @@
     const adminList = document.getElementById('adminList');
     const questionList = document.getElementById('questionList');
     const answerQuestionsBtn = document.getElementById('answerQuestionsBtn');
+    const answerQuestionsCount = document.getElementById('answerQuestionsCount');
     const articleList = document.getElementById('articleList');
     const classList = document.getElementById('classList');
     const liveClassStatusElement = document.getElementById('liveClassStatus');
@@ -449,6 +450,17 @@
     }
 
     function renderQuestions() {
+      if (answerQuestionsCount) {
+        const unansweredCount = state.questions.filter((item) => !item.isAnswered).length;
+        if (unansweredCount > 0) {
+          answerQuestionsCount.textContent = String(unansweredCount);
+          answerQuestionsCount.classList.remove('d-none');
+        } else {
+          answerQuestionsCount.textContent = '0';
+          answerQuestionsCount.classList.add('d-none');
+        }
+      }
+
       if (!state.questions.length) {
         questionList.innerHTML = '<li class="text-muted">No questions found.</li>';
         return;

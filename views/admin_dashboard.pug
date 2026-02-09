@@ -18,7 +18,9 @@ block content
       .admin-card
         .admin-card-head
           h3.admin-card-title Questions
-          button#answerQuestionsBtn.btn.admin-btn(type="button" data-no-loading) Answer Questions
+          button#answerQuestionsBtn.btn.admin-btn(type="button" data-no-loading)
+            | Answer Questions
+            span#answerQuestionsCount.badge.text-bg-danger.ms-2.d-none 0
         p#questionFeedback.admin-feedback.d-none
         ul#questionList.admin-item-list
           li.text-muted Loading questions...

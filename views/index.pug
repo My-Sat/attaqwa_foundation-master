@@ -42,7 +42,7 @@ block content
             data-feed-type="questions"
             data-page-size=homePageSize
             data-initial-count=questions.length
-            data-has-more=hasMoreQuestions
+            data-has-more=(hasMoreQuestions ? 'true' : 'false')
           )
             if questions.length
               each question in questions
@@ -61,7 +61,7 @@ block content
             data-feed-type="videos"
             data-page-size=homePageSize
             data-initial-count=videoCategories.length
-            data-has-more=hasMoreVideos
+            data-has-more=(hasMoreVideos ? 'true' : 'false')
           )
             if videoCategories.length
               each category in videoCategories
@@ -79,7 +79,7 @@ block content
             data-feed-type="articles"
             data-page-size=homePageSize
             data-initial-count=articles.length
-            data-has-more=hasMoreArticles
+            data-has-more=(hasMoreArticles ? 'true' : 'false')
           )
             if articles.length
               each article in articles

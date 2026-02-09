@@ -6,6 +6,18 @@
   }
 
   const supportsIntersectionObserver = 'IntersectionObserver' in window;
+  const parseBoolean = (value) => {
+    if (typeof value !== 'string') {
+      return Boolean(value);
+    }
+
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) {
+      return false;
+    }
+
+    return normalized === 'true' || normalized === '1' || normalized === 'yes';
+  };
 
   lazyLists.forEach((list) => {
     const feedType = list.dataset.feedType;
@@ -20,7 +32,7 @@
 
     const state = {
       skip: parseInt(list.dataset.initialCount, 10) || 0,
-      hasMore: list.dataset.hasMore === 'true',
+      hasMore: parseBoolean(list.dataset.hasMore),
       isLoading: false,
     };
 
@@ -49,6 +61,8 @@
       }
     };
 
+    let observer = null;
+
     const loadNextPage = async () => {
       if (state.isLoading || !state.hasMore) {
         return;
@@ -56,6 +70,9 @@
 
       state.isLoading = true;
       loader.style.display = '';
+      if (observer) {
+        observer.unobserve(sentinel);
+      }
 
       try {
         const response = await fetch(`/api/home-feed/${feedType}?skip=${state.skip}&limit=${pageSize}`);
@@ -75,18 +92,26 @@
         state.hasMore = Boolean(payload.hasMore);
 
         if (!state.hasMore) {
-          observer.disconnect();
+          if (observer) {
+            observer.disconnect();
+          }
           sentinel.remove();
+        } else if (observer) {
+          // Re-arm observer so additional batches still load when sentinel remains near viewport.
+          requestAnimationFrame(() => observer.observe(sentinel));
         }
       } catch (error) {
         console.error(`[homeLazyLists] ${feedType} lazy loading failed`, error);
+        if (observer) {
+          requestAnimationFrame(() => observer.observe(sentinel));
+        }
       } finally {
         loader.style.display = 'none';
         state.isLoading = false;
       }
     };
 
-    const observer = new IntersectionObserver(
+    observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
@@ -95,12 +120,27 @@
         });
       },
       {
-        root: list,
+        root: null,
         rootMargin: '150px 0px',
         threshold: 0,
       }
     );
 
     observer.observe(sentinel);
+
+    const fallbackCheck = () => {
+      if (!state.hasMore || state.isLoading || !sentinel.isConnected) {
+        return;
+      }
+
+      const rect = sentinel.getBoundingClientRect();
+      if (rect.top <= window.innerHeight + 150) {
+        loadNextPage();
+      }
+    };
+
+    window.addEventListener('scroll', fallbackCheck, { passive: true });
+    window.addEventListener('resize', fallbackCheck);
+    fallbackCheck();
   });
 })();

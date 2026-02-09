@@ -97,10 +97,17 @@ exports.getUserSignUpSuccess = (req, res) => {
 //GET: User messages
 exports.getUserMessages = asyncHandler(async (req, res) => {
   const userId = req.session.user?.id; // Retrieve logged-in user's ID
-  const messages = await Message.find({ userId }).sort({ createdAt: -1 });
+
+  if (!userId) {
+    return res.redirect('/signin');
+  }
 
   // Mark all messages as read
   await Message.updateMany({ userId, isRead: false }, { isRead: true });
+  const messages = await Message.find({ userId }).sort({ createdAt: -1 });
+
+  // Ensure the current response nav badge clears immediately.
+  res.locals.unreadMessages = 0;
 
   res.render('userMessages', {
     title: 'Your Messages',
