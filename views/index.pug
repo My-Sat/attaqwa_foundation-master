@@ -1,5 +1,29 @@
 extends layout
 
+mixin commentItem(comment, postId)
+  li.community-comment-item.mb-2(data-comment-id=comment.id)
+    div
+      strong= comment.authorName
+      span.text-muted.small.ms-2= comment.authorType === 'admin' ? 'Admin' : 'User'
+    p.mb-1= comment.body
+    small.text-muted= new Date(comment.createdAt).toLocaleString()
+    if isLoggedIn
+      .mt-2
+        button.btn.btn-sm.btn-outline-secondary.community-reply-toggle(type="button" data-action="toggle-reply") Reply
+      form.community-comment-form.community-reply-form.mt-2.d-none(data-post-id=postId data-parent-comment-id=comment.id)
+        .input-group
+          input.form-control.auth-input(type="text" name="body" maxlength="700" placeholder="Write a reply..." required)
+          button.btn.btn-outline-primary(type="submit") Reply
+    if comment.replies && comment.replies.length
+      button.btn.btn-sm.btn-outline-secondary.community-replies-toggle.mt-2(
+        type="button"
+        data-action="toggle-replies"
+        data-replies-count=comment.replies.length
+      ) View replies (#{comment.replies.length})
+      ul.community-replies.list-unstyled.mt-2.d-none
+        each reply in comment.replies
+          +commentItem(reply, postId)
+
 block content
   section.home-hero
     .hero-content
@@ -141,12 +165,7 @@ block content
                       ul.community-comments.list-unstyled.mb-2
                         if post.comments && post.comments.length
                           each comment in post.comments
-                            li.community-comment-item.mb-2
-                              div
-                                strong= comment.authorName
-                                span.text-muted.small.ms-2= comment.authorType === 'admin' ? 'Admin' : 'User'
-                              p.mb-1= comment.body
-                              small.text-muted= new Date(comment.createdAt).toLocaleString()
+                            +commentItem(comment, post.id)
                         else
                           li.text-muted.small.community-no-comments No comments yet.
 

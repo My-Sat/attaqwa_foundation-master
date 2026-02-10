@@ -957,6 +957,17 @@ a:active {
   word-break: break-word;
 }
 
+.community-replies {
+  margin-top: 0.55rem;
+  margin-left: 1rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--border-0);
+}
+
+.community-reply-form .input-group .form-control {
+  min-height: 2.3rem;
+}
+
 /* Footer */
 .site-footer {
   margin-top: 1.2rem;

@@ -8,6 +8,12 @@ const postCommentSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    parentCommentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'PostComment',
+      default: null,
+      index: true,
+    },
     body: {
       type: String,
       required: true,

@@ -66,22 +66,59 @@
     }
 
     function buildCommentMarkup(comment) {
+      const replies = Array.isArray(comment.replies) ? comment.replies : [];
+      const replyFormMarkup = isLoggedIn
+        ? `
+          <div class="mt-2">
+            <button class="btn btn-sm btn-outline-secondary community-reply-toggle" type="button" data-action="toggle-reply">Reply</button>
+          </div>
+          <form class="community-comment-form community-reply-form mt-2 d-none" data-post-id="${comment.postId || ''}" data-parent-comment-id="${comment.id}">
+            <div class="input-group">
+              <input class="form-control auth-input" type="text" name="body" maxlength="700" placeholder="Write a reply..." required>
+              <button class="btn btn-outline-primary" type="submit">Reply</button>
+            </div>
+          </form>
+        `
+        : '';
+      const repliesToggleMarkup = replies.length
+        ? `<button class="btn btn-sm btn-outline-secondary community-replies-toggle mt-2" type="button" data-action="toggle-replies" data-replies-count="${replies.length}">View replies (${replies.length})</button>`
+        : '';
+      const repliesMarkup = replies.length
+        ? `<ul class="community-replies list-unstyled mt-2 d-none">${replies.map((reply) => buildCommentMarkup(reply)).join('')}</ul>`
+        : '';
+
       return `
-        <li class="community-comment-item mb-2">
+        <li class="community-comment-item mb-2" data-comment-id="${comment.id}">
           <div>
             <strong>${escapeHtml(comment.authorName || 'User')}</strong>
             <span class="text-muted small ms-2">${comment.authorType === 'admin' ? 'Admin' : 'User'}</span>
           </div>
           <p class="mb-1">${escapeHtml(comment.body || '')}</p>
           <small class="text-muted">${escapeHtml(formatDateTime(comment.createdAt))}</small>
+          ${replyFormMarkup}
+          ${repliesToggleMarkup}
+          ${repliesMarkup}
         </li>
       `;
     }
 
+    function getRepliesToggleLabel(count, expanded) {
+      return expanded ? `Hide replies (${count})` : `View replies (${count})`;
+    }
+
+    function withPostId(comments, postId) {
+      return (comments || []).map((comment) => ({
+        ...comment,
+        postId,
+        replies: withPostId(comment.replies || [], postId),
+      }));
+    }
+
     function buildPostMarkup(post) {
       const comments = Array.isArray(post.comments) ? post.comments : [];
+      const hydratedComments = withPostId(comments, post.id);
       const commentsMarkup = comments.length
-        ? comments.map(buildCommentMarkup).join('')
+        ? hydratedComments.map(buildCommentMarkup).join('')
         : '<li class="text-muted small community-no-comments">No comments yet.</li>';
       const commentFormMarkup = isLoggedIn
         ? `
@@ -187,6 +224,12 @@
         return;
       }
 
+      const submitButton = composerForm ? composerForm.querySelector('button[type="submit"]') : null;
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Posting...';
+      }
+
       try {
         const payload = await request('/api/posts', {
           method: 'POST',
@@ -199,12 +242,18 @@
         showFeedback('Post published.', 'success');
       } catch (error) {
         showFeedback(error.message, 'error');
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Post';
+        }
       }
     }
 
     async function submitComment(form) {
       clearFeedback();
       const postId = form.getAttribute('data-post-id') || '';
+      const parentCommentId = form.getAttribute('data-parent-comment-id') || '';
       const input = form.querySelector('input[name="body"]');
       if (!postId || !input) {
         return;
@@ -219,13 +268,14 @@
       const button = form.querySelector('button[type="submit"]');
       if (button) {
         button.disabled = true;
+        button.textContent = parentCommentId ? 'Replying...' : 'Commenting...';
       }
 
       try {
         const payload = await request(`/api/posts/${postId}/comments`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ body }),
+          body: JSON.stringify({ body, parentCommentId }),
         });
 
         const article = form.closest('.community-post');
@@ -234,19 +284,57 @@
         if (noComments) {
           noComments.remove();
         }
-        if (commentsList && payload.comment) {
-          commentsList.insertAdjacentHTML('beforeend', buildCommentMarkup(payload.comment));
+
+        if (payload.comment) {
+          const mappedComment = {
+            ...payload.comment,
+            postId,
+            replies: [],
+          };
+
+          if (parentCommentId) {
+            const parentItem = article ? article.querySelector(`.community-comment-item[data-comment-id="${parentCommentId}"]`) : null;
+            if (parentItem) {
+              let repliesList = parentItem.querySelector(':scope > .community-replies');
+              let repliesToggle = parentItem.querySelector(':scope > .community-replies-toggle');
+              if (!repliesList) {
+                parentItem.insertAdjacentHTML('beforeend', '<ul class="community-replies list-unstyled mt-2 d-none"></ul>');
+                repliesList = parentItem.querySelector(':scope > .community-replies');
+              }
+              if (!repliesToggle) {
+                parentItem.insertAdjacentHTML('beforeend', '<button class="btn btn-sm btn-outline-secondary community-replies-toggle mt-2" type="button" data-action="toggle-replies" data-replies-count="0">View replies (0)</button>');
+                repliesToggle = parentItem.querySelector(':scope > .community-replies-toggle');
+              }
+              if (repliesList) {
+                repliesList.insertAdjacentHTML('beforeend', buildCommentMarkup(mappedComment));
+                repliesList.classList.remove('d-none');
+              }
+              if (repliesToggle && repliesList) {
+                const currentCount = Number(repliesToggle.getAttribute('data-replies-count') || '0') + 1;
+                repliesToggle.setAttribute('data-replies-count', String(currentCount));
+                repliesToggle.textContent = getRepliesToggleLabel(currentCount, true);
+              }
+            } else if (commentsList) {
+              commentsList.insertAdjacentHTML('beforeend', buildCommentMarkup(mappedComment));
+            }
+          } else if (commentsList) {
+            commentsList.insertAdjacentHTML('beforeend', buildCommentMarkup(mappedComment));
+          }
         }
         const countElement = article ? article.querySelector('.community-comment-count') : null;
         if (countElement && Number.isFinite(Number(payload.commentsCount))) {
           countElement.textContent = String(payload.commentsCount);
         }
         input.value = '';
+        if (parentCommentId) {
+          form.classList.add('d-none');
+        }
       } catch (error) {
         showFeedback(error.message, 'error');
       } finally {
         if (button) {
           button.disabled = false;
+          button.textContent = parentCommentId ? 'Reply' : 'Comment';
         }
       }
     }
@@ -267,6 +355,44 @@
       }
       event.preventDefault();
       submitComment(form);
+    });
+
+    postsContainer.addEventListener('click', (event) => {
+      const toggleButton = event.target.closest('[data-action="toggle-reply"]');
+      if (toggleButton) {
+        const commentItem = toggleButton.closest('.community-comment-item');
+        if (!commentItem) {
+          return;
+        }
+
+        const replyForm = commentItem.querySelector(':scope > .community-reply-form');
+        if (!replyForm) {
+          return;
+        }
+
+        replyForm.classList.toggle('d-none');
+        return;
+      }
+
+      const repliesToggle = event.target.closest('[data-action="toggle-replies"]');
+      if (!repliesToggle) {
+        return;
+      }
+
+      const commentItem = repliesToggle.closest('.community-comment-item');
+      if (!commentItem) {
+        return;
+      }
+
+      const repliesList = commentItem.querySelector(':scope > .community-replies');
+      if (!repliesList) {
+        return;
+      }
+
+      const isExpanded = !repliesList.classList.contains('d-none');
+      repliesList.classList.toggle('d-none', isExpanded);
+      const count = Number(repliesToggle.getAttribute('data-replies-count') || '0');
+      repliesToggle.textContent = getRepliesToggleLabel(count, !isExpanded);
     });
   }
 
