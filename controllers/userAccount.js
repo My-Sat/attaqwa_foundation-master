@@ -114,3 +114,69 @@ exports.getUserMessages = asyncHandler(async (req, res) => {
     messages,
   });
 });
+
+exports.getPasswordSettings = asyncHandler(async (req, res) => {
+  const success = req.flash('success');
+  const error = req.flash('error');
+
+  res.render('password_settings', {
+    title: 'Account Settings',
+    accountTypeLabel: 'User',
+    actionPath: '/settings/password',
+    success,
+    error,
+  });
+});
+
+exports.postPasswordSettings = asyncHandler(async (req, res) => {
+  const userId = req.session.user?.id;
+  const oldPassword = req.body.oldPassword || '';
+  const newPassword = req.body.newPassword || '';
+  const confirmNewPassword = req.body.confirmNewPassword || '';
+
+  if (!userId) {
+    return res.redirect('/signin');
+  }
+
+  if (!oldPassword || !newPassword || !confirmNewPassword) {
+    req.flash('error', 'All password fields are required.');
+    return res.redirect('/settings/password');
+  }
+
+  if (newPassword.length < 8) {
+    req.flash('error', 'New password must be at least 8 characters.');
+    return res.redirect('/settings/password');
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    req.flash('error', 'New password and confirmation do not match.');
+    return res.redirect('/settings/password');
+  }
+
+  if (oldPassword === newPassword) {
+    req.flash('error', 'New password must be different from old password.');
+    return res.redirect('/settings/password');
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    req.flash('error', 'Account not found.');
+    return res.redirect('/settings/password');
+  }
+
+  const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
+  if (!isOldPasswordValid) {
+    req.flash('error', 'Old password is incorrect.');
+    return res.redirect('/settings/password');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await User.findByIdAndUpdate(
+    userId,
+    { $set: { password: hashedPassword } },
+    { runValidators: false }
+  );
+
+  req.flash('success', 'Password updated successfully.');
+  return res.redirect('/settings/password');
+});

@@ -3,6 +3,7 @@ const { validationResult } = require('express-validator'); // Import express-val
 const asyncHandler = require('express-async-handler');
 const Admin = require('../models/admin');
 const RegistrationFee = require('../models/registrationFee');
+const bcrypt = require('bcryptjs');
 
 // GET:  Admin Sign-Up Page
 exports.getAdminSignUp = (req, res) => {
@@ -145,4 +146,70 @@ exports.postRegistrationFee = asyncHandler(async (req, res) => {
   await fee.save();
   req.flash('success', 'Registration fee updated successfully.');
   res.redirect('registration_fee');
+});
+
+exports.getPasswordSettings = asyncHandler(async (req, res) => {
+  const success = req.flash('success');
+  const error = req.flash('error');
+
+  res.render('password_settings', {
+    title: 'Account Settings',
+    accountTypeLabel: 'Admin',
+    actionPath: '/admin/settings/password',
+    success,
+    error,
+  });
+});
+
+exports.postPasswordSettings = asyncHandler(async (req, res) => {
+  const adminId = req.session.admin?.id;
+  const oldPassword = req.body.oldPassword || '';
+  const newPassword = req.body.newPassword || '';
+  const confirmNewPassword = req.body.confirmNewPassword || '';
+
+  if (!adminId) {
+    return res.redirect('/signin');
+  }
+
+  if (!oldPassword || !newPassword || !confirmNewPassword) {
+    req.flash('error', 'All password fields are required.');
+    return res.redirect('/admin/settings/password');
+  }
+
+  if (newPassword.length < 8) {
+    req.flash('error', 'New password must be at least 8 characters.');
+    return res.redirect('/admin/settings/password');
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    req.flash('error', 'New password and confirmation do not match.');
+    return res.redirect('/admin/settings/password');
+  }
+
+  if (oldPassword === newPassword) {
+    req.flash('error', 'New password must be different from old password.');
+    return res.redirect('/admin/settings/password');
+  }
+
+  const admin = await Admin.findById(adminId);
+  if (!admin) {
+    req.flash('error', 'Account not found.');
+    return res.redirect('/admin/settings/password');
+  }
+
+  const isOldPasswordValid = await bcrypt.compare(oldPassword, admin.password);
+  if (!isOldPasswordValid) {
+    req.flash('error', 'Old password is incorrect.');
+    return res.redirect('/admin/settings/password');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await Admin.findByIdAndUpdate(
+    adminId,
+    { $set: { password: hashedPassword } },
+    { runValidators: false }
+  );
+
+  req.flash('success', 'Password updated successfully.');
+  return res.redirect('/admin/settings/password');
 });

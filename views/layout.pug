@@ -69,6 +69,10 @@ html(lang="en")
                   i(class="fas fa-user-circle")
                 ul.dropdown-menu.dropdown-menu-end
                   li
+                    a.dropdown-item(href="/admin/settings/password") Settings
+                  li
+                    hr.dropdown-divider
+                  li
                     a.dropdown-item(href="/signout") Sign Out
             else if isLoggedIn && user
               // User Messages Link
@@ -87,6 +91,8 @@ html(lang="en")
                     a.dropdown-item(href="/my_class_sessions") My Class Sessions
                   li
                     a.dropdown-item(href="/register") Register Session
+                  li
+                    a.dropdown-item(href="/settings/password") Settings
                   li
                     hr.dropdown-divider
                   li

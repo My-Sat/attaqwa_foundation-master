@@ -108,6 +108,8 @@ router.post('/signup',validateUserSignUp, userAccount.postUserSignUp);
 router.get('/user_signup_success', userAccount.getUserSignUpSuccess);
 
 router.get('/user_messages', userAccount.getUserMessages);
+router.get('/settings/password', isAuthenticated, userAccount.getPasswordSettings);
+router.post('/settings/password', isAuthenticated, userAccount.postPasswordSettings);
 
 router.get('/admin_signup_success', adminAccount.getAdminSignUpSuccess);
 
@@ -115,6 +117,8 @@ router.get('/admin_signup_success', adminAccount.getAdminSignUpSuccess);
 router.get('/signup/admin', isAdmin, adminAccount.getAdminSignUp); 
 
 router.post('/signup/admin',validateAdminSignUp,isAdmin, adminAccount.postAdminSignUp);
+router.get('/admin/settings/password', isAdmin, adminAccount.getPasswordSettings);
+router.post('/admin/settings/password', isAdmin, adminAccount.postPasswordSettings);
 
 // GET: Admin Dashboard
 router.get('/dashboard',isAdmin, adminAccount.getAdminDashboard);
