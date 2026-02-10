@@ -21,12 +21,16 @@
 
   lazyLists.forEach((list) => {
     const feedType = list.dataset.feedType;
+    const loadMode = (list.dataset.loadMode || 'auto').trim().toLowerCase();
+    const isManualMode = loadMode === 'button';
     const pageSize = parseInt(list.dataset.pageSize, 10) || 5;
     const loader = list.querySelector('.home-list-loader');
     const sentinel = list.querySelector('.home-list-sentinel');
     const emptyState = list.querySelector('.home-empty-state');
+    const viewMoreRow = list.querySelector('.home-view-more-row');
+    const viewMoreButton = list.querySelector('.home-view-more-btn');
 
-    if (!feedType || !loader || !sentinel) {
+    if (!feedType || !loader || (!isManualMode && !sentinel)) {
       return;
     }
 
@@ -36,8 +40,24 @@
       isLoading: false,
     };
 
-    if (!supportsIntersectionObserver || !state.hasMore) {
-      sentinel.remove();
+    if (!state.hasMore) {
+      if (sentinel) {
+        sentinel.remove();
+      }
+      if (viewMoreRow) {
+        viewMoreRow.classList.add('d-none');
+      }
+      return;
+    }
+
+    if (isManualMode) {
+      if (sentinel) {
+        sentinel.remove();
+      }
+    } else if (!supportsIntersectionObserver) {
+      if (sentinel) {
+        sentinel.remove();
+      }
       return;
     }
 
@@ -63,14 +83,30 @@
 
     let observer = null;
 
+    const updateManualModeState = () => {
+      if (!isManualMode || !viewMoreButton || !viewMoreRow) {
+        return;
+      }
+
+      viewMoreButton.disabled = state.isLoading;
+      viewMoreButton.textContent = state.isLoading ? 'Loading...' : 'View more';
+
+      if (state.hasMore) {
+        viewMoreRow.classList.remove('d-none');
+      } else {
+        viewMoreRow.classList.add('d-none');
+      }
+    };
+
     const loadNextPage = async () => {
       if (state.isLoading || !state.hasMore) {
         return;
       }
 
       state.isLoading = true;
+      updateManualModeState();
       loader.style.display = '';
-      if (observer) {
+      if (!isManualMode && observer && sentinel) {
         observer.unobserve(sentinel);
       }
 
@@ -92,24 +128,35 @@
         state.hasMore = Boolean(payload.hasMore);
 
         if (!state.hasMore) {
-          if (observer) {
+          if (!isManualMode && observer) {
             observer.disconnect();
           }
-          sentinel.remove();
-        } else if (observer) {
+          if (sentinel) {
+            sentinel.remove();
+          }
+        } else if (!isManualMode && observer && sentinel) {
           // Re-arm observer so additional batches still load when sentinel remains near viewport.
           requestAnimationFrame(() => observer.observe(sentinel));
         }
       } catch (error) {
         console.error(`[homeLazyLists] ${feedType} lazy loading failed`, error);
-        if (observer) {
+        if (!isManualMode && observer && sentinel) {
           requestAnimationFrame(() => observer.observe(sentinel));
         }
       } finally {
         loader.style.display = 'none';
         state.isLoading = false;
+        updateManualModeState();
       }
     };
+
+    if (isManualMode) {
+      if (viewMoreButton) {
+        viewMoreButton.addEventListener('click', loadNextPage);
+      }
+      updateManualModeState();
+      return;
+    }
 
     observer = new IntersectionObserver(
       (entries) => {

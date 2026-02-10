@@ -43,6 +43,7 @@ block content
             data-page-size=homePageSize
             data-initial-count=questions.length
             data-has-more=(hasMoreQuestions ? 'true' : 'false')
+            data-load-mode="button"
           )
             if questions.length
               each question in questions
@@ -50,6 +51,8 @@ block content
                   a(href=`/question/${question._id}`) #{question.question}
             else
               li.text-muted.home-empty-state No answered questions yet.
+            li.home-view-more-row(class=(hasMoreQuestions ? '' : 'd-none'))
+              button.home-view-more-btn.btn.btn-outline-secondary.btn-sm(type="button" data-no-loading) View more
             li.home-list-loader.text-muted(style="display:none;") Loading...
             li.home-list-sentinel(aria-hidden="true")
 

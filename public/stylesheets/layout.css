@@ -894,6 +894,13 @@ a:active {
   margin-bottom: 0;
 }
 
+.home-lazy-list .home-view-more-row {
+  border-bottom: 0;
+  padding-top: 0.1rem;
+  padding-bottom: 0;
+  margin-bottom: 0.25rem;
+}
+
 .home-list-loader {
   font-size: 0.92rem;
 }
