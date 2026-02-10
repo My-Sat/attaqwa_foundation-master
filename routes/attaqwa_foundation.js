@@ -90,6 +90,9 @@ router.post("/delete_video/:id", isAdmin, redirectDeprecatedToDashboard);
 
 // GET: Display the sign-in page
 router.get('/signin', authController.getSignInPage);
+router.get('/forgot_password', authController.getForgotPasswordPage);
+router.post('/forgot_password/request', authController.postForgotPasswordRequest);
+router.post('/forgot_password/verify', authController.postForgotPasswordVerify);
 
 // POST: Handle sign-in for all roles
 router.post('/signin', authController.postSignIn);

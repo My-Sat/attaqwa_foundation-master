@@ -11,6 +11,11 @@ block content
           i.fas.fa-exclamation-circle.me-2(aria-hidden="true")
           | #{signInError}
 
+      if signInSuccess
+        .alert.alert-success.auth-alert(role="alert")
+          i.fas.fa-check-circle.me-2(aria-hidden="true")
+          | #{signInSuccess}
+
       form.auth-form(method="POST" action="/signin")
         .mb-3
           label.form-label(for="username") Username
@@ -29,6 +34,8 @@ block content
             autocomplete="current-password"
             required
           )
+        .d-flex.justify-content-end.mb-3
+          a.small(href="/forgot_password") Forgot password?
         button.btn.auth-submit(type="submit") Sign In
 
       p.auth-footer.mb-0
