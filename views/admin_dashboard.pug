@@ -38,24 +38,15 @@ block content
         .admin-card-head
           h3.admin-card-title Class
           button.btn.admin-btn(type="button" data-bs-toggle="modal" data-bs-target="#classSessionModal") Add Session
-        .admin-card-head.mb-2
-          p.admin-card-note.mb-0 Manage class access approvals and pending registrations.
-          .dropdown
-            button.btn.btn-outline-secondary.btn-sm(type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Class management actions")
-              i.bi.bi-three-dots-vertical
-            ul.dropdown-menu.dropdown-menu-end
-              li
-                a.dropdown-item(href="/registrations/pending") Approve Registrations
-        .admin-card-head.mb-2
-          p#liveStreamScheduleStatus.admin-card-note.mb-0 No incoming live video for the moment.
-          .dropdown
-            button.btn.btn-outline-secondary.btn-sm(type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Countdown actions")
-              i.bi.bi-three-dots-vertical
-            ul.dropdown-menu.dropdown-menu-end
-              li
-                button.dropdown-item(type="button" data-bs-toggle="modal" data-bs-target="#liveStreamScheduleModal") Set Countdown
-              li
-                button#clearLiveStreamScheduleBtn.dropdown-item(type="button" data-no-loading) Clear
+        .d-flex.flex-wrap.justify-content-end.gap-2.mb-2
+          a.btn.admin-btn(href="/registrations/pending") Approve Registrations
+        h4.admin-card-title.mb-2 Home Page Live Video
+        .d-flex.gap-2.mb-2
+          button.btn.btn-outline-primary(type="button" data-bs-toggle="modal" data-bs-target="#liveStreamScheduleModal") Set Countdown
+          button#clearLiveStreamScheduleBtn.btn.btn-outline-secondary(type="button" data-no-loading) Clear
+        p#liveStreamScheduleStatus.admin-card-note No incoming live video for the moment.
+        hr.my-3
+        h4.admin-card-title.mb-2 Live Class
         p#liveClassStatus.admin-card-note Live class is currently not active.
         .d-flex.gap-2.mb-2
           button#endLiveClassBtn.btn.btn-outline-danger(type="button" data-no-loading) End Live Class
