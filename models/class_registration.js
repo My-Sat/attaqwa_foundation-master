@@ -36,6 +36,10 @@ const registrationSchema = new Schema(
     accessExpiresAt: {
       type: Date,
     },
+    accessExpiryReminder24hSentAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

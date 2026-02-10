@@ -9,6 +9,7 @@ const MongoStore = require('connect-mongo'); // Persistent session store
 const mongoose = require('mongoose');
 const flash = require('express-flash'); // Import express-flash
 const Message = require('./models/messages');
+const { startAccessExpiryReminderWorker } = require('./services/accessExpiryReminder');
 
 const attaqwaRouter = require("./routes/attaqwa_foundation");
 const usersRouter = require('./routes/users');
@@ -20,7 +21,10 @@ mongoose.set("strictQuery", false);
 const mongoDB = process.env.MONGODB_URI || "your-mongo-uri-here";
 
 mongoose.connect(mongoDB)
-  .then(() => console.log('MongoDB connected'))
+  .then(() => {
+    console.log('MongoDB connected');
+    startAccessExpiryReminderWorker();
+  })
   .catch(err => console.error('MongoDB connection error:', err));
 
 // View engine setup
