@@ -38,6 +38,8 @@ block content
                       span.badge.text-bg-warning Pending Approval
                   td
                     div= record.scheduleSummary || 'N/A'
+                    if record.accessDurationDays
+                      small.d-block.text-muted Access duration: #{record.accessDurationDays} day(s)
                     if record.durationMinutes
                       small.text-muted Duration: #{record.durationMinutes} min
                   td

@@ -80,6 +80,7 @@ exports.getClassSessionRegistration = asyncHandler(async (req, res) => {
     _id: session._id,
     title: session.title,
     price: Number.isFinite(Number(session.price)) ? Number(session.price) : 0,
+    accessDurationDays: Number.isFinite(Number(session.accessDurationDays)) ? Number(session.accessDurationDays) : 30,
     scheduleSummary: getScheduleSummary(session),
   }));
 
@@ -146,7 +147,10 @@ exports.postClassSessionRegistration = asyncHandler(async (req, res) => {
       approved: false,
     });
 
-    req.flash('success', 'Registration submitted. Wait for admin approval to get 30 days access.');
+    const requestedDurationDays = Number.isFinite(Number(selectedSession.accessDurationDays))
+      ? Number(selectedSession.accessDurationDays)
+      : 30;
+    req.flash('success', `Registration submitted. Wait for admin approval to get ${requestedDurationDays} day(s) access.`);
     res.redirect('/register');
   } catch (err) {
     console.error('Registration error:', err);
@@ -161,7 +165,7 @@ exports.getPendingRegistrations = asyncHandler(async (req, res) => {
   const error = req.flash('error');
   const registrations = await Registration.find()
     .populate('userId', 'username')
-    .populate('classSessionId', 'title price')
+    .populate('classSessionId', 'title price accessDurationDays')
     .sort({ createdAt: -1 });
 
   res.render('admin_session_reg', {
@@ -172,7 +176,7 @@ exports.getPendingRegistrations = asyncHandler(async (req, res) => {
   });
 });
 
-// POST: Approve registration and grant 30-day access
+// POST: Approve registration and grant session-configured access duration
 exports.postPendingRegistrations = asyncHandler(async (req, res) => {
   const registrationId = (req.body.registrationId || '').trim();
   if (!registrationId) {
@@ -183,7 +187,7 @@ exports.postPendingRegistrations = asyncHandler(async (req, res) => {
   try {
     const registration = await Registration.findById(registrationId)
       .populate('userId', 'username phoneNumber')
-      .populate('classSessionId', 'title');
+      .populate('classSessionId', 'title accessDurationDays');
     if (!registration) {
       req.flash('error', 'Registration not found.');
       return res.redirect('/registrations/pending');
@@ -195,14 +199,17 @@ exports.postPendingRegistrations = asyncHandler(async (req, res) => {
     }
 
     const now = new Date();
+    const accessDurationDays = Number.isFinite(Number(registration.classSessionId && registration.classSessionId.accessDurationDays))
+      ? Number(registration.classSessionId.accessDurationDays)
+      : 30;
     registration.approved = true;
     registration.approvedAt = now;
-    registration.accessExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    registration.accessExpiresAt = new Date(now.getTime() + accessDurationDays * 24 * 60 * 60 * 1000);
     await registration.save();
 
     const approvedAtText = registration.approvedAt ? registration.approvedAt.toLocaleString() : 'now';
     const expiresAtText = registration.accessExpiresAt ? registration.accessExpiresAt.toLocaleString() : 'N/A';
-    const smsText = `As-salaam alaikum. Your class registration is approved. Session: ${registration.classSessionId.title}. Approved: ${approvedAtText}. Access valid until: ${expiresAtText}.`;
+    const smsText = `As-salaam alaikum. Your class registration is approved. Session: ${registration.classSessionId.title}. Access duration: ${accessDurationDays} day(s). Approved: ${approvedAtText}. Access valid until: ${expiresAtText}.`;
 
     let smsDeliveryFailed = false;
     try {
@@ -212,7 +219,7 @@ exports.postPendingRegistrations = asyncHandler(async (req, res) => {
       console.error('Session approval SMS error:', smsError.message);
     }
 
-    req.flash('success', `Approved ${registration.userId.username} for ${registration.classSessionId.title}. Access is active for 30 days.`);
+    req.flash('success', `Approved ${registration.userId.username} for ${registration.classSessionId.title}. Access is active for ${accessDurationDays} day(s).`);
     if (smsDeliveryFailed) {
       req.flash('error', `Approval succeeded, but SMS alert could not be sent to ${registration.userId.username}.`);
     }
@@ -240,7 +247,7 @@ exports.getMyClassSessions = asyncHandler(async (req, res) => {
   const now = new Date();
 
   const registrations = await Registration.find({ userId })
-    .populate('classSessionId', 'title price schedule')
+    .populate('classSessionId', 'title price accessDurationDays schedule')
     .sort({ createdAt: -1 });
 
   const records = registrations.map((registration) => {
@@ -265,6 +272,9 @@ exports.getMyClassSessions = asyncHandler(async (req, res) => {
       paymentMethod: registration.paymentMethod || 'Other',
       paymentReference: registration.paymentReference || 'N/A',
       scheduleSummary: sessionData ? getScheduleSummary(sessionData) : 'N/A',
+      accessDurationDays: sessionData && Number.isFinite(Number(sessionData.accessDurationDays))
+        ? Number(sessionData.accessDurationDays)
+        : 30,
       durationMinutes: normalizedSchedule ? normalizedSchedule.durationMinutes : null,
       nextSessionStartAt: nextSessionStartAt || null,
       scheduleStartDate: normalizedSchedule && normalizedSchedule.startDate ? normalizedSchedule.startDate : null,

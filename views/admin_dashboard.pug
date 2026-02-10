@@ -163,6 +163,9 @@ block content
               label.form-label(for="classSessionPrice") Session Price (GHC)
               input#classSessionPrice.form-control(type="number" name="price" min="0" step="0.01" placeholder="e.g. 50" required)
             .mb-3
+              label.form-label(for="classSessionAccessDurationDays") Access Duration (Days)
+              input#classSessionAccessDurationDays.form-control(type="number" name="accessDurationDays" min="1" max="3650" step="1" value="30" required)
+            .mb-3
               label.form-label(for="classSessionStartDate") First Session Date
               input#classSessionStartDate.form-control(type="date" name="scheduleStartDate" required)
             .mb-3
@@ -209,6 +212,9 @@ block content
             .mb-3
               label.form-label(for="classSessionEditPrice") Session Price (GHC)
               input#classSessionEditPrice.form-control(type="number" name="price" min="0" step="0.01" required)
+            .mb-3
+              label.form-label(for="classSessionEditAccessDurationDays") Access Duration (Days)
+              input#classSessionEditAccessDurationDays.form-control(type="number" name="accessDurationDays" min="1" max="3650" step="1" required)
             .mb-3
               label.form-label(for="classSessionEditStartDate") First Session Date
               input#classSessionEditStartDate.form-control(type="date" name="scheduleStartDate" required)

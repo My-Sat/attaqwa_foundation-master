@@ -30,12 +30,14 @@ block content
                 value=session._id
                 data-price=(typeof session.price === 'number' ? session.price.toFixed(2) : '0.00')
                 data-schedule=session.scheduleSummary
+                data-access-duration-days=(typeof session.accessDurationDays === 'number' ? session.accessDurationDays : 30)
                 selected=formData && formData.sessionId && String(formData.sessionId) === String(session._id)
               )= session.title
         .mb-3
           .alert.alert-info.py-2.px-3.mb-0#sessionDetailsPanel
             strong.d-block#selectedSessionPrice Select a session to see price.
             small.text-muted#selectedSessionSchedule Schedule details will appear here.
+            small.text-muted.d-block#selectedSessionAccessDuration Access duration details will appear here.
         .mb-3
           label.form-label(for='paymentMethod') Payment Method
           select#paymentMethod.form-select(name='paymentMethod' required)
@@ -72,8 +74,9 @@ block scripts
       const sessionSelect = document.getElementById('sessionId');
       const priceElement = document.getElementById('selectedSessionPrice');
       const scheduleElement = document.getElementById('selectedSessionSchedule');
+      const accessDurationElement = document.getElementById('selectedSessionAccessDuration');
 
-      if (!sessionSelect || !priceElement || !scheduleElement) {
+      if (!sessionSelect || !priceElement || !scheduleElement || !accessDurationElement) {
         return;
       }
 
@@ -81,15 +84,18 @@ block scripts
         const selectedOption = sessionSelect.options[sessionSelect.selectedIndex];
         const price = selectedOption ? selectedOption.dataset.price : '';
         const schedule = selectedOption ? selectedOption.dataset.schedule : '';
+        const accessDurationDays = selectedOption ? selectedOption.dataset.accessDurationDays : '';
 
         if (!selectedOption || !selectedOption.value) {
           priceElement.textContent = 'Select a session to see price.';
           scheduleElement.textContent = 'Schedule details will appear here.';
+          accessDurationElement.textContent = 'Access duration details will appear here.';
           return;
         }
 
         priceElement.textContent = `Price: GHC ${price || '0.00'}`;
         scheduleElement.textContent = schedule || 'Schedule details unavailable.';
+        accessDurationElement.textContent = `Access duration: ${accessDurationDays || '30'} day(s)`;
       };
 
       sessionSelect.addEventListener('change', updateSessionDetails);

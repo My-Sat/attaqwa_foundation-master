@@ -28,6 +28,7 @@
     const classSessionForm = document.getElementById('classSessionForm');
     const classSessionTitle = document.getElementById('classSessionTitle');
     const classSessionPrice = document.getElementById('classSessionPrice');
+    const classSessionAccessDurationDays = document.getElementById('classSessionAccessDurationDays');
     const classSessionStartDate = document.getElementById('classSessionStartDate');
     const classSessionStartTime = document.getElementById('classSessionStartTime');
     const classSessionDurationMinutes = document.getElementById('classSessionDurationMinutes');
@@ -40,6 +41,7 @@
     const classSessionEditId = document.getElementById('classSessionEditId');
     const classSessionEditTitle = document.getElementById('classSessionEditTitle');
     const classSessionEditPrice = document.getElementById('classSessionEditPrice');
+    const classSessionEditAccessDurationDays = document.getElementById('classSessionEditAccessDurationDays');
     const classSessionEditStartDate = document.getElementById('classSessionEditStartDate');
     const classSessionEditStartTime = document.getElementById('classSessionEditStartTime');
     const classSessionEditDurationMinutes = document.getElementById('classSessionEditDurationMinutes');
@@ -554,6 +556,7 @@
               <div>
                 <p class="admin-item-title">${escapeHtml(session.title)}</p>
                 <small class="text-muted">${session.registrationCount} registration(s) | ${escapeHtml(formatMoney(session.price))}</small>
+                <small class="d-block text-muted">Access: ${escapeHtml(String(session.accessDurationDays || 30))} day(s)</small>
                 <small class="d-block text-muted">${escapeHtml(session.scheduleSummary || 'Schedule not configured')}</small>
                 <small class="d-block text-muted">Duration: ${escapeHtml(String(session.schedule && session.schedule.durationMinutes ? session.schedule.durationMinutes : 60))} min</small>
                 ${session.isLiveActive ? '<small class="d-block text-success fw-bold">Live now</small>' : ''}
@@ -916,6 +919,7 @@
       const mode = options && options.mode === 'edit' ? 'edit' : 'create';
       const titleInput = mode === 'edit' ? classSessionEditTitle : classSessionTitle;
       const priceInput = mode === 'edit' ? classSessionEditPrice : classSessionPrice;
+      const accessDurationInput = mode === 'edit' ? classSessionEditAccessDurationDays : classSessionAccessDurationDays;
       const startDateInput = mode === 'edit' ? classSessionEditStartDate : classSessionStartDate;
       const startTimeInput = mode === 'edit' ? classSessionEditStartTime : classSessionStartTime;
       const durationInput = mode === 'edit' ? classSessionEditDurationMinutes : classSessionDurationMinutes;
@@ -924,6 +928,7 @@
 
       const title = (titleInput && titleInput.value ? titleInput.value : '').trim();
       const price = priceInput && priceInput.value ? Number(priceInput.value) : NaN;
+      const accessDurationDays = accessDurationInput && accessDurationInput.value ? Number(accessDurationInput.value) : NaN;
       const scheduleStartDate = (startDateInput && startDateInput.value ? startDateInput.value : '').trim();
       const scheduleStartTime = (startTimeInput && startTimeInput.value ? startTimeInput.value : '').trim();
       const durationMinutes = durationInput && durationInput.value ? Number(durationInput.value) : NaN;
@@ -937,6 +942,9 @@
       }
       if (!Number.isFinite(price) || price < 0) {
         return { error: 'Session price must be a valid number (0 or higher).' };
+      }
+      if (!Number.isFinite(accessDurationDays) || accessDurationDays < 1 || accessDurationDays > 3650) {
+        return { error: 'Access duration must be between 1 and 3650 days.' };
       }
       if (!scheduleStartDate) {
         return { error: 'Session start date is required.' };
@@ -955,6 +963,7 @@
         payload: {
           title,
           price,
+          accessDurationDays: Math.round(accessDurationDays),
           scheduleStartDate,
           scheduleStartTime,
           durationMinutes: Math.round(durationMinutes),
@@ -989,6 +998,9 @@
     }
     if (classSessionPrice && !classSessionPrice.value) {
       classSessionPrice.value = '0.00';
+    }
+    if (classSessionAccessDurationDays && !classSessionAccessDurationDays.value) {
+      classSessionAccessDurationDays.value = '30';
     }
 
     if (classSessionForm) {
@@ -1025,6 +1037,9 @@
           }
           if (classSessionPrice) {
             classSessionPrice.value = '0.00';
+          }
+          if (classSessionAccessDurationDays) {
+            classSessionAccessDurationDays.value = '30';
           }
           hideModal(classSessionModal, classSessionModalElement);
           await loadLiveClassStatus();
@@ -1311,6 +1326,11 @@
         classSessionEditTitle.value = session.title || '';
         if (classSessionEditPrice) {
           classSessionEditPrice.value = Number.isFinite(Number(session.price)) ? Number(session.price).toFixed(2) : '0.00';
+        }
+        if (classSessionEditAccessDurationDays) {
+          classSessionEditAccessDurationDays.value = Number.isFinite(Number(session.accessDurationDays))
+            ? String(session.accessDurationDays)
+            : '30';
         }
         if (classSessionEditStartDate) {
           classSessionEditStartDate.value = toDateInputValue(session.schedule && session.schedule.startDate ? session.schedule.startDate : '');

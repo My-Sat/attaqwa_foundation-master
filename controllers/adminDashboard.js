@@ -97,6 +97,7 @@ function parseClassSessionPayload(body) {
   const rawStartDate = (body.scheduleStartDate || '').toString().trim();
   const rawStartTime = (body.scheduleStartTime || '').toString().trim();
   const price = getSessionPrice(body.price);
+  const rawAccessDurationDays = Number(body.accessDurationDays);
   const startTime = normalizeStartTime(rawStartTime);
   const durationMinutes = normalizeDurationMinutes(body.durationMinutes);
   const frequency = normalizeFrequency(body.frequency);
@@ -114,6 +115,10 @@ function parseClassSessionPayload(body) {
     return { error: 'Session price must be a valid number (0 or higher).' };
   }
 
+  if (!Number.isFinite(rawAccessDurationDays) || rawAccessDurationDays < 1 || rawAccessDurationDays > 3650) {
+    return { error: 'Access duration must be between 1 and 3650 days.' };
+  }
+
   if (!rawStartDate || !startDate) {
     return { error: 'Session start date is required.' };
   }
@@ -129,6 +134,7 @@ function parseClassSessionPayload(body) {
   return {
     title,
     price,
+    accessDurationDays: Math.round(rawAccessDurationDays),
     schedule: {
       startDate,
       startTime,
@@ -145,6 +151,7 @@ function buildClassSessionResponse(session, registrationCount, activeSessionId) 
     _id: session._id,
     title: session.title,
     price: Number.isFinite(Number(session.price)) ? Number(session.price) : 0,
+    accessDurationDays: Number.isFinite(Number(session.accessDurationDays)) ? Number(session.accessDurationDays) : 30,
     registrationCount,
     schedule: {
       startDate: schedule.startDate,
@@ -579,6 +586,7 @@ exports.createClassSession = asyncHandler(async (req, res) => {
   const classSession = await ClassSession.create({
     title: parsed.title,
     price: parsed.price,
+    accessDurationDays: parsed.accessDurationDays,
     schedule: parsed.schedule,
   });
 
@@ -599,6 +607,7 @@ exports.updateClassSession = asyncHandler(async (req, res) => {
     {
       title: parsed.title,
       price: parsed.price,
+      accessDurationDays: parsed.accessDurationDays,
       schedule: parsed.schedule,
     },
     { new: true }

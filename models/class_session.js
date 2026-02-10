@@ -12,6 +12,13 @@ const classSessionSchema = new Schema({
     min: 0,
     default: 0,
   },
+  accessDurationDays: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 3650,
+    default: 30,
+  },
   schedule: {
     startDate: {
       type: Date,
