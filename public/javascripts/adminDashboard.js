@@ -242,6 +242,50 @@
       target.textContent = '';
     }
 
+    function setButtonLoadingState(button, loadingText) {
+      if (!button || button.classList.contains('is-loading')) {
+        return;
+      }
+
+      const label = loadingText || button.getAttribute('data-loading-text') || 'Loading...';
+      const isInputSubmit = button.matches('input[type="submit"]');
+      const originalContent = isInputSubmit ? button.value : button.innerHTML;
+
+      if (!button.dataset.loadingOriginalContent) {
+        button.dataset.loadingOriginalContent = originalContent || '';
+      }
+
+      button.classList.add('is-loading');
+      button.setAttribute('aria-busy', 'true');
+      button.disabled = true;
+
+      if (isInputSubmit) {
+        button.value = label;
+      } else {
+        button.innerHTML = `<span class="btn-loading-content"><span class="btn-loading-spinner" aria-hidden="true"></span><span>${label}</span></span>`;
+      }
+    }
+
+    function resetButtonLoadingState(button) {
+      if (!button || !button.classList.contains('is-loading')) {
+        return;
+      }
+
+      const isInputSubmit = button.matches('input[type="submit"]');
+      const originalContent = button.dataset.loadingOriginalContent || '';
+      button.classList.remove('is-loading');
+      button.removeAttribute('aria-busy');
+      button.disabled = false;
+
+      if (isInputSubmit) {
+        button.value = originalContent;
+      } else {
+        button.innerHTML = originalContent;
+      }
+
+      delete button.dataset.loadingOriginalContent;
+    }
+
     function hideModal(modalInstance, modalElement) {
       if (modalInstance) {
         modalInstance.hide();
@@ -824,6 +868,7 @@
       event.preventDefault();
       clearFeedback(categoryModalFeedback);
       clearFeedback(categoryFeedback);
+      const submitButton = event.submitter || categoryForm.querySelector('button[type="submit"], input[type="submit"]');
 
       const formData = new FormData(categoryForm);
       const title = (formData.get('title') || '').toString().trim();
@@ -832,6 +877,7 @@
         showFeedback(categoryModalFeedback, 'Category title is required.', 'error');
         return;
       }
+      setButtonLoadingState(submitButton, 'Saving...');
 
       try {
         await request('/api/admin/video-categories', {
@@ -847,6 +893,8 @@
         showFeedback(categoryFeedback, 'Category added successfully.', 'success');
       } catch (error) {
         showFeedback(categoryModalFeedback, error.message, 'error');
+      } finally {
+        resetButtonLoadingState(submitButton);
       }
     });
 
@@ -855,6 +903,7 @@
         event.preventDefault();
         clearFeedback(categoryEditModalFeedback);
         clearFeedback(categoryFeedback);
+        const submitButton = event.submitter || categoryEditForm.querySelector('button[type="submit"], input[type="submit"]');
 
         const categoryId = (categoryEditId.value || '').trim();
         const title = (categoryEditTitle.value || '').trim();
@@ -863,6 +912,7 @@
           showFeedback(categoryEditModalFeedback, 'Category title is required.', 'error');
           return;
         }
+        setButtonLoadingState(submitButton, 'Saving...');
 
         try {
           await request(`/api/admin/video-categories/${categoryId}`, {
@@ -877,6 +927,8 @@
           showFeedback(categoryFeedback, 'Category updated successfully.', 'success');
         } catch (error) {
           showFeedback(categoryEditModalFeedback, error.message, 'error');
+        } finally {
+          resetButtonLoadingState(submitButton);
         }
       });
     }
@@ -885,6 +937,7 @@
       event.preventDefault();
       clearFeedback(videoModalFeedback);
       clearFeedback(videoFeedback);
+      const submitButton = event.submitter || videoForm.querySelector('button[type="submit"], input[type="submit"]');
 
       const formData = new FormData(videoForm);
       const payload = {
@@ -897,6 +950,7 @@
         showFeedback(videoModalFeedback, 'All fields are required.', 'error');
         return;
       }
+      setButtonLoadingState(submitButton, 'Saving...');
 
       try {
         await request('/api/admin/videos', {
@@ -912,6 +966,8 @@
         showFeedback(videoFeedback, 'Video added successfully.', 'success');
       } catch (error) {
         showFeedback(videoModalFeedback, error.message, 'error');
+      } finally {
+        resetButtonLoadingState(submitButton);
       }
     });
 
@@ -1008,11 +1064,13 @@
         event.preventDefault();
         clearFeedback(classSessionModalFeedback);
         clearFeedback(classFeedback);
+        const submitButton = event.submitter || classSessionForm.querySelector('button[type="submit"], input[type="submit"]');
         const parsed = collectClassSessionPayload({ mode: 'create' });
         if (parsed.error) {
           showFeedback(classSessionModalFeedback, parsed.error, 'error');
           return;
         }
+        setButtonLoadingState(submitButton, 'Saving...');
 
         try {
           await request('/api/admin/class-sessions', {
@@ -1047,6 +1105,8 @@
           showFeedback(classFeedback, 'Session added successfully.', 'success');
         } catch (error) {
           showFeedback(classSessionModalFeedback, error.message, 'error');
+        } finally {
+          resetButtonLoadingState(submitButton);
         }
       });
     }
@@ -1056,6 +1116,7 @@
         event.preventDefault();
         clearFeedback(classSessionEditModalFeedback);
         clearFeedback(classFeedback);
+        const submitButton = event.submitter || classSessionEditForm.querySelector('button[type="submit"], input[type="submit"]');
 
         const sessionId = (classSessionEditId.value || '').trim();
         const parsed = collectClassSessionPayload({ mode: 'edit' });
@@ -1067,6 +1128,7 @@
           showFeedback(classSessionEditModalFeedback, parsed.error, 'error');
           return;
         }
+        setButtonLoadingState(submitButton, 'Saving...');
 
         try {
           await request(`/api/admin/class-sessions/${sessionId}`, {
@@ -1081,6 +1143,8 @@
           showFeedback(classFeedback, 'Session updated successfully.', 'success');
         } catch (error) {
           showFeedback(classSessionEditModalFeedback, error.message, 'error');
+        } finally {
+          resetButtonLoadingState(submitButton);
         }
       });
     }
@@ -1090,6 +1154,7 @@
         event.preventDefault();
         clearFeedback(liveStreamScheduleModalFeedback);
         clearFeedback(classFeedback);
+        const submitButton = event.submitter || liveStreamScheduleForm.querySelector('button[type="submit"], input[type="submit"]');
 
         const startsAt = (liveStreamStartsAt && liveStreamStartsAt.value ? liveStreamStartsAt.value : '').trim();
         const note = (liveStreamNote && liveStreamNote.value ? liveStreamNote.value : '').trim();
@@ -1098,6 +1163,7 @@
           showFeedback(liveStreamScheduleModalFeedback, 'Start date/time is required.', 'error');
           return;
         }
+        setButtonLoadingState(submitButton, 'Saving...');
 
         try {
           await request('/api/admin/live-stream-schedule', {
@@ -1110,6 +1176,8 @@
           showFeedback(classFeedback, 'Live stream countdown updated successfully.', 'success');
         } catch (error) {
           showFeedback(liveStreamScheduleModalFeedback, error.message, 'error');
+        } finally {
+          resetButtonLoadingState(submitButton);
         }
       });
     }
@@ -1119,6 +1187,7 @@
         event.preventDefault();
         clearFeedback(questionAnswerModalFeedback);
         clearFeedback(questionFeedback);
+        const submitButton = event.submitter || questionAnswerForm.querySelector('button[type="submit"], input[type="submit"]');
 
         const questionId = (questionAnswerId.value || '').trim();
         const answer = (questionAnswerInput.value || '').trim();
@@ -1127,6 +1196,7 @@
           showFeedback(questionAnswerModalFeedback, 'Answer is required.', 'error');
           return;
         }
+        setButtonLoadingState(submitButton, 'Saving...');
 
         try {
           await request(`/api/admin/questions/${questionId}/answer`, {
@@ -1140,6 +1210,8 @@
           showFeedback(questionFeedback, 'Answer updated successfully.', 'success');
         } catch (error) {
           showFeedback(questionAnswerModalFeedback, error.message, 'error');
+        } finally {
+          resetButtonLoadingState(submitButton);
         }
       });
     }
