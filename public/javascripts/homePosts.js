@@ -91,7 +91,6 @@
         <li class="community-comment-item mb-2" data-comment-id="${comment.id}">
           <div>
             <strong>${escapeHtml(comment.authorName || 'User')}</strong>
-            <span class="text-muted small ms-2">${comment.authorType === 'admin' ? 'Admin' : 'User'}</span>
           </div>
           <p class="mb-1">${escapeHtml(comment.body || '')}</p>
           <small class="text-muted">${escapeHtml(formatDateTime(comment.createdAt))}</small>
@@ -137,7 +136,6 @@
             <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
               <div>
                 <strong class="community-author">${escapeHtml(post.authorName || 'User')}</strong>
-                <span class="text-muted small ms-2">${post.authorType === 'admin' ? 'Admin' : 'User'}</span>
               </div>
               <small class="text-muted">${escapeHtml(formatDateTime(post.createdAt))}</small>
             </div>

@@ -4,7 +4,6 @@ mixin commentItem(comment, postId)
   li.community-comment-item.mb-2(data-comment-id=comment.id)
     div
       strong= comment.authorName
-      span.text-muted.small.ms-2= comment.authorType === 'admin' ? 'Admin' : 'User'
     p.mb-1= comment.body
     small.text-muted= new Date(comment.createdAt).toLocaleString()
     if isLoggedIn
@@ -157,7 +156,6 @@ block content
                     .d-flex.justify-content-between.align-items-start.gap-2.mb-2
                       div
                         strong.community-author= post.authorName
-                        span.text-muted.small.ms-2= post.authorType === 'admin' ? 'Admin' : 'User'
                       small.text-muted= new Date(post.createdAt).toLocaleString()
                     p.community-body.mb-3= post.body
                     .community-comments-wrap
