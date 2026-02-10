@@ -13,8 +13,10 @@ const articleController = require('../controllers/article');
 const liveClassController = require('../controllers/live_class'); 
 const searchController = require("../controllers/searchController");
 const adminDashboardController = require('../controllers/adminDashboard');
+const postController = require('../controllers/post');
 const isAuthenticated = require("../middleware/userSessionAuth");
 const isAdmin = require("../middleware/adminSessionAuth");
+const isAnySessionAuthenticated = require('../middleware/anySessionAuth');
 const express = require("express");
 const router = express.Router();
 
@@ -25,6 +27,9 @@ router.get("/", index_controller.index);
 
 // GET: Search page with results
 router.get('/search', searchController.search);
+router.get('/api/posts', postController.getHomePosts);
+router.post('/api/posts', isAnySessionAuthenticated, postController.createPost);
+router.post('/api/posts/:id/comments', isAnySessionAuthenticated, postController.createComment);
 
 // Display registration form
 router.get('/register', isAuthenticated, sessionController.getClassSessionRegistration);

@@ -909,6 +909,54 @@ a:active {
   min-height: 1px;
 }
 
+.community-panel {
+  border: 1px solid var(--border-0);
+  border-radius: 1rem;
+  background: linear-gradient(155deg, #ffffff 0%, #f3faf8 65%, #eef6f4 100%);
+  box-shadow: var(--shadow-soft);
+  padding: 1rem;
+}
+
+.community-composer textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.community-post.card {
+  border: 1px solid var(--border-0);
+  border-radius: 0.85rem;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(16, 33, 38, 0.08);
+}
+
+.community-author {
+  color: var(--text-0);
+}
+
+.community-body {
+  color: var(--text-1);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.community-comments-wrap {
+  border-top: 1px solid var(--border-0);
+  padding-top: 0.75rem;
+}
+
+.community-comment-item {
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--border-0);
+  border-radius: 0.65rem;
+  background: #f9fcfb;
+}
+
+.community-comment-item p {
+  color: var(--text-1);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* Footer */
 .site-footer {
   margin-top: 1.2rem;

@@ -3,6 +3,7 @@ const VideoCategory = require('../models/videoCategory');
 const Visitor = require('../models/visitor');
 const Article = require('../models/article');
 const LiveStreamSchedule = require('../models/live_stream_schedule');
+const postController = require('./post');
 const axios = require('axios');
 const asyncHandler = require('express-async-handler');
 
@@ -64,7 +65,7 @@ exports.index = asyncHandler(async (req, res) => {
   const shouldLazyLoadVideos = totalVideoCategories > HOME_EAGER_LOAD_THRESHOLD;
   const shouldLazyLoadArticles = totalArticles > HOME_EAGER_LOAD_THRESHOLD;
 
-  const [videoCategories, questions, articles] = await Promise.all([
+  const [videoCategories, questions, articles, postPayload] = await Promise.all([
     shouldLazyLoadVideos
       ? VideoCategory.find().sort({ _id: -1 }).limit(HOME_PAGE_SIZE)
       : VideoCategory.find().sort({ _id: -1 }),
@@ -72,6 +73,7 @@ exports.index = asyncHandler(async (req, res) => {
     shouldLazyLoadArticles
       ? Article.find(getPublicArticleFilter()).sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE)
       : Article.find(getPublicArticleFilter()).sort({ createdAt: -1 }),
+    postController.fetchPostsSlice(0, postController.HOME_POST_PAGE_SIZE),
   ]);
   
   // Update visitor count
@@ -94,6 +96,9 @@ exports.index = asyncHandler(async (req, res) => {
     hasMoreQuestions: totalQuestions > questions.length,
     hasMoreVideos: totalVideoCategories > videoCategories.length,
     hasMoreArticles: totalArticles > articles.length,
+    posts: postPayload.posts || [],
+    postPageSize: postController.HOME_POST_PAGE_SIZE,
+    hasMorePosts: Boolean(postPayload.hasMore),
     liveClassNotice,
     liveStreamSchedule: {
       startsAt: liveStreamSchedule && liveStreamSchedule.startsAt ? liveStreamSchedule.startsAt : null,

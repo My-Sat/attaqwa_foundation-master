@@ -99,6 +99,68 @@ block content
           span Visitors
           strong= visitorCount
 
+    .row.g-4.mt-2
+      .col-12
+        .panel.community-panel
+          .panel-header
+            h3.panel-section-title.mb-0 Community Posts
+          p.text-muted.mb-3 Share insights and engage with other learners.
+
+          if isLoggedIn
+            form#postComposer.community-composer.mb-3
+              .mb-2
+                textarea#postBody.form-control.auth-input(name="body" rows="3" maxlength="1200" placeholder="Share something helpful..." required)
+              .d-flex.justify-content-between.align-items-center.gap-2
+                small.text-muted#postComposerHint Max 1200 characters.
+                button.btn.admin-btn(type="submit") Post
+          else
+            .alert.alert-info.py-2.px-3.mb-3
+              | Sign in to post and comment.
+              a.ms-1(href="/signin") Sign in
+
+          p#communityFeedback.admin-feedback.d-none
+
+          .community-posts#communityPosts(
+            data-page-size=postPageSize
+            data-initial-count=posts.length
+            data-has-more=(hasMorePosts ? 'true' : 'false')
+            data-is-logged-in=(isLoggedIn ? 'true' : 'false')
+          )
+            if posts && posts.length
+              each post in posts
+                article.community-post.card.mb-3(data-post-id=post.id)
+                  .card-body
+                    .d-flex.justify-content-between.align-items-start.gap-2.mb-2
+                      div
+                        strong.community-author= post.authorName
+                        span.text-muted.small.ms-2= post.authorType === 'admin' ? 'Admin' : 'User'
+                      small.text-muted= new Date(post.createdAt).toLocaleString()
+                    p.community-body.mb-3= post.body
+                    .community-comments-wrap
+                      h6.community-comment-title.mb-2 Comments (#{post.commentsCount || 0})
+                      ul.community-comments.list-unstyled.mb-2
+                        if post.comments && post.comments.length
+                          each comment in post.comments
+                            li.community-comment-item.mb-2
+                              div
+                                strong= comment.authorName
+                                span.text-muted.small.ms-2= comment.authorType === 'admin' ? 'Admin' : 'User'
+                              p.mb-1= comment.body
+                              small.text-muted= new Date(comment.createdAt).toLocaleString()
+                        else
+                          li.text-muted.small.community-no-comments No comments yet.
+
+                      if isLoggedIn
+                        form.community-comment-form(data-post-id=post.id)
+                          .input-group
+                            input.form-control.auth-input(type="text" name="body" maxlength="700" placeholder="Write a comment..." required)
+                            button.btn.btn-outline-primary(type="submit") Comment
+            else
+              p.text-muted.mb-0#communityEmptyState No posts yet. Be the first to post.
+
+          .d-flex.justify-content-center.mt-2
+            button#loadMorePostsBtn.btn.btn-outline-secondary.btn-sm(type="button" class=(hasMorePosts ? '' : 'd-none') data-no-loading) View more posts
+
   if liveClassNotice
     .modal.fade#liveClassNoticeModal(tabindex="-1" aria-labelledby="liveClassNoticeModalLabel" aria-hidden="true")
       .modal-dialog
@@ -114,6 +176,7 @@ block content
 block scripts
   script(src="/javascripts/homeLazyLists.js")
   script(src="/javascripts/homeCountdown.js")
+  script(src="/javascripts/homePosts.js")
   if liveClassNotice
     script.
       (function () {
