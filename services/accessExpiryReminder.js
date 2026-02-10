@@ -44,6 +44,7 @@ async function processExpiringAccessReminders() {
         userId: registration.userId._id,
         question: 'Session Expiry Reminder',
         answer: inboxText,
+        kind: 'session',
       });
       appInboxDelivered = true;
     } catch (messageError) {

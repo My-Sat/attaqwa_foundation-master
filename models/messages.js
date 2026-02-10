@@ -15,6 +15,11 @@ const messageSchema = new Schema({
     type: String,
     required: true,
   },
+  kind: {
+    type: String,
+    enum: ['qa', 'session'],
+    default: 'qa',
+  },
   isRead: {
     type: Boolean,
     default: false, // By default, a new message is unread

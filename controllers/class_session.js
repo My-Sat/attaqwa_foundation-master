@@ -156,6 +156,7 @@ exports.postPendingRegistrations = asyncHandler(async (req, res) => {
         userId: registration.userId._id,
         question: 'Session Approval',
         answer: inboxMessage,
+        kind: 'session',
       });
     } catch (messageError) {
       console.error('Session approval inbox message error:', messageError.message);
