@@ -36,10 +36,7 @@ block content
 
       .admin-card
         .admin-card-head
-          h3.admin-card-title Class
-          button.btn.admin-btn(type="button" data-bs-toggle="modal" data-bs-target="#classSessionModal") Add Session
-        .d-flex.flex-wrap.justify-content-end.gap-2.mb-2
-          a.btn.admin-btn(href="/registrations/pending") Approve Registrations
+          h3.admin-card-title Live Videos
         h4.admin-card-title.mb-2 Home Page Live Video
         .d-flex.gap-2.mb-2
           button.btn.btn-outline-primary(type="button" data-bs-toggle="modal" data-bs-target="#liveStreamScheduleModal") Set Countdown
@@ -51,6 +48,9 @@ block content
         .d-flex.gap-2.mb-2
           button#endLiveClassBtn.btn.btn-outline-danger(type="button" data-no-loading) End Live Class
           button#joinLiveClassBtn.btn.btn-outline-success(type="button" data-no-loading disabled) Enter Live Class
+        .d-flex.flex-wrap.gap-2.mb-2
+          button.btn.admin-btn(type="button" data-bs-toggle="modal" data-bs-target="#classSessionModal") Add Session
+          a.btn.admin-btn(href="/registrations/pending") Approve Registrations
         p#classFeedback.admin-feedback.d-none
         ul#classList.admin-item-list
           li.text-muted Loading class sessions...

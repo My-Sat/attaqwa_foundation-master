@@ -1,5 +1,6 @@
 const Registration = require('../models/class_registration');
 const ClassSession = require('../models/class_session');
+const Message = require('../models/messages');
 const asyncHandler = require('express-async-handler');
 const { getNextSessionStart, getScheduleSummary, getNormalizedSchedule } = require('../utils/sessionSchedule');
 const { sendHubtelSMS } = require('../utils/hubtelSms');
@@ -148,6 +149,17 @@ exports.postPendingRegistrations = asyncHandler(async (req, res) => {
     const approvedAtText = registration.approvedAt ? registration.approvedAt.toLocaleString() : 'now';
     const expiresAtText = registration.accessExpiresAt ? registration.accessExpiresAt.toLocaleString() : 'N/A';
     const smsText = `As-salaam alaikum. Your class registration is approved. Session: ${registration.classSessionId.title}. Access duration: ${accessDurationDays} day(s). Approved: ${approvedAtText}. Access valid until: ${expiresAtText}.`;
+    const inboxMessage = `Your class registration has been approved.\nSession: ${registration.classSessionId.title}\nAccess duration: ${accessDurationDays} day(s)\nApproved: ${approvedAtText}\nAccess valid until: ${expiresAtText}`;
+
+    try {
+      await Message.create({
+        userId: registration.userId._id,
+        question: 'Session Approval',
+        answer: inboxMessage,
+      });
+    } catch (messageError) {
+      console.error('Session approval inbox message error:', messageError.message);
+    }
 
     let smsDeliveryFailed = false;
     try {

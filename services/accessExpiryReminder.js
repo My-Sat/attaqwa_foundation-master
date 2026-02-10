@@ -1,4 +1,5 @@
 const Registration = require('../models/class_registration');
+const Message = require('../models/messages');
 const { sendHubtelSMS } = require('../utils/hubtelSms');
 
 const DEFAULT_INTERVAL_MINUTES = 10;
@@ -33,13 +34,32 @@ async function processExpiringAccessReminders() {
       : 'soon';
 
     const smsText = `Reminder: ${username}, your access to ${sessionTitle} expires in about 24 hours (${expiresAtText}). Please renew if you want uninterrupted access.`;
+    const inboxText = `Reminder: Your access to ${sessionTitle} expires in about 24 hours (${expiresAtText}). Please renew if you want uninterrupted access.`;
+
+    let appInboxDelivered = false;
+    let smsDelivered = false;
+
+    try {
+      await Message.create({
+        userId: registration.userId._id,
+        question: 'Session Expiry Reminder',
+        answer: inboxText,
+      });
+      appInboxDelivered = true;
+    } catch (messageError) {
+      console.error(`24h expiry reminder inbox message failed for registration ${registration._id}:`, messageError.message);
+    }
 
     try {
       await sendHubtelSMS(phoneNumber, smsText);
+      smsDelivered = true;
+    } catch (smsError) {
+      console.error(`24h expiry reminder SMS failed for registration ${registration._id}:`, smsError.message);
+    }
+
+    if (appInboxDelivered || smsDelivered) {
       registration.accessExpiryReminder24hSentAt = new Date();
       await registration.save();
-    } catch (error) {
-      console.error(`24h expiry reminder SMS failed for registration ${registration._id}:`, error.message);
     }
   }
 }
