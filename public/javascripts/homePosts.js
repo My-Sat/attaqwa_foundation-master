@@ -93,6 +93,17 @@
             <strong>${escapeHtml(comment.authorName || 'User')}</strong>
           </div>
           <p class="mb-1">${escapeHtml(comment.body || '')}</p>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <button
+              class="btn btn-sm btn-outline-primary community-like-btn ${comment.likedByCurrent ? 'is-liked' : ''}"
+              type="button"
+              data-action="like-comment"
+              data-post-id="${comment.postId || ''}"
+              data-comment-id="${comment.id}"
+              data-no-loading
+            >${comment.likedByCurrent ? 'Liked' : 'Like'}</button>
+            <small class="text-muted community-like-count" data-comment-like-count>${Number(comment.likesCount || 0)}</small>
+          </div>
           <small class="text-muted">${escapeHtml(formatDateTime(comment.createdAt))}</small>
           ${replyFormMarkup}
           ${repliesToggleMarkup}
@@ -140,6 +151,16 @@
               <small class="text-muted">${escapeHtml(formatDateTime(post.createdAt))}</small>
             </div>
             <p class="community-body mb-3">${escapeHtml(post.body || '')}</p>
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <button
+                class="btn btn-sm btn-outline-primary community-like-btn ${post.likedByCurrent ? 'is-liked' : ''}"
+                type="button"
+                data-action="like-post"
+                data-post-id="${post.id}"
+                data-no-loading
+              >${post.likedByCurrent ? 'Liked' : 'Like'}</button>
+              <small class="text-muted community-like-count" data-post-like-count>${Number(post.likesCount || 0)}</small>
+            </div>
             <div class="community-comments-wrap">
               <h6 class="community-comment-title mb-2">Comments (<span class="community-comment-count">${Number(post.commentsCount || comments.length || 0)}</span>)</h6>
               <ul class="community-comments list-unstyled mb-2">${commentsMarkup}</ul>
@@ -284,11 +305,11 @@
         }
 
         if (payload.comment) {
-          const mappedComment = {
-            ...payload.comment,
-            postId,
-            replies: [],
-          };
+        const mappedComment = {
+          ...payload.comment,
+          postId,
+          replies: [],
+        };
 
           if (parentCommentId) {
             const parentItem = article ? article.querySelector(`.community-comment-item[data-comment-id="${parentCommentId}"]`) : null;
@@ -356,6 +377,59 @@
     });
 
     postsContainer.addEventListener('click', (event) => {
+      const likePostButton = event.target.closest('[data-action="like-post"]');
+      if (likePostButton) {
+        const postId = likePostButton.getAttribute('data-post-id') || '';
+        if (!postId) {
+          return;
+        }
+
+        const postCard = likePostButton.closest('.community-post');
+        const likeCountEl = postCard ? postCard.querySelector('[data-post-like-count]') : null;
+        likePostButton.disabled = true;
+
+        request(`/api/posts/${postId}/like`, { method: 'POST' })
+          .then((payload) => {
+            likePostButton.classList.toggle('is-liked', Boolean(payload.liked));
+            likePostButton.textContent = payload.liked ? 'Liked' : 'Like';
+            if (likeCountEl && Number.isFinite(Number(payload.likesCount))) {
+              likeCountEl.textContent = String(payload.likesCount);
+            }
+          })
+          .catch((error) => showFeedback(error.message, 'error'))
+          .finally(() => {
+            likePostButton.disabled = false;
+          });
+        return;
+      }
+
+      const likeCommentButton = event.target.closest('[data-action="like-comment"]');
+      if (likeCommentButton) {
+        const postId = likeCommentButton.getAttribute('data-post-id') || '';
+        const commentId = likeCommentButton.getAttribute('data-comment-id') || '';
+        if (!postId || !commentId) {
+          return;
+        }
+
+        const commentItem = likeCommentButton.closest('.community-comment-item');
+        const likeCountEl = commentItem ? commentItem.querySelector('[data-comment-like-count]') : null;
+        likeCommentButton.disabled = true;
+
+        request(`/api/posts/${postId}/comments/${commentId}/like`, { method: 'POST' })
+          .then((payload) => {
+            likeCommentButton.classList.toggle('is-liked', Boolean(payload.liked));
+            likeCommentButton.textContent = payload.liked ? 'Liked' : 'Like';
+            if (likeCountEl && Number.isFinite(Number(payload.likesCount))) {
+              likeCountEl.textContent = String(payload.likesCount);
+            }
+          })
+          .catch((error) => showFeedback(error.message, 'error'))
+          .finally(() => {
+            likeCommentButton.disabled = false;
+          });
+        return;
+      }
+
       const toggleButton = event.target.closest('[data-action="toggle-reply"]');
       if (toggleButton) {
         const commentItem = toggleButton.closest('.community-comment-item');

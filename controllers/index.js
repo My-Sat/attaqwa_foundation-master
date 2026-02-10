@@ -73,7 +73,7 @@ exports.index = asyncHandler(async (req, res) => {
     shouldLazyLoadArticles
       ? Article.find(getPublicArticleFilter()).sort({ createdAt: -1 }).limit(HOME_PAGE_SIZE)
       : Article.find(getPublicArticleFilter()).sort({ createdAt: -1 }),
-    postController.fetchPostsSlice(0, postController.HOME_POST_PAGE_SIZE),
+    postController.fetchPostsSlice(0, postController.HOME_POST_PAGE_SIZE, req),
   ]);
   
   // Update visitor count

@@ -957,6 +957,14 @@ a:active {
   word-break: break-word;
 }
 
+.community-like-btn.is-liked,
+.community-like-btn.is-liked:hover,
+.community-like-btn.is-liked:focus {
+  color: #ffffff;
+  background: var(--brand-500);
+  border-color: var(--brand-500);
+}
+
 .community-replies {
   margin-top: 0.55rem;
   margin-left: 1rem;

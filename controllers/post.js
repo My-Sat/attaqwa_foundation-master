@@ -28,6 +28,14 @@ function getActorFromSession(req) {
   return null;
 }
 
+function getActorLikeKey(req) {
+  const actor = getActorFromSession(req);
+  if (!actor) {
+    return null;
+  }
+  return actor.type === 'admin' ? `a:${actor.id}` : `u:${actor.id}`;
+}
+
 function normalizePostBody(value) {
   return String(value || '').trim();
 }
@@ -44,7 +52,8 @@ function mapAuthorName(item) {
     : 'User';
 }
 
-function mapComment(comment) {
+function mapComment(comment, likeKey) {
+  const likedByKeys = Array.isArray(comment.likedByKeys) ? comment.likedByKeys : [];
   return {
     id: comment._id,
     parentCommentId: comment.parentCommentId ? String(comment.parentCommentId) : null,
@@ -52,13 +61,16 @@ function mapComment(comment) {
     authorType: comment.authorType,
     authorName: mapAuthorName(comment),
     createdAt: comment.createdAt,
+    likesCount: Number.isFinite(Number(comment.likesCount)) ? Number(comment.likesCount) : 0,
+    likedByCurrent: Boolean(likeKey && likedByKeys.includes(likeKey)),
     replies: [],
   };
 }
 
-async function fetchPostsSlice(skip = 0, limit = HOME_POST_PAGE_SIZE) {
+async function fetchPostsSlice(skip = 0, limit = HOME_POST_PAGE_SIZE, req = null) {
   const safeSkip = Math.max(0, Number(skip) || 0);
   const safeLimit = Math.min(20, Math.max(1, Number(limit) || HOME_POST_PAGE_SIZE));
+  const likeKey = req ? getActorLikeKey(req) : null;
 
   const [posts, total] = await Promise.all([
     Post.find({})
@@ -83,7 +95,7 @@ async function fetchPostsSlice(skip = 0, limit = HOME_POST_PAGE_SIZE) {
     if (!acc[key]) {
       acc[key] = [];
     }
-    acc[key].push(mapComment(comment));
+    acc[key].push(mapComment(comment, likeKey));
     return acc;
   }, {});
 
@@ -100,6 +112,7 @@ async function fetchPostsSlice(skip = 0, limit = HOME_POST_PAGE_SIZE) {
       }
     });
 
+    const likedByKeys = Array.isArray(post.likedByKeys) ? post.likedByKeys : [];
     return {
       id: String(post._id),
       body: post.body,
@@ -107,6 +120,8 @@ async function fetchPostsSlice(skip = 0, limit = HOME_POST_PAGE_SIZE) {
       authorName: mapAuthorName(post),
       createdAt: post.createdAt,
       commentsCount: Number.isFinite(Number(post.commentsCount)) ? Number(post.commentsCount) : 0,
+      likesCount: Number.isFinite(Number(post.likesCount)) ? Number(post.likesCount) : 0,
+      likedByCurrent: Boolean(likeKey && likedByKeys.includes(likeKey)),
       comments: rootComments,
     };
   });
@@ -121,7 +136,7 @@ async function fetchPostsSlice(skip = 0, limit = HOME_POST_PAGE_SIZE) {
 exports.getHomePosts = asyncHandler(async (req, res) => {
   const skip = Math.max(0, parseInt(req.query.skip, 10) || 0);
   const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || HOME_POST_PAGE_SIZE));
-  const payload = await fetchPostsSlice(skip, limit);
+  const payload = await fetchPostsSlice(skip, limit, req);
 
   return res.json({
     posts: payload.posts,
@@ -149,6 +164,8 @@ exports.createPost = asyncHandler(async (req, res) => {
     authorUserId: actor.userId,
     authorAdminId: actor.adminId,
     commentsCount: 0,
+    likesCount: 0,
+    likedByKeys: [],
   });
 
   return res.status(201).json({
@@ -159,6 +176,8 @@ exports.createPost = asyncHandler(async (req, res) => {
       authorName: actor.name,
       createdAt: post.createdAt,
       commentsCount: 0,
+      likesCount: 0,
+      likedByCurrent: false,
       comments: [],
     },
   });
@@ -209,6 +228,8 @@ exports.createComment = asyncHandler(async (req, res) => {
     authorType: actor.type,
     authorUserId: actor.userId,
     authorAdminId: actor.adminId,
+    likesCount: 0,
+    likedByKeys: [],
   });
 
   post.commentsCount = (post.commentsCount || 0) + 1;
@@ -223,8 +244,90 @@ exports.createComment = asyncHandler(async (req, res) => {
       authorType: actor.type,
       authorName: actor.name,
       createdAt: comment.createdAt,
+      likesCount: 0,
+      likedByCurrent: false,
     },
     commentsCount: post.commentsCount,
+  });
+});
+
+exports.togglePostLike = asyncHandler(async (req, res) => {
+  const actor = getActorFromSession(req);
+  if (!actor) {
+    return res.status(401).json({ error: 'You need to sign in to like posts.' });
+  }
+
+  const likeKey = getActorLikeKey(req);
+  const postId = (req.params.id || '').trim();
+  if (!postId) {
+    return res.status(400).json({ error: 'Post id is required.' });
+  }
+
+  const post = await Post.findById(postId);
+  if (!post) {
+    return res.status(404).json({ error: 'Post not found.' });
+  }
+
+  const likedByKeys = Array.isArray(post.likedByKeys) ? post.likedByKeys : [];
+  const existingIndex = likedByKeys.indexOf(likeKey);
+  let liked = false;
+
+  if (existingIndex >= 0) {
+    likedByKeys.splice(existingIndex, 1);
+    liked = false;
+  } else {
+    likedByKeys.push(likeKey);
+    liked = true;
+  }
+
+  post.likedByKeys = likedByKeys;
+  post.likesCount = likedByKeys.length;
+  await post.save();
+
+  return res.json({
+    liked,
+    likesCount: post.likesCount,
+  });
+});
+
+exports.toggleCommentLike = asyncHandler(async (req, res) => {
+  const actor = getActorFromSession(req);
+  if (!actor) {
+    return res.status(401).json({ error: 'You need to sign in to like replies.' });
+  }
+
+  const likeKey = getActorLikeKey(req);
+  const postId = (req.params.postId || '').trim();
+  const commentId = (req.params.commentId || '').trim();
+
+  if (!postId || !commentId) {
+    return res.status(400).json({ error: 'Post id and comment id are required.' });
+  }
+
+  const comment = await PostComment.findOne({ _id: commentId, postId });
+  if (!comment) {
+    return res.status(404).json({ error: 'Comment not found.' });
+  }
+
+  const likedByKeys = Array.isArray(comment.likedByKeys) ? comment.likedByKeys : [];
+  const existingIndex = likedByKeys.indexOf(likeKey);
+  let liked = false;
+
+  if (existingIndex >= 0) {
+    likedByKeys.splice(existingIndex, 1);
+    liked = false;
+  } else {
+    likedByKeys.push(likeKey);
+    liked = true;
+  }
+
+  comment.likedByKeys = likedByKeys;
+  comment.likesCount = likedByKeys.length;
+  await comment.save();
+
+  return res.json({
+    liked,
+    likesCount: comment.likesCount,
   });
 });
 

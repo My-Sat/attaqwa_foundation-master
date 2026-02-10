@@ -5,6 +5,16 @@ mixin commentItem(comment, postId)
     div
       strong= comment.authorName
     p.mb-1= comment.body
+    .d-flex.align-items-center.gap-2.mb-1
+      button.btn.btn-sm.btn-outline-primary.community-like-btn(
+        type="button"
+        data-action="like-comment"
+        data-post-id=postId
+        data-comment-id=comment.id
+        class=(comment.likedByCurrent ? 'is-liked' : '')
+        data-no-loading
+      ) #{comment.likedByCurrent ? 'Liked' : 'Like'}
+      small.text-muted.community-like-count(data-comment-like-count)= (typeof comment.likesCount === 'number' ? comment.likesCount : 0)
     small.text-muted= new Date(comment.createdAt).toLocaleString()
     if isLoggedIn
       .mt-2
@@ -158,6 +168,15 @@ block content
                         strong.community-author= post.authorName
                       small.text-muted= new Date(post.createdAt).toLocaleString()
                     p.community-body.mb-3= post.body
+                    .d-flex.align-items-center.gap-2.mb-3
+                      button.btn.btn-sm.btn-outline-primary.community-like-btn(
+                        type="button"
+                        data-action="like-post"
+                        data-post-id=post.id
+                        class=(post.likedByCurrent ? 'is-liked' : '')
+                        data-no-loading
+                      ) #{post.likedByCurrent ? 'Liked' : 'Like'}
+                      small.text-muted.community-like-count(data-post-like-count)= (typeof post.likesCount === 'number' ? post.likesCount : 0)
                     .community-comments-wrap
                       h6.community-comment-title.mb-2 Comments (#{post.commentsCount || 0})
                       ul.community-comments.list-unstyled.mb-2

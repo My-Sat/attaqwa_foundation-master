@@ -30,6 +30,8 @@ router.get('/search', searchController.search);
 router.get('/api/posts', postController.getHomePosts);
 router.post('/api/posts', isAnySessionAuthenticated, postController.createPost);
 router.post('/api/posts/:id/comments', isAnySessionAuthenticated, postController.createComment);
+router.post('/api/posts/:id/like', isAnySessionAuthenticated, postController.togglePostLike);
+router.post('/api/posts/:postId/comments/:commentId/like', isAnySessionAuthenticated, postController.toggleCommentLike);
 
 // Display registration form
 router.get('/register', isAuthenticated, sessionController.getClassSessionRegistration);

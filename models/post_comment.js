@@ -35,6 +35,15 @@ const postCommentSchema = new mongoose.Schema(
       ref: 'Admin',
       default: null,
     },
+    likesCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    likedByKeys: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true }
 );
