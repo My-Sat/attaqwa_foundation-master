@@ -166,6 +166,10 @@ block content
               label.form-label(for="classSessionAccessDurationDays") Access Duration (Days)
               input#classSessionAccessDurationDays.form-control(type="number" name="accessDurationDays" min="1" max="3650" step="1" value="30" required)
             .mb-3
+              label.form-label(for="classSessionAlertAdmin") Alert Admin for New Registrations
+              select#classSessionAlertAdmin.form-select(name="registrationAlertAdminId" required)
+                option(value="") Select admin
+            .mb-3
               label.form-label(for="classSessionStartDate") First Session Date
               input#classSessionStartDate.form-control(type="date" name="scheduleStartDate" required)
             .mb-3
@@ -215,6 +219,10 @@ block content
             .mb-3
               label.form-label(for="classSessionEditAccessDurationDays") Access Duration (Days)
               input#classSessionEditAccessDurationDays.form-control(type="number" name="accessDurationDays" min="1" max="3650" step="1" required)
+            .mb-3
+              label.form-label(for="classSessionEditAlertAdmin") Alert Admin for New Registrations
+              select#classSessionEditAlertAdmin.form-select(name="registrationAlertAdminId" required)
+                option(value="") Select admin
             .mb-3
               label.form-label(for="classSessionEditStartDate") First Session Date
               input#classSessionEditStartDate.form-control(type="date" name="scheduleStartDate" required)

@@ -29,6 +29,7 @@
     const classSessionTitle = document.getElementById('classSessionTitle');
     const classSessionPrice = document.getElementById('classSessionPrice');
     const classSessionAccessDurationDays = document.getElementById('classSessionAccessDurationDays');
+    const classSessionAlertAdmin = document.getElementById('classSessionAlertAdmin');
     const classSessionStartDate = document.getElementById('classSessionStartDate');
     const classSessionStartTime = document.getElementById('classSessionStartTime');
     const classSessionDurationMinutes = document.getElementById('classSessionDurationMinutes');
@@ -42,6 +43,7 @@
     const classSessionEditTitle = document.getElementById('classSessionEditTitle');
     const classSessionEditPrice = document.getElementById('classSessionEditPrice');
     const classSessionEditAccessDurationDays = document.getElementById('classSessionEditAccessDurationDays');
+    const classSessionEditAlertAdmin = document.getElementById('classSessionEditAlertAdmin');
     const classSessionEditStartDate = document.getElementById('classSessionEditStartDate');
     const classSessionEditStartTime = document.getElementById('classSessionEditStartTime');
     const classSessionEditDurationMinutes = document.getElementById('classSessionEditDurationMinutes');
@@ -397,6 +399,30 @@
       }
     }
 
+    function renderClassSessionAlertAdminOptions() {
+      const options = state.admins
+        .map((admin) => `<option value="${admin._id}">${escapeHtml(admin.username)}</option>`)
+        .join('');
+
+      if (classSessionAlertAdmin) {
+        const selectedValue = classSessionAlertAdmin.value;
+        classSessionAlertAdmin.innerHTML = `<option value="">Select admin</option>${options}`;
+        if (selectedValue && state.admins.some((admin) => String(admin._id) === String(selectedValue))) {
+          classSessionAlertAdmin.value = selectedValue;
+        } else if (state.admins.length) {
+          classSessionAlertAdmin.value = String(state.admins[0]._id);
+        }
+      }
+
+      if (classSessionEditAlertAdmin) {
+        const selectedValue = classSessionEditAlertAdmin.value;
+        classSessionEditAlertAdmin.innerHTML = `<option value="">Select admin</option>${options}`;
+        if (selectedValue && state.admins.some((admin) => String(admin._id) === String(selectedValue))) {
+          classSessionEditAlertAdmin.value = selectedValue;
+        }
+      }
+    }
+
     function renderCategories() {
       if (!state.categories.length) {
         categoryList.innerHTML = '<li class="text-muted">No categories added yet.</li>';
@@ -601,6 +627,7 @@
                 <p class="admin-item-title">${escapeHtml(session.title)}</p>
                 <small class="text-muted">${session.registrationCount} registration(s) | ${escapeHtml(formatMoney(session.price))}</small>
                 <small class="d-block text-muted">Access: ${escapeHtml(String(session.accessDurationDays || 30))} day(s)</small>
+                <small class="d-block text-muted">Approval alert admin: ${escapeHtml(session.registrationAlertAdmin && session.registrationAlertAdmin.username ? session.registrationAlertAdmin.username : 'Not set')}</small>
                 <small class="d-block text-muted">${escapeHtml(session.scheduleSummary || 'Schedule not configured')}</small>
                 <small class="d-block text-muted">Duration: ${escapeHtml(String(session.schedule && session.schedule.durationMinutes ? session.schedule.durationMinutes : 60))} min</small>
                 ${session.isLiveActive ? '<small class="d-block text-success fw-bold">Live now</small>' : ''}
@@ -737,6 +764,7 @@
       const payload = await request('/api/admin/admins');
       state.admins = payload.admins || [];
       renderAdmins();
+      renderClassSessionAlertAdminOptions();
     }
 
     async function loadQuestions() {
@@ -980,6 +1008,7 @@
       const startTimeInput = mode === 'edit' ? classSessionEditStartTime : classSessionStartTime;
       const durationInput = mode === 'edit' ? classSessionEditDurationMinutes : classSessionDurationMinutes;
       const frequencyInput = mode === 'edit' ? classSessionEditFrequency : classSessionFrequency;
+      const alertAdminInput = mode === 'edit' ? classSessionEditAlertAdmin : classSessionAlertAdmin;
       const weekDayInputs = mode === 'edit' ? classSessionEditWeekDayInputs : classSessionWeekDayInputs;
 
       const title = (titleInput && titleInput.value ? titleInput.value : '').trim();
@@ -988,6 +1017,7 @@
       const scheduleStartDate = (startDateInput && startDateInput.value ? startDateInput.value : '').trim();
       const scheduleStartTime = (startTimeInput && startTimeInput.value ? startTimeInput.value : '').trim();
       const durationMinutes = durationInput && durationInput.value ? Number(durationInput.value) : NaN;
+      const registrationAlertAdminId = (alertAdminInput && alertAdminInput.value ? alertAdminInput.value : '').trim();
       const frequency = (frequencyInput && frequencyInput.value ? frequencyInput.value : 'weekly').trim().toLowerCase() === 'daily'
         ? 'daily'
         : 'weekly';
@@ -1001,6 +1031,9 @@
       }
       if (!Number.isFinite(accessDurationDays) || accessDurationDays < 1 || accessDurationDays > 3650) {
         return { error: 'Access duration must be between 1 and 3650 days.' };
+      }
+      if (!registrationAlertAdminId) {
+        return { error: 'Select an admin to receive registration approval alerts.' };
       }
       if (!scheduleStartDate) {
         return { error: 'Session start date is required.' };
@@ -1020,6 +1053,7 @@
           title,
           price,
           accessDurationDays: Math.round(accessDurationDays),
+          registrationAlertAdminId,
           scheduleStartDate,
           scheduleStartTime,
           durationMinutes: Math.round(durationMinutes),
@@ -1098,6 +1132,9 @@
           }
           if (classSessionAccessDurationDays) {
             classSessionAccessDurationDays.value = '30';
+          }
+          if (classSessionAlertAdmin && state.admins.length) {
+            classSessionAlertAdmin.value = String(state.admins[0]._id);
           }
           hideModal(classSessionModal, classSessionModalElement);
           await loadLiveClassStatus();
@@ -1403,6 +1440,11 @@
           classSessionEditAccessDurationDays.value = Number.isFinite(Number(session.accessDurationDays))
             ? String(session.accessDurationDays)
             : '30';
+        }
+        if (classSessionEditAlertAdmin) {
+          classSessionEditAlertAdmin.value = session.registrationAlertAdmin && session.registrationAlertAdmin._id
+            ? String(session.registrationAlertAdmin._id)
+            : '';
         }
         if (classSessionEditStartDate) {
           classSessionEditStartDate.value = toDateInputValue(session.schedule && session.schedule.startDate ? session.schedule.startDate : '');

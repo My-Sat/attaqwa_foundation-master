@@ -94,6 +94,7 @@ function getSessionPrice(value) {
 
 function parseClassSessionPayload(body) {
   const title = (body.title || '').trim();
+  const registrationAlertAdminId = (body.registrationAlertAdminId || '').toString().trim();
   const rawStartDate = (body.scheduleStartDate || '').toString().trim();
   const rawStartTime = (body.scheduleStartTime || '').toString().trim();
   const price = getSessionPrice(body.price);
@@ -109,6 +110,14 @@ function parseClassSessionPayload(body) {
 
   if (!title) {
     return { error: 'Session title is required.' };
+  }
+
+  if (!registrationAlertAdminId) {
+    return { error: 'Select an admin to receive registration approval alerts.' };
+  }
+
+  if (!/^[a-f\d]{24}$/i.test(registrationAlertAdminId)) {
+    return { error: 'Selected alert admin is invalid.' };
   }
 
   if (price === null) {
@@ -133,6 +142,7 @@ function parseClassSessionPayload(body) {
 
   return {
     title,
+    registrationAlertAdminId,
     price,
     accessDurationDays: Math.round(rawAccessDurationDays),
     schedule: {
@@ -152,6 +162,12 @@ function buildClassSessionResponse(session, registrationCount, activeSessionId) 
     title: session.title,
     price: Number.isFinite(Number(session.price)) ? Number(session.price) : 0,
     accessDurationDays: Number.isFinite(Number(session.accessDurationDays)) ? Number(session.accessDurationDays) : 30,
+    registrationAlertAdmin: session.registrationAlertAdminId
+      ? {
+        _id: session.registrationAlertAdminId._id,
+        username: session.registrationAlertAdminId.username,
+      }
+      : null,
     registrationCount,
     schedule: {
       startDate: schedule.startDate,
@@ -553,7 +569,9 @@ exports.getClassSessions = asyncHandler(async (req, res) => {
     ? String(liveState.activeSessionId)
     : '';
   const [sessions, registrationCounts] = await Promise.all([
-    ClassSession.find().sort({ title: 1 }),
+    ClassSession.find()
+      .populate('registrationAlertAdminId', 'username')
+      .sort({ title: 1 }),
     Registration.aggregate([
       {
         $group: {
@@ -583,12 +601,20 @@ exports.createClassSession = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: parsed.error });
   }
 
+  const alertAdminExists = await Admin.exists({ _id: parsed.registrationAlertAdminId });
+  if (!alertAdminExists) {
+    return res.status(400).json({ error: 'Selected alert admin does not exist.' });
+  }
+
   const classSession = await ClassSession.create({
     title: parsed.title,
     price: parsed.price,
     accessDurationDays: parsed.accessDurationDays,
+    registrationAlertAdminId: parsed.registrationAlertAdminId,
     schedule: parsed.schedule,
   });
+
+  await classSession.populate('registrationAlertAdminId', 'username');
 
   return res.status(201).json({
     classSession: buildClassSessionResponse(classSession, 0, ''),
@@ -602,12 +628,18 @@ exports.updateClassSession = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: parsed.error });
   }
 
+  const alertAdminExists = await Admin.exists({ _id: parsed.registrationAlertAdminId });
+  if (!alertAdminExists) {
+    return res.status(400).json({ error: 'Selected alert admin does not exist.' });
+  }
+
   const updatedSession = await ClassSession.findByIdAndUpdate(
     id,
     {
       title: parsed.title,
       price: parsed.price,
       accessDurationDays: parsed.accessDurationDays,
+      registrationAlertAdminId: parsed.registrationAlertAdminId,
       schedule: parsed.schedule,
     },
     { new: true }
@@ -618,6 +650,7 @@ exports.updateClassSession = asyncHandler(async (req, res) => {
   }
 
   const registrationCount = await Registration.countDocuments({ classSessionId: id });
+  await updatedSession.populate('registrationAlertAdminId', 'username');
 
   return res.json({
     classSession: buildClassSessionResponse(updatedSession, registrationCount, ''),

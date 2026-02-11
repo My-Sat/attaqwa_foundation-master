@@ -19,6 +19,11 @@ const classSessionSchema = new Schema({
     max: 3650,
     default: 30,
   },
+  registrationAlertAdminId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Admin',
+    default: null,
+  },
   schedule: {
     startDate: {
       type: Date,

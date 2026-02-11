@@ -1,6 +1,7 @@
 const Registration = require('../models/class_registration');
 const ClassSession = require('../models/class_session');
 const Message = require('../models/messages');
+const User = require('../models/users');
 const asyncHandler = require('express-async-handler');
 const { getNextSessionStart, getScheduleSummary, getNormalizedSchedule } = require('../utils/sessionSchedule');
 const { sendHubtelSMS } = require('../utils/hubtelSms');
@@ -48,7 +49,8 @@ exports.postClassSessionRegistration = asyncHandler(async (req, res) => {
     return res.redirect('/register');
   }
 
-  const selectedSession = await ClassSession.findById(sessionId);
+  const selectedSession = await ClassSession.findById(sessionId)
+    .populate('registrationAlertAdminId', 'username phoneNumber');
   if (!selectedSession) {
     req.flash('error', 'Selected session does not exist.');
     return res.redirect('/register');
@@ -88,6 +90,19 @@ exports.postClassSessionRegistration = asyncHandler(async (req, res) => {
     const requestedDurationDays = Number.isFinite(Number(selectedSession.accessDurationDays))
       ? Number(selectedSession.accessDurationDays)
       : 30;
+
+    try {
+      const alertAdmin = selectedSession.registrationAlertAdminId;
+      if (alertAdmin && alertAdmin.phoneNumber) {
+        const user = await User.findById(userId, 'username');
+        const applicantName = user && user.username ? user.username : 'A user';
+        const smsText = `As-salaam alaikum. New class registration needs approval. User: ${applicantName}. Session: ${selectedSession.title}. Payment method: ${paymentMethod || 'Other'}. Reference: ${paymentReference}. Please review pending registrations.`;
+        await sendHubtelSMS(alertAdmin.phoneNumber, smsText);
+      }
+    } catch (alertSmsError) {
+      console.error('Session registration alert SMS error:', alertSmsError.message);
+    }
+
     req.flash('success', `Registration submitted. Wait for admin approval to get ${requestedDurationDays} day(s) access.`);
     res.redirect('/register');
   } catch (err) {
