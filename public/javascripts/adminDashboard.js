@@ -11,6 +11,7 @@
     const liveClassStatusElement = document.getElementById('liveClassStatus');
     const endLiveClassBtn = document.getElementById('endLiveClassBtn');
     const joinLiveClassBtn = document.getElementById('joinLiveClassBtn');
+    const approveRegistrationsCount = document.getElementById('approveRegistrationsCount');
     const liveStreamScheduleStatusElement = document.getElementById('liveStreamScheduleStatus');
     const clearLiveStreamScheduleBtn = document.getElementById('clearLiveStreamScheduleBtn');
 
@@ -143,6 +144,7 @@
         note: '',
         updatedAt: null,
       },
+      pendingRegistrationsCount: 0,
       activeCategory: '',
     };
 
@@ -879,6 +881,30 @@
       renderLiveStreamScheduleStatus();
     }
 
+    function renderPendingRegistrationsCount() {
+      if (!approveRegistrationsCount) {
+        return;
+      }
+
+      const count = Number.isFinite(Number(state.pendingRegistrationsCount))
+        ? Number(state.pendingRegistrationsCount)
+        : 0;
+
+      if (count > 0) {
+        approveRegistrationsCount.textContent = String(count);
+        approveRegistrationsCount.classList.remove('d-none');
+      } else {
+        approveRegistrationsCount.textContent = '0';
+        approveRegistrationsCount.classList.add('d-none');
+      }
+    }
+
+    async function loadPendingRegistrationsCount() {
+      const payload = await request('/api/admin/registrations/pending/count');
+      state.pendingRegistrationsCount = Number(payload.pendingCount) || 0;
+      renderPendingRegistrationsCount();
+    }
+
     async function refreshAll() {
       await Promise.all([
         loadCategories(),
@@ -888,6 +914,7 @@
         loadArticles(),
         loadLiveClassStatus(),
         loadLiveStreamSchedule(),
+        loadPendingRegistrationsCount(),
         loadClassSessions(),
       ]);
     }

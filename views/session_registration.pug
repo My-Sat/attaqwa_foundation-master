@@ -3,6 +3,52 @@ extends layout
 block content
   section.auth-shell
     .auth-card
+      style.
+        .payment-guide {
+          border: 1px solid #d9e8ff;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #f6faff 0%, #ffffff 100%);
+          padding: 1rem;
+          margin-bottom: 1rem;
+        }
+        .payment-guide-title {
+          color: #0f3c78;
+          font-weight: 700;
+          margin-bottom: .35rem;
+        }
+        .payment-guide-subtitle {
+          color: #5d6b7b;
+          font-size: .95rem;
+          margin-bottom: .85rem;
+        }
+        .payment-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: .75rem;
+        }
+        .payment-block {
+          border: 1px solid #e6eef8;
+          border-radius: 12px;
+          background: #ffffff;
+          padding: .8rem;
+        }
+        .payment-block h6 {
+          margin: 0 0 .5rem;
+          color: #0f3c78;
+          font-weight: 700;
+        }
+        .payment-line {
+          margin-bottom: .25rem;
+          color: #2f3b4a;
+          font-size: .94rem;
+        }
+        .payment-line:last-child {
+          margin-bottom: 0;
+        }
+        .payment-line strong {
+          color: #0f7a3d;
+        }
+
       .auth-header
         h1.auth-title= title
         p.auth-subtitle Submit your payment proof and wait for admin approval.
@@ -38,6 +84,33 @@ block content
             strong.d-block#selectedSessionPrice Select a session to see price.
             small.text-muted#selectedSessionSchedule Schedule details will appear here.
             small.text-muted.d-block#selectedSessionAccessDuration Access duration details will appear here.
+        .payment-guide
+          h5.payment-guide-title Payment Details
+          p.payment-guide-subtitle
+            | Use any of the options below to make payment, then submit your payment proof/reference.
+          .payment-grid
+            .payment-block
+              h6 Mobile Money
+              p.payment-line
+                | Number:
+                strong  +233591459200
+              p.payment-line
+                | Name:
+                strong  At-taqwafoundation and Humanitarian Service
+            .payment-block
+              h6 Bank Transfer
+              p.payment-line
+                | Bank:
+                strong  Absa
+              p.payment-line
+                | Branch:
+                strong  Tamale
+              p.payment-line
+                | Acc Name:
+                strong  At-Taqwa foundation and Humanitrian
+              p.payment-line
+                | Acc Number:
+                strong  033-1809918
         .mb-3
           label.form-label(for='paymentMethod') Payment Method
           select#paymentMethod.form-select(name='paymentMethod' required)

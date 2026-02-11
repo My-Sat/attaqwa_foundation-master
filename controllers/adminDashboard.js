@@ -595,6 +595,11 @@ exports.getClassSessions = asyncHandler(async (req, res) => {
   });
 });
 
+exports.getPendingRegistrationsCount = asyncHandler(async (req, res) => {
+  const pendingCount = await Registration.countDocuments({ approved: false });
+  return res.json({ pendingCount });
+});
+
 exports.createClassSession = asyncHandler(async (req, res) => {
   const parsed = parseClassSessionPayload(req.body || {});
   if (parsed.error) {

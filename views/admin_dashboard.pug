@@ -50,7 +50,9 @@ block content
           button#joinLiveClassBtn.btn.btn-outline-success(type="button" data-no-loading disabled) Enter Live Class
         .d-flex.flex-wrap.gap-2.mb-2
           button.btn.admin-btn(type="button" data-bs-toggle="modal" data-bs-target="#classSessionModal") Add Session
-          a.btn.admin-btn(href="/registrations/pending") Approve Registrations
+          a.btn.admin-btn(href="/registrations/pending")
+            | Approve Registrations
+            span#approveRegistrationsCount.badge.text-bg-danger.ms-2.d-none 0
         p#classFeedback.admin-feedback.d-none
         ul#classList.admin-item-list
           li.text-muted Loading class sessions...

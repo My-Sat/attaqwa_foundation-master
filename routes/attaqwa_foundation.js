@@ -148,6 +148,7 @@ router.get('/api/admin/articles', isAdmin, adminDashboardController.getArticles)
 router.get('/api/admin/articles/:id', isAdmin, adminDashboardController.getArticleById);
 router.put('/api/admin/articles/:id', isAdmin, adminDashboardController.updateArticle);
 router.delete('/api/admin/articles/:id', isAdmin, adminDashboardController.deleteArticle);
+router.get('/api/admin/registrations/pending/count', isAdmin, adminDashboardController.getPendingRegistrationsCount);
 router.get('/api/admin/class-sessions', isAdmin, adminDashboardController.getClassSessions);
 router.post('/api/admin/class-sessions', isAdmin, adminDashboardController.createClassSession);
 router.get('/api/admin/class-sessions/:id/users', isAdmin, adminDashboardController.getClassSessionUsers);
