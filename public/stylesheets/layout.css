@@ -964,19 +964,46 @@ a:active {
   resize: vertical;
 }
 
-.community-post.card {
-  border: 1px solid var(--border-0);
-  border-radius: 0.85rem;
+.community-composer-card {
+  border: 1px solid #d7e7f4;
+  border-radius: 0.9rem;
+  padding: 0.9rem;
   background: #ffffff;
-  box-shadow: 0 8px 20px rgba(16, 33, 38, 0.08);
+  box-shadow: 0 6px 16px rgba(14, 33, 48, 0.06);
+}
+
+.community-feed-wrap {
+  margin-top: 0.5rem;
+  border-top: 1px dashed #cbdceb;
+  padding-top: 0.95rem;
+}
+
+.community-feed-title {
+  color: #1d3852;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.community-post.card {
+  border: 1px solid #c3d9ec;
+  border-left: 4px solid #1a6fb0;
+  border-radius: 0.85rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  box-shadow: 0 10px 24px rgba(16, 33, 38, 0.12);
+}
+
+.community-post.card .card-body {
+  background: linear-gradient(180deg, rgba(26, 111, 176, 0.03) 0%, rgba(255, 255, 255, 0) 45%);
 }
 
 .community-author {
-  color: var(--text-0);
+  color: #143a58;
+  font-weight: 700;
 }
 
 .community-body {
-  color: var(--text-1);
+  color: #11283a;
+  font-weight: 500;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -988,9 +1015,9 @@ a:active {
 
 .community-comment-item {
   padding: 0.55rem 0.6rem;
-  border: 1px solid var(--border-0);
+  border: 1px solid #d8e4ee;
   border-radius: 0.65rem;
-  background: #f9fcfb;
+  background: #f8fbfd;
 }
 
 .community-comment-item p {
