@@ -2,6 +2,7 @@
   function initHomeCountdown() {
     const countdownElement = document.getElementById('liveStreamCountdown');
     const noteElement = document.getElementById('liveStreamNote');
+    const liveStreamFrame = document.getElementById('liveStreamFrame');
 
     if (!countdownElement) {
       return;
@@ -31,12 +32,58 @@
       noteElement.textContent = note ? `Incoming live video: ${note}` : '';
     }
 
+    let livePollingTimer = null;
+    let isRefreshingLiveStream = false;
+
+    async function refreshLiveStreamSource() {
+      if (isRefreshingLiveStream) {
+        return;
+      }
+
+      isRefreshingLiveStream = true;
+      try {
+        const response = await fetch('/api/live-stream/current', {
+          headers: { Accept: 'application/json' },
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = await response.json().catch(() => ({}));
+        const nextSrc = payload && payload.liveVideoUrl ? String(payload.liveVideoUrl) : '';
+        if (liveStreamFrame && nextSrc && liveStreamFrame.src !== nextSrc) {
+          liveStreamFrame.src = nextSrc;
+        }
+
+        if (payload && payload.isLive) {
+          countdownElement.textContent = 'Live video is now streaming.';
+        } else if (!payload || !payload.isLive) {
+          countdownElement.textContent = 'Incoming live video should be live now.';
+        }
+      } catch (error) {
+        // no-op
+      } finally {
+        isRefreshingLiveStream = false;
+      }
+    }
+
+    function startLiveRefreshPolling() {
+      if (livePollingTimer) {
+        return;
+      }
+
+      refreshLiveStreamSource();
+      livePollingTimer = window.setInterval(refreshLiveStreamSource, 30000);
+    }
+
     function renderCountdown() {
       const now = new Date();
       const diff = targetDate.getTime() - now.getTime();
 
       if (diff <= 0) {
         countdownElement.textContent = 'Incoming live video should be live now.';
+        startLiveRefreshPolling();
         return;
       }
 

@@ -22,37 +22,49 @@ function getPublicArticleFilter() {
   };
 }
 
+async function fetchCurrentLiveVideoUrl() {
+  const fallbackUrl = 'https://www.youtube.com/embed/xjxOWSmSjnU';
+
+  try {
+    const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+      params: {
+        part: 'id',
+        channelId: CHANNEL_ID,
+        eventType: 'live',
+        type: 'video',
+        key: YOUTUBE_API_KEY,
+      },
+      timeout: 12000,
+    });
+
+    const items = response && response.data && Array.isArray(response.data.items)
+      ? response.data.items
+      : [];
+    const videoId = items.length && items[0] && items[0].id ? items[0].id.videoId : '';
+
+    if (videoId) {
+      return {
+        liveVideoUrl: `https://www.youtube.com/embed/${videoId}`,
+        isLive: true,
+      };
+    }
+  } catch (error) {
+    console.error('Error fetching live video:', error.message);
+  }
+
+  return {
+    liveVideoUrl: fallbackUrl,
+    isLive: false,
+  };
+}
+
 exports.index = asyncHandler(async (req, res) => {
   const noticeType = (req.query.liveClassNotice || '').trim();
   const liveClassNotice = noticeType === 'not_started'
     ? 'No class is active right now. Please wait for admin to start the live class.'
     : '';
-  let liveVideoUrl = "https://www.youtube.com/embed/xjxOWSmSjnU"; // Fallback video
-
-  try {
-    // Fetch YouTube live broadcasts for the specified channel
-    const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
-      params: {
-        part: 'id',
-        channelId: CHANNEL_ID,
-        eventType: 'live', // Get only active live streams
-        type: 'video',
-        key: YOUTUBE_API_KEY
-      }
-    });
-
-    console.log('YouTube API Response:', response.data);
-
-    // Extract the live videoId from the API response
-    if (response.data.items && response.data.items.length > 0 && response.data.items[0].id.videoId) {
-      const videoId = response.data.items[0].id.videoId;
-      liveVideoUrl = `https://www.youtube.com/embed/${videoId}`;
-    } else {
-      console.warn('No live videos found.');
-    }
-  } catch (error) {
-    console.error('Error fetching live video:', error.message);
-  }
+  const liveVideoStatus = await fetchCurrentLiveVideoUrl();
+  const liveVideoUrl = liveVideoStatus.liveVideoUrl;
 
   // Fetch video categories and answered questions from the database
   const [totalQuestions, totalVideoCategories, totalArticles, liveStreamSchedule] = await Promise.all([
@@ -104,6 +116,14 @@ exports.index = asyncHandler(async (req, res) => {
       startsAt: liveStreamSchedule && liveStreamSchedule.startsAt ? liveStreamSchedule.startsAt : null,
       note: liveStreamSchedule && liveStreamSchedule.note ? liveStreamSchedule.note : '',
     },
+  });
+});
+
+exports.getCurrentLiveStream = asyncHandler(async (req, res) => {
+  const status = await fetchCurrentLiveVideoUrl();
+  return res.json({
+    liveVideoUrl: status.liveVideoUrl,
+    isLive: status.isLive,
   });
 });
 

@@ -192,6 +192,7 @@ router.post('/delete_question', isAdmin, redirectDeprecatedToDashboard);
 //Donate Page
 router.get('/donate', donateController.getDonatePage);
 router.get('/api/home-feed/:type', index_controller.getHomeFeed);
+router.get('/api/live-stream/current', index_controller.getCurrentLiveStream);
 
 router.get('/live_class_auth', isAuthenticated, sessionController.getLiveClassAuth);
 

@@ -54,7 +54,7 @@ block content
             data-start-at=(liveStreamSchedule && liveStreamSchedule.startsAt ? liveStreamSchedule.startsAt.toISOString() : '')
           ) No incoming live video for the moment
           .iframe-container
-            iframe(
+            iframe#liveStreamFrame(
               src=liveVideoUrl
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
