@@ -28,6 +28,7 @@ router.get("/", index_controller.index);
 // GET: Search page with results
 router.get('/search', searchController.search);
 router.get('/api/posts', postController.getHomePosts);
+router.get('/api/posts/:id', postController.getPostById);
 router.post('/api/posts', isAnySessionAuthenticated, postController.createPost);
 router.post('/api/posts/:id/comments', isAnySessionAuthenticated, postController.createComment);
 router.post('/api/posts/:id/like', isAnySessionAuthenticated, postController.togglePostLike);
@@ -118,6 +119,7 @@ router.post('/signup',validateUserSignUp, userAccount.postUserSignUp);
 router.get('/user_signup_success', userAccount.getUserSignUpSuccess);
 
 router.get('/user_messages', userAccount.getUserMessages);
+router.get('/messages/:id/open', isAuthenticated, userAccount.openUserMessage);
 router.get('/settings/password', isAuthenticated, userAccount.getPasswordSettings);
 router.post('/settings/password', isAuthenticated, userAccount.postPasswordSettings);
 

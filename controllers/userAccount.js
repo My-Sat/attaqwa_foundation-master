@@ -115,6 +115,39 @@ exports.getUserMessages = asyncHandler(async (req, res) => {
   });
 });
 
+exports.openUserMessage = asyncHandler(async (req, res) => {
+  const userId = req.session.user?.id;
+  const messageId = (req.params.id || '').trim();
+
+  if (!userId || !messageId) {
+    return res.redirect('/user_messages');
+  }
+
+  const message = await Message.findOne({ _id: messageId, userId });
+  if (!message) {
+    return res.redirect('/user_messages');
+  }
+
+  if (!message.isRead) {
+    message.isRead = true;
+    await message.save();
+  }
+
+  if (
+    message.kind === 'community'
+    && message.linkType === 'community-comment'
+    && message.linkPostId
+  ) {
+    const focusPost = encodeURIComponent(String(message.linkPostId));
+    const focusComment = message.linkCommentId
+      ? `&focusComment=${encodeURIComponent(String(message.linkCommentId))}`
+      : '';
+    return res.redirect(`/?focusPost=${focusPost}${focusComment}#communityPosts`);
+  }
+
+  return res.redirect('/user_messages');
+});
+
 exports.getPasswordSettings = asyncHandler(async (req, res) => {
   const success = req.flash('success');
   const error = req.flash('error');

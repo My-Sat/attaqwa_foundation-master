@@ -17,7 +17,18 @@
       pageSize: parseInt(postsContainer.dataset.pageSize, 10) || 5,
       hasMore: String(postsContainer.dataset.hasMore || '').toLowerCase() === 'true',
       isLoading: false,
+      focusPostId: '',
+      focusCommentId: '',
     };
+
+    try {
+      const url = new URL(window.location.href);
+      state.focusPostId = (url.searchParams.get('focusPost') || '').trim();
+      state.focusCommentId = (url.searchParams.get('focusComment') || '').trim();
+    } catch (error) {
+      state.focusPostId = '';
+      state.focusCommentId = '';
+    }
 
     function escapeHtml(value) {
       return String(value)
@@ -193,6 +204,114 @@
       state.skip += posts.length;
     }
 
+    function clearFocusQueryParams() {
+      if (!state.focusPostId && !state.focusCommentId) {
+        return;
+      }
+
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('focusPost');
+        url.searchParams.delete('focusComment');
+        const normalizedUrl = `${url.pathname}${url.search}${url.hash}`;
+        window.history.replaceState({}, '', normalizedUrl);
+      } catch (error) {
+        // no-op
+      }
+    }
+
+    function getPostElement(postId) {
+      if (!postId) {
+        return null;
+      }
+      return Array.from(postsContainer.querySelectorAll('.community-post'))
+        .find((item) => String(item.getAttribute('data-post-id')) === String(postId)) || null;
+    }
+
+    function applyFocusHighlight(element) {
+      if (!element) {
+        return;
+      }
+
+      element.classList.add('community-focus-target');
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      window.setTimeout(() => {
+        element.classList.remove('community-focus-target');
+      }, 2400);
+    }
+
+    function expandRepliesAncestors(commentElement) {
+      let currentParent = commentElement ? commentElement.parentElement : null;
+
+      while (currentParent) {
+        if (currentParent.classList && currentParent.classList.contains('community-replies')) {
+          currentParent.classList.remove('d-none');
+          const parentCommentItem = currentParent.closest('.community-comment-item');
+          if (parentCommentItem) {
+            const toggle = parentCommentItem.querySelector(':scope > .community-replies-toggle');
+            if (toggle) {
+              const count = Number(toggle.getAttribute('data-replies-count') || '0');
+              toggle.textContent = getRepliesToggleLabel(count, true);
+            }
+          }
+        }
+        currentParent = currentParent.parentElement;
+      }
+    }
+
+    async function ensurePostLoaded(postId) {
+      const existing = getPostElement(postId);
+      if (existing) {
+        return existing;
+      }
+
+      const payload = await request(`/api/posts/${encodeURIComponent(postId)}`);
+      if (!payload || !payload.post) {
+        throw new Error('Unable to locate the target post.');
+      }
+
+      if (emptyState) {
+        emptyState.remove();
+      }
+
+      postsContainer.insertAdjacentHTML('afterbegin', buildPostMarkup(payload.post));
+      state.skip += 1;
+      return getPostElement(postId);
+    }
+
+    async function focusTargetFromQuery() {
+      if (!state.focusPostId) {
+        return;
+      }
+
+      try {
+        const postElement = await ensurePostLoaded(state.focusPostId);
+        if (!postElement) {
+          return;
+        }
+
+        if (!state.focusCommentId) {
+          applyFocusHighlight(postElement);
+          clearFocusQueryParams();
+          return;
+        }
+
+        const commentElement = postElement.querySelector(`.community-comment-item[data-comment-id="${state.focusCommentId}"]`);
+        if (!commentElement) {
+          applyFocusHighlight(postElement);
+          clearFocusQueryParams();
+          return;
+        }
+
+        expandRepliesAncestors(commentElement);
+        applyFocusHighlight(commentElement);
+      } catch (error) {
+        showFeedback(error.message || 'Unable to focus the target message.', 'error');
+      } finally {
+        clearFocusQueryParams();
+      }
+    }
+
     async function request(url, options) {
       const response = await fetch(url, options);
       const payload = await response.json().catch(() => ({}));
@@ -366,6 +485,8 @@
       loadMoreButton.addEventListener('click', loadMorePosts);
       updateLoadMoreVisibility();
     }
+
+    focusTargetFromQuery();
 
     postsContainer.addEventListener('submit', (event) => {
       const form = event.target.closest('.community-comment-form');

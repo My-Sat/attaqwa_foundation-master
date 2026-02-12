@@ -75,11 +75,30 @@ html(lang="en")
                   li
                     a.dropdown-item(href="/signout") Sign Out
             else if isLoggedIn && user
-              // User Messages Link
-              a.nav-link.messages-link(href="/user_messages" aria-label="Messages")
-                i(class="fas fa-envelope")
-                if unreadMessages > 0
-                  span.badge.bg-danger= unreadMessages
+              // User Messages Dropdown
+              .dropdown
+                a.nav-link.dropdown-toggle.messages-link(href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Messages")
+                  i(class="fas fa-envelope")
+                  if unreadMessages > 0
+                    span.badge.bg-danger= unreadMessages
+                ul.dropdown-menu.dropdown-menu-end.messages-dropdown
+                  if navMessages && navMessages.length
+                    each navMessage in navMessages
+                      li
+                        a.dropdown-item.messages-dropdown-item(
+                          href=`/messages/${navMessage.id}/open`
+                          class=(navMessage.isRead ? '' : 'is-unread')
+                        )
+                          span.messages-dropdown-title= navMessage.subject
+                          span.messages-dropdown-preview= navMessage.preview
+                          small.messages-dropdown-time= navMessage.createdAt ? new Date(navMessage.createdAt).toLocaleString() : ''
+                    li
+                      hr.dropdown-divider
+                    li
+                      a.dropdown-item.text-center.fw-semibold(href="/user_messages") View all messages
+                  else
+                    li
+                      span.dropdown-item-text.text-muted No messages yet.
               a.nav-link(href="/my_class_sessions") Class
               // User Username
               span.site-user-name= user.username ? user.username[0].toUpperCase() + user.username.slice(1).toLowerCase() : ''

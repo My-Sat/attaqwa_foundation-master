@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Post = require('../models/post');
 const PostComment = require('../models/post_comment');
+const Message = require('../models/messages');
 
 const HOME_POST_PAGE_SIZE = 5;
 
@@ -38,6 +39,22 @@ function getActorLikeKey(req) {
 
 function normalizePostBody(value) {
   return String(value || '').trim();
+}
+
+async function createCommunityInboxMessage(userId, subject, details, options = {}) {
+  if (!userId) {
+    return;
+  }
+
+  await Message.create({
+    userId,
+    question: subject,
+    answer: details,
+    kind: 'community',
+    linkType: options.linkType || 'community-comment',
+    linkPostId: options.linkPostId || null,
+    linkCommentId: options.linkCommentId || null,
+  });
 }
 
 function mapAuthorName(item) {
@@ -144,6 +161,54 @@ exports.getHomePosts = asyncHandler(async (req, res) => {
   });
 });
 
+exports.getPostById = asyncHandler(async (req, res) => {
+  const postId = (req.params.id || '').trim();
+  if (!postId) {
+    return res.status(400).json({ error: 'Post id is required.' });
+  }
+
+  const likeKey = getActorLikeKey(req);
+  const post = await Post.findById(postId)
+    .populate('authorUserId', 'username')
+    .populate('authorAdminId', 'username');
+
+  if (!post) {
+    return res.status(404).json({ error: 'Post not found.' });
+  }
+
+  const comments = await PostComment.find({ postId: post._id })
+    .sort({ createdAt: 1 })
+    .populate('authorUserId', 'username')
+    .populate('authorAdminId', 'username');
+
+  const flatComments = comments.map((comment) => mapComment(comment, likeKey));
+  const byId = new Map(flatComments.map((comment) => [String(comment.id), comment]));
+  const rootComments = [];
+
+  flatComments.forEach((comment) => {
+    if (comment.parentCommentId && byId.has(String(comment.parentCommentId))) {
+      byId.get(String(comment.parentCommentId)).replies.push(comment);
+    } else {
+      rootComments.push(comment);
+    }
+  });
+
+  const likedByKeys = Array.isArray(post.likedByKeys) ? post.likedByKeys : [];
+  return res.json({
+    post: {
+      id: String(post._id),
+      body: post.body,
+      authorType: post.authorType,
+      authorName: mapAuthorName(post),
+      createdAt: post.createdAt,
+      commentsCount: Number.isFinite(Number(post.commentsCount)) ? Number(post.commentsCount) : 0,
+      likesCount: Number.isFinite(Number(post.likesCount)) ? Number(post.likesCount) : 0,
+      likedByCurrent: Boolean(likeKey && likedByKeys.includes(likeKey)),
+      comments: rootComments,
+    },
+  });
+});
+
 exports.createPost = asyncHandler(async (req, res) => {
   const actor = getActorFromSession(req);
   if (!actor) {
@@ -234,6 +299,50 @@ exports.createComment = asyncHandler(async (req, res) => {
 
   post.commentsCount = (post.commentsCount || 0) + 1;
   await post.save();
+
+  const actorUserId = actor && actor.type === 'user' && actor.userId
+    ? String(actor.userId)
+    : '';
+  const actorDisplayName = actor && actor.name ? actor.name : 'A user';
+
+  if (!parentComment) {
+    const postOwnerUserId = post.authorUserId ? String(post.authorUserId) : '';
+    if (postOwnerUserId && postOwnerUserId !== actorUserId) {
+      try {
+        await createCommunityInboxMessage(
+          postOwnerUserId,
+          'Post Comment',
+          `${actorDisplayName} commented on your post.`,
+          {
+            linkType: 'community-comment',
+            linkPostId: post._id,
+            linkCommentId: comment._id,
+          }
+        );
+      } catch (messageError) {
+        console.error('Community post-comment inbox message error:', messageError.message);
+      }
+    }
+  } else {
+    const parentOwnerUserId = parentComment.authorUserId ? String(parentComment.authorUserId) : '';
+    if (parentOwnerUserId && parentOwnerUserId !== actorUserId) {
+      const isReplyToReply = Boolean(parentComment.parentCommentId);
+      const subject = isReplyToReply ? 'Reply to Your Reply' : 'Reply to Your Comment';
+      const details = isReplyToReply
+        ? `${actorDisplayName} replied to your reply.`
+        : `${actorDisplayName} replied to your comment.`;
+
+      try {
+        await createCommunityInboxMessage(parentOwnerUserId, subject, details, {
+          linkType: 'community-comment',
+          linkPostId: post._id,
+          linkCommentId: comment._id,
+        });
+      } catch (messageError) {
+        console.error('Community reply inbox message error:', messageError.message);
+      }
+    }
+  }
 
   return res.status(201).json({
     comment: {

@@ -17,8 +17,23 @@ const messageSchema = new Schema({
   },
   kind: {
     type: String,
-    enum: ['qa', 'session'],
+    enum: ['qa', 'session', 'community'],
     default: 'qa',
+  },
+  linkType: {
+    type: String,
+    enum: ['inbox', 'community-comment'],
+    default: 'inbox',
+  },
+  linkPostId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post',
+    default: null,
+  },
+  linkCommentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PostComment',
+    default: null,
   },
   isRead: {
     type: Boolean,

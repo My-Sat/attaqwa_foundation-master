@@ -14,6 +14,8 @@ block content
               .card-body
                 if message.kind === 'session'
                   h5.card-title.text-muted.text-center Subject: #{message.question}
+                else if message.kind === 'community'
+                  h5.card-title.text-muted.text-center Community: #{message.question}
                 else
                   h5.card-title.text-muted.text-center Question: #{message.question}
                 p.card-text.text-dark.text-center Details: #{message.answer}
