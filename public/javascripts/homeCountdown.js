@@ -104,7 +104,7 @@
       }
 
       refreshLiveStreamSource();
-      livePollingTimer = window.setInterval(refreshLiveStreamSource, 30000);
+      livePollingTimer = window.setInterval(refreshLiveStreamSource, 10000);
     }
 
     function renderCountdown() {
