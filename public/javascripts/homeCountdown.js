@@ -34,6 +34,26 @@
 
     let livePollingTimer = null;
     let isRefreshingLiveStream = false;
+    let hasTriggeredAutoplay = false;
+
+    function buildAutoplayUrl(rawUrl) {
+      const value = String(rawUrl || '').trim();
+      if (!value) {
+        return '';
+      }
+
+      try {
+        const url = new URL(value, window.location.origin);
+        url.searchParams.set('autoplay', '1');
+        url.searchParams.set('mute', '1');
+        url.searchParams.set('playsinline', '1');
+        return url.toString();
+      } catch (error) {
+        const hasQuery = value.includes('?');
+        const separator = hasQuery ? '&' : '?';
+        return `${value}${separator}autoplay=1&mute=1&playsinline=1`;
+      }
+    }
 
     async function refreshLiveStreamSource() {
       if (isRefreshingLiveStream) {
@@ -52,8 +72,18 @@
 
         const payload = await response.json().catch(() => ({}));
         const nextSrc = payload && payload.liveVideoUrl ? String(payload.liveVideoUrl) : '';
-        if (liveStreamFrame && nextSrc && liveStreamFrame.src !== nextSrc) {
-          liveStreamFrame.src = nextSrc;
+        if (liveStreamFrame && nextSrc) {
+          const shouldAutoplay = Boolean(payload && payload.isLive);
+          const targetSrc = shouldAutoplay ? buildAutoplayUrl(nextSrc) : nextSrc;
+          const mustReloadForAutoplay = shouldAutoplay && !hasTriggeredAutoplay;
+
+          if (liveStreamFrame.src !== targetSrc || mustReloadForAutoplay) {
+            liveStreamFrame.src = targetSrc;
+          }
+
+          if (shouldAutoplay) {
+            hasTriggeredAutoplay = true;
+          }
         }
 
         if (payload && payload.isLive) {
