@@ -13,6 +13,18 @@ const CHANNEL_ID = 'UCuc74pUfHQ0w4wLxe9yeIRg'; // Replace with your channel ID
 const HOME_PAGE_SIZE = 5;
 const HOME_EAGER_LOAD_THRESHOLD = 25;
 
+function getSiteUrl(req) {
+  const configured = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+  if (configured) {
+    return configured;
+  }
+
+  const forwardedProto = (req.headers['x-forwarded-proto'] || '').toString().split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol || 'https';
+  const host = req.get('host') || '';
+  return `${protocol}://${host}`;
+}
+
 function getPublicArticleFilter() {
   return {
     $or: [
@@ -98,6 +110,7 @@ exports.index = asyncHandler(async (req, res) => {
   await visitor.save();
 
   // Render the updated view
+  const siteUrl = getSiteUrl(req);
   res.render('index', {
     liveVideoUrl, 
     videoCategories, 
@@ -115,6 +128,38 @@ exports.index = asyncHandler(async (req, res) => {
     liveStreamSchedule: {
       startsAt: liveStreamSchedule && liveStreamSchedule.startsAt ? liveStreamSchedule.startsAt : null,
       note: liveStreamSchedule && liveStreamSchedule.note ? liveStreamSchedule.note : '',
+    },
+    seo: {
+      title: 'At-Taqwa Foundation | Live Teachings, Questions, Videos, Articles',
+      description: 'At-Taqwa Foundation offers live Islamic teachings, answered questions, curated videos, and articles for learners worldwide.',
+      canonical: `${siteUrl}/`,
+      ogType: 'website',
+      image: '/images/attaqwa.jpg',
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'At-Taqwa Foundation',
+          url: `${siteUrl}/`,
+          logo: `${siteUrl}/images/attaqwa.jpg`,
+          sameAs: [
+            'https://www.facebook.com/TaqwaAnd?mibextid=ZbWKwL',
+            'https://x.com/TaqwaAnd?s=09',
+            'https://www.youtube.com/@at-taqwafoundationandhuman2761',
+          ],
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: 'At-Taqwa Foundation',
+          url: `${siteUrl}/`,
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: `${siteUrl}/search?q={search_term_string}`,
+            'query-input': 'required name=search_term_string',
+          },
+        },
+      ],
     },
   });
 });

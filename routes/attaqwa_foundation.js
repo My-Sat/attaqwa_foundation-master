@@ -14,6 +14,7 @@ const liveClassController = require('../controllers/live_class');
 const searchController = require("../controllers/searchController");
 const adminDashboardController = require('../controllers/adminDashboard');
 const postController = require('../controllers/post');
+const seoController = require('../controllers/seo');
 const isAuthenticated = require("../middleware/userSessionAuth");
 const isAdmin = require("../middleware/adminSessionAuth");
 const isAnySessionAuthenticated = require('../middleware/anySessionAuth');
@@ -24,6 +25,8 @@ const redirectDeprecatedToDashboard = (req, res) => res.redirect('/dashboard');
 
 /* GET home page. */
 router.get("/", index_controller.index);
+router.get('/robots.txt', seoController.getRobotsTxt);
+router.get('/sitemap.xml', seoController.getSitemapXml);
 
 // GET: Search page with results
 router.get('/search', searchController.search);

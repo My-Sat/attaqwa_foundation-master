@@ -27,6 +27,30 @@ function normalizeArticleLanguage(language) {
   return String(language || '').trim().toLowerCase() === 'ar' ? 'ar' : 'en';
 }
 
+function getSiteUrl(req) {
+  const configured = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+  if (configured) {
+    return configured;
+  }
+
+  const forwardedProto = (req.headers['x-forwarded-proto'] || '').toString().split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol || 'https';
+  const host = req.get('host') || '';
+  return `${protocol}://${host}`;
+}
+
+function toPlainText(htmlContent) {
+  return sanitizeHtml(htmlContent || '', { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, ' ').trim();
+}
+
+function trimDescription(text, max = 160) {
+  const value = String(text || '').trim();
+  if (value.length <= max) {
+    return value;
+  }
+  return `${value.slice(0, max - 1).trim()}…`;
+}
+
 // GET: Form to Create Article (Admin only)
 exports.getCreateArticle = asyncHandler(async (req, res) => {
   const articleId = (req.params.id || '').trim();
@@ -177,13 +201,70 @@ exports.getArticle = asyncHandler(async (req, res) => {
     return;
   }
 
-  res.render('article', { article }); // Render article view
+  const siteUrl = getSiteUrl(req);
+  const articleUrl = `${siteUrl}/article/${article._id}`;
+  const plainContent = toPlainText(article.content);
+  const description = trimDescription(plainContent || article.title || 'Read this article from At-Taqwa Foundation.');
+
+  res.render('article', {
+    article,
+    title: article.title,
+    seo: {
+      title: `${article.title} | At-Taqwa Foundation`,
+      description,
+      canonical: articleUrl,
+      ogType: 'article',
+      image: '/images/attaqwa.jpg',
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: article.title,
+          description,
+          datePublished: article.createdAt ? new Date(article.createdAt).toISOString() : undefined,
+          dateModified: article.updatedAt ? new Date(article.updatedAt).toISOString() : undefined,
+          author: {
+            '@type': 'Organization',
+            name: 'At-Taqwa Foundation',
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'At-Taqwa Foundation',
+            logo: {
+              '@type': 'ImageObject',
+              url: `${siteUrl}/images/attaqwa.jpg`,
+            },
+          },
+          mainEntityOfPage: articleUrl,
+        },
+      ],
+    },
+  }); // Render article view
 });
 
 // GET: View All Articles
 exports.getAllArticles = asyncHandler(async (req, res) => {
   const articles = await Article.find(getPublicArticleFilter()).sort({ createdAt: -1 }); // Get all published articles
-  res.render('all_articles', { articles }); // Render the view listing all articles
+  const siteUrl = getSiteUrl(req);
+  res.render('all_articles', {
+    title: 'All Articles',
+    articles,
+    seo: {
+      title: 'All Articles | At-Taqwa Foundation',
+      description: 'Browse published Islamic articles and curricular resources from At-Taqwa Foundation.',
+      canonical: `${siteUrl}/all_articles`,
+      ogType: 'website',
+      image: '/images/attaqwa.jpg',
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: 'All Articles',
+          url: `${siteUrl}/all_articles`,
+        },
+      ],
+    },
+  }); // Render the view listing all articles
 });
 
 // GET: Fetch and List All Articles for Deletion

@@ -2,6 +2,26 @@ const Question = require("../models/question");
 const Message = require("../models/messages");
 const asyncHandler = require("express-async-handler");
 
+function getSiteUrl(req) {
+  const configured = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+  if (configured) {
+    return configured;
+  }
+
+  const forwardedProto = (req.headers['x-forwarded-proto'] || '').toString().split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol || 'https';
+  const host = req.get('host') || '';
+  return `${protocol}://${host}`;
+}
+
+function trimDescription(text, max = 160) {
+  const value = String(text || '').replace(/\s+/g, ' ').trim();
+  if (value.length <= max) {
+    return value;
+  }
+  return `${value.slice(0, max - 1).trim()}…`;
+}
+
 exports.getAskQuestion = asyncHandler(async (req, res) => {
   const success = req.flash('success');
   const error = req.flash('error');
@@ -47,17 +67,57 @@ exports.getQuestionDetails = asyncHandler(async (req, res) => {
     return res.status(404).render('error', { message: "Question not found." });
   }
 
-  res.render('questionDetail', { title: 'Question Detail', question });
+  const siteUrl = getSiteUrl(req);
+  const pageUrl = `${siteUrl}/question/${question._id}`;
+  const description = trimDescription(question.answer || question.question || 'Question detail on At-Taqwa Foundation.');
+  const questionEntity = {
+    '@type': 'Question',
+    name: question.question,
+    text: question.question,
+    answerCount: question.answer ? 1 : 0,
+  };
+  if (question.answer) {
+    questionEntity.acceptedAnswer = {
+      '@type': 'Answer',
+      text: question.answer,
+    };
+  }
+
+  res.render('questionDetail', {
+    title: 'Question Detail',
+    question,
+    seo: {
+      title: `${trimDescription(question.question, 60)} | At-Taqwa Foundation Q&A`,
+      description,
+      canonical: pageUrl,
+      ogType: 'article',
+      image: '/images/attaqwa.jpg',
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'QAPage',
+          mainEntity: questionEntity,
+        },
+      ],
+    },
+  });
 });
 
 // GET: Display All Answered Questions
 exports.getAllQuestions = asyncHandler(async (req, res) => {
   const questions = await Question.find({ isAnswered: true })
     .sort({ createdAt: -1 });
-
+  const siteUrl = getSiteUrl(req);
   res.render('allQuestions', { 
     title: "All Questions",
-    questions
+    questions,
+    seo: {
+      title: 'All Questions | At-Taqwa Foundation',
+      description: 'Browse answered questions from At-Taqwa Foundation.',
+      canonical: `${siteUrl}/all_questions`,
+      ogType: 'website',
+      image: '/images/attaqwa.jpg',
+    },
   });
 });
 

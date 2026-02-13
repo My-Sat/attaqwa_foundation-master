@@ -1,9 +1,40 @@
 doctype html
 html(lang="en")
   head
+    -
+      const seoData = seo || {};
+      const pageTitle = seoData.title || title || 'At-Taqwa Foundation';
+      const pageDescription = seoData.description || 'At-Taqwa Foundation: live teachings, Islamic Q&A, videos, and articles.';
+      const pageCanonicalUrl = seoData.canonical || canonicalUrl || currentUrl || '';
+      const ogType = seoData.ogType || 'website';
+      const robotsValue = seoData.robots || 'index,follow';
+      const twitterCard = seoData.twitterCard || 'summary_large_image';
+      const siteName = seoData.siteName || 'At-Taqwa Foundation';
+      const rawImage = seoData.image || '/images/attaqwa.jpg';
+      const imageUrl = rawImage && rawImage.startsWith('/') && siteUrl ? `${siteUrl}${rawImage}` : rawImage;
+      const ldItems = Array.isArray(seoData.jsonLd) ? seoData.jsonLd : [];
     meta(charset="utf-8")
     meta(name="viewport" content="width=device-width, initial-scale=1")
-    title= title || 'Home Page'
+    title= pageTitle
+    meta(name="description" content=pageDescription)
+    meta(name="robots" content=robotsValue)
+    if pageCanonicalUrl
+      link(rel="canonical" href=pageCanonicalUrl)
+
+    meta(property="og:title" content=pageTitle)
+    meta(property="og:description" content=pageDescription)
+    meta(property="og:type" content=ogType)
+    meta(property="og:site_name" content=siteName)
+    if pageCanonicalUrl
+      meta(property="og:url" content=pageCanonicalUrl)
+    if imageUrl
+      meta(property="og:image" content=imageUrl)
+
+    meta(name="twitter:card" content=twitterCard)
+    meta(name="twitter:title" content=pageTitle)
+    meta(name="twitter:description" content=pageDescription)
+    if imageUrl
+      meta(name="twitter:image" content=imageUrl)
 
     link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css")
     link(rel="stylesheet", href="/stylesheets/layout.css")
@@ -18,7 +49,8 @@ html(lang="en")
     link(rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png")
     link(rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png")
     link(rel="manifest" href="/site.webmanifest")
-
+    each ld in ldItems
+      script(type="application/ld+json")!= JSON.stringify(ld)
 
 
   body.site-body

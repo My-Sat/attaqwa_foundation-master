@@ -59,9 +59,45 @@ app.use(flash());
 
 // Middleware to set local variables for dynamic navigation layout (excluding req.flash here)
 app.use(async (req, res, next) => {
+  const forwardedProto = (req.headers['x-forwarded-proto'] || '').toString().split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol || 'https';
+  const host = req.get('host') || '';
+  const envSiteUrl = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+  const siteUrl = envSiteUrl || `${protocol}://${host}`;
+  const currentUrl = `${siteUrl}${req.originalUrl || req.url || ''}`;
+  const canonicalUrl = `${siteUrl}${req.path || ''}`;
+
   res.locals.isLoggedIn = req.session.isLoggedIn || false;
   res.locals.admin = req.session.admin || null;
   res.locals.user = req.session.user || null;
+  res.locals.siteUrl = siteUrl;
+  res.locals.currentUrl = currentUrl;
+  res.locals.canonicalUrl = canonicalUrl;
+
+  const noindexPaths = [
+    '/dashboard',
+    '/signin',
+    '/forgot_password',
+    '/signup/admin',
+    '/register',
+    '/my_class_sessions',
+    '/user_messages',
+    '/settings',
+    '/admin/settings',
+    '/registrations/pending',
+    '/live_class/admin',
+    '/api/',
+  ];
+  const requestPath = (req.path || '').toLowerCase();
+  const shouldNoindex = noindexPaths.some((prefix) => requestPath.startsWith(prefix));
+  res.locals.seo = {
+    description: 'At-Taqwa Foundation: live teachings, Islamic Q&A, videos, and articles.',
+    robots: shouldNoindex ? 'noindex,nofollow' : 'index,follow',
+    ogType: 'website',
+    image: '/images/attaqwa.jpg',
+    twitterCard: 'summary_large_image',
+    jsonLd: [],
+  };
 
   // Check for unread messages if the user is logged in
   if (req.session.user) {
