@@ -2,17 +2,17 @@ doctype html
 html(lang="en")
   head
     -
-      const seoData = seo || {};
-      const pageTitle = seoData.title || title || 'At-Taqwa Foundation';
-      const pageDescription = seoData.description || 'At-Taqwa Foundation: live teachings, Islamic Q&A, videos, and articles.';
-      const pageCanonicalUrl = seoData.canonical || canonicalUrl || currentUrl || '';
-      const ogType = seoData.ogType || 'website';
-      const robotsValue = seoData.robots || 'index,follow';
-      const twitterCard = seoData.twitterCard || 'summary_large_image';
-      const siteName = seoData.siteName || 'At-Taqwa Foundation';
-      const rawImage = seoData.image || '/images/attaqwa.jpg';
-      const imageUrl = rawImage && rawImage.startsWith('/') && siteUrl ? `${siteUrl}${rawImage}` : rawImage;
-      const ldItems = Array.isArray(seoData.jsonLd) ? seoData.jsonLd : [];
+      var seoData = seo || {};
+      var pageTitle = seoData.title || title || 'At-Taqwa Foundation';
+      var pageDescription = seoData.description || 'At-Taqwa Foundation: live teachings, Islamic Q&A, videos, and articles.';
+      var pageCanonicalUrl = seoData.canonical || canonicalUrl || currentUrl || '';
+      var ogType = seoData.ogType || 'website';
+      var robotsValue = seoData.robots || 'index,follow';
+      var twitterCard = seoData.twitterCard || 'summary_large_image';
+      var siteName = seoData.siteName || 'At-Taqwa Foundation';
+      var rawImage = seoData.image || '/images/attaqwa.jpg';
+      var imageUrl = rawImage && rawImage.charAt(0) === '/' && siteUrl ? (siteUrl + rawImage) : rawImage;
+      var ldItems = Array.isArray(seoData.jsonLd) ? seoData.jsonLd : [];
     meta(charset="utf-8")
     meta(name="viewport" content="width=device-width, initial-scale=1")
     title= pageTitle

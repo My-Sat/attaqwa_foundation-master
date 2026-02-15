@@ -1,15 +1,15 @@
 extends layout
 
 block content
-  - const pageTitle = title || 'Create Article'
-  - const isEditing = Boolean(formData && formData.articleId)
-  - const pageMode = isEditing ? 'edit' : 'create'
-  - const initialTitle = formData && formData.title ? formData.title : ''
-  - const initialContent = formData && formData.content ? formData.content : ''
-  - const initialArticleId = formData && formData.articleId ? formData.articleId : ''
-  - const initialLanguage = formData && formData.language === 'ar' ? 'ar' : 'en'
-  - const titleError = errors && errors.title ? errors.title : ''
-  - const contentError = errors && errors.content ? errors.content : ''
+  - var pageTitle = title || 'Create Article'
+  - var isEditing = Boolean(formData && formData.articleId)
+  - var pageMode = isEditing ? 'edit' : 'create'
+  - var initialTitle = formData && formData.title ? formData.title : ''
+  - var initialContent = formData && formData.content ? formData.content : ''
+  - var initialArticleId = formData && formData.articleId ? formData.articleId : ''
+  - var initialLanguage = formData && formData.language === 'ar' ? 'ar' : 'en'
+  - var titleError = errors && errors.title ? errors.title : ''
+  - var contentError = errors && errors.content ? errors.content : ''
   section.article-create-shell
     .article-create-header
       h1#articlePageTitle.article-create-title(data-mode=pageMode)= pageTitle
