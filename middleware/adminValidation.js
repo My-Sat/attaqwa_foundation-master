@@ -15,8 +15,9 @@ const { check } = require('express-validator');
       .isLength({ max: 80 }).withMessage('Other names must not exceed 80 characters')
       .trim(),
     check('phoneNumber')
+      .customSanitizer((value) => String(value || '').replace(/[\s()-]/g, ''))
       .notEmpty().withMessage('Phone number is required')
-      .isMobilePhone('any').withMessage('Enter a valid phone number')
+      .matches(/^\+[1-9]\d{7,14}$/).withMessage('Enter a valid phone number with country code (e.g. +233...)')
       .trim(),
     check('username')
       .notEmpty().withMessage('Username is required')

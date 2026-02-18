@@ -24,7 +24,7 @@ block content
             input#otherNames.form-control.auth-input(type="text" name="otherNames" value=(oldInput && oldInput.otherNames ? oldInput.otherNames : '') autocomplete="additional-name")
           .col-12
             label.form-label(for="phoneNumber") Phone Number
-            input#phoneNumber.form-control.auth-input(type="tel" name="phoneNumber" value=(oldInput && oldInput.phoneNumber ? oldInput.phoneNumber : '') autocomplete="tel" required)
+            input#phoneNumber.form-control.auth-input(type="tel" name="phoneNumber" value=(oldInput && oldInput.phoneNumber ? oldInput.phoneNumber : '') autocomplete="tel" placeholder="Add country code, e.g. +233" required)
           .col-12
             label.form-label(for="username") Username
             input#username.form-control.auth-input(type="text" name="username" value=(oldInput && oldInput.username ? oldInput.username : '') autocomplete="username" required)

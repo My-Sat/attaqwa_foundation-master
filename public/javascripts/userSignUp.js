@@ -5,7 +5,6 @@
       return;
     }
 
-    const phoneInput = document.getElementById('phoneNumber');
     const password = document.getElementById('password');
     const confirmPassword = document.getElementById('confirmPassword');
     const matchIndicator = document.getElementById('userPasswordMatch');
@@ -63,24 +62,6 @@
         toggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
       });
     });
-
-    if (phoneInput) {
-      phoneInput.addEventListener('blur', () => {
-        let phone = (phoneInput.value || '').trim();
-
-        if (!phone) {
-          return;
-        }
-
-        if (phone.startsWith('0')) {
-          phone = `+233${phone.substring(1)}`;
-        } else if (!phone.startsWith('+233')) {
-          phone = `+233${phone}`;
-        }
-
-        phoneInput.value = phone;
-      });
-    }
 
     if (password) {
       password.addEventListener('input', updatePasswordMatch);

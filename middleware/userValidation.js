@@ -22,11 +22,12 @@ exports.validateUserSignUp = [
     .notEmpty().withMessage('Username is required')
     .isLength({ min: 3, max: 20 }).withMessage('Username must be 3-20 characters long'),
 
-  // Validate phone number (pattern specific for +233 or 0)
+  // Validate phone number (international support)
   check('phoneNumber')
+    .customSanitizer((value) => String(value || '').replace(/[\s()-]/g, ''))
     .trim()
     .notEmpty().withMessage('Phone number is required')
-    .matches(/^(\+233|0)[1-9]{1}[0-9]{8}$/).withMessage('Invalid phone number format'),
+    .isMobilePhone('any', { strictMode: false }).withMessage('Enter a valid phone number with country code'),
 
   // Validate password
   check('password')

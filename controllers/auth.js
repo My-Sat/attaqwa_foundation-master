@@ -43,60 +43,64 @@ function normalizePhoneNumber(phoneNumberInput) {
     return '';
   }
 
-  const digitsOnly = raw.replace(/\D/g, '');
+  const compact = raw.replace(/[\s().-]/g, '');
+  const digitsOnly = compact.replace(/\D/g, '');
 
-  if (digitsOnly.startsWith('233') && digitsOnly.length === 12) {
+  if (compact.startsWith('+') && digitsOnly) {
     return `+${digitsOnly}`;
   }
 
-  if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {
-    return `+233${digitsOnly.slice(1)}`;
+  if (compact.startsWith('00') && digitsOnly.length > 2) {
+    return `+${digitsOnly.slice(2)}`;
   }
 
-  if (raw.startsWith('+')) {
+  // If user provides digits only, treat as international format without '+'.
+  if (/^\d+$/.test(compact) && digitsOnly.length >= 8) {
     return `+${digitsOnly}`;
   }
 
-  if (digitsOnly.length >= 10) {
-    return `+${digitsOnly}`;
-  }
-
-  return raw;
+  return compact;
 }
 
 function getPhoneSearchCandidates(phoneNumberInput) {
   const raw = String(phoneNumberInput || '').trim();
-  const digits = raw.replace(/\D/g, '');
+  const normalized = normalizePhoneNumber(raw);
+  const digits = normalized.replace(/\D/g, '');
   const set = new Set();
 
   if (raw) {
     set.add(raw);
   }
 
+  if (normalized) {
+    set.add(normalized);
+  }
+
   if (digits) {
     set.add(digits);
     set.add(`+${digits}`);
+    set.add(`00${digits}`);
   }
 
-  if (digits.startsWith('0') && digits.length === 10) {
-    const localNoLeadingZero = digits.slice(1);
-    set.add(digits);
-    set.add(`+233${localNoLeadingZero}`);
-    set.add(`233${localNoLeadingZero}`);
+  if (normalized.startsWith('+')) {
+    set.add(normalized.slice(1));
+  } else if (normalized.startsWith('00')) {
+    set.add(`+${normalized.slice(2)}`);
   }
 
-  if (digits.startsWith('233') && digits.length === 12) {
-    const localPart = digits.slice(3);
-    set.add(`+${digits}`);
-    set.add(`0${localPart}`);
-  }
-
-  return Array.from(set).filter(Boolean);
+  return Array.from(set).filter(Boolean).map((value) => String(value).trim());
 }
 
 function phonesMatch(storedPhone, inputPhone) {
-  const normalizeForCompare = (value) => String(value || '').replace(/\D/g, '');
-  return normalizeForCompare(storedPhone) === normalizeForCompare(inputPhone);
+  const normalizeForCompare = (value) => normalizePhoneNumber(value).replace(/\D/g, '');
+  const left = normalizeForCompare(storedPhone);
+  const right = normalizeForCompare(inputPhone);
+
+  if (!left || !right) {
+    return false;
+  }
+
+  return left === right;
 }
 
 function hashResetCode(code) {
